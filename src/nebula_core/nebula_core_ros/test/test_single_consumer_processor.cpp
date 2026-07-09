@@ -88,6 +88,10 @@ TEST_F(SingleConsumerProcessorTest, ConstructorValidation)
   // Test with zero max queue size
   EXPECT_THROW(SingleConsumerProcessor<int>([](int /*unused*/) {}, 0), std::invalid_argument);
 
+  // Test with null thread factory
+  EXPECT_THROW(
+    SingleConsumerProcessor<int>([](int /*unused*/) {}, 1, nullptr), std::invalid_argument);
+
   // Test with valid parameters
   EXPECT_NO_THROW(SingleConsumerProcessor<int>([](int /*unused*/) {}, 1));
 }

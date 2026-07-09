@@ -33,7 +33,8 @@ if(BUILD_TESTING)
   ament_add_gtest(test_single_consumer_processor
                   test/test_single_consumer_processor.cpp)
   target_include_directories(test_single_consumer_processor PRIVATE include)
-  target_link_libraries(test_single_consumer_processor rcpputils::rcpputils)
+  target_link_libraries(test_single_consumer_processor
+                        nebula_core_common::nebula_core_common rcpputils::rcpputils)
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")

@@ -21,6 +21,7 @@
 
 #include <nebula_core_common/util/errno.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_common/util/thread_factory.hpp>
 #include <nebula_core_hw_interfaces/connections/socket_utils.hpp>
 
 #include <arpa/inet.h>
@@ -260,13 +261,11 @@ public:
 
   using callback_t = std::function<void(std::vector<uint8_t> & data, const RxMetadata & metadata)>;
 
-  /// Creates the receiver thread from a given thread body. Allows callers to integrate the
-  /// receiver thread with external thread management frameworks (e.g. to control its scheduling
-  /// policy). If not given, a plain `std::thread` is created.
+  /// Creates the receiver thread from a given thread body.
   /// Note: the factory is invoked again each time the receiver thread is relaunched, i.e. when a
   /// subscribed socket is re-subscribed or moved (the previous thread is joined first, so two
   /// factory-created threads never coexist).
-  using thread_factory_t = std::function<std::thread(std::function<void()> && thread_body)>;
+  using thread_factory_t = util::thread_factory_t;
 
   /**
    * @brief Register a callback for processing received packets and start the receiver thread. The
@@ -274,11 +273,13 @@ public:
    * Has to be called on a bound socket (`bind()` has to have been called before).
    *
    * @param callback The function to be executed for each received packet.
-   * @param thread_factory Optional factory used to create the receiver thread. If not given, a
-   * plain `std::thread` is created.
+   * @param thread_factory The factory used to create the receiver thread. Must not be null.
    */
-  UdpSocket & subscribe(callback_t && callback, thread_factory_t thread_factory = nullptr)
+  UdpSocket & subscribe(
+    callback_t && callback, thread_factory_t thread_factory = util::StdThreadFactory{})
   {
+    if (!thread_factory) throw UsageError("Thread factory must not be null");
+
     unsubscribe();
     callback_ = std::move(callback);
     thread_factory_ = std::move(thread_factory);
@@ -394,15 +395,11 @@ private:
       }
     };
 
-    if (thread_factory_) {
-      receive_thread_ = thread_factory_(std::move(receive_loop));
-      if (!receive_thread_.joinable()) {
-        // Roll back so the socket is left in a consistent unsubscribed state.
-        running_ = false;
-        throw UsageError("Thread factory must return a joinable thread");
-      }
-    } else {
-      receive_thread_ = std::thread(std::move(receive_loop));
+    receive_thread_ = thread_factory_(std::move(receive_loop));
+    if (!receive_thread_.joinable()) {
+      // Roll back so the socket is left in a consistent unsubscribed state.
+      running_ = false;
+      throw UsageError("Thread factory must return a joinable thread");
     }
   }
 

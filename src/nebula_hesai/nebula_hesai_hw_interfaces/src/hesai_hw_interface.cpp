@@ -243,7 +243,8 @@ Status HesaiHwInterface::sensor_interface_start()
 
   udp_socket_.emplace(std::move(builder).bind());
 
-  // Copy rather than move the factory: the interface can be stopped and restarted.
+  // Copy rather than move the factory: each sensor_interface_start() call creates a fresh
+  // socket, so the factory must remain available for subsequent restarts.
   udp_socket_->subscribe(
     [&](std::vector<uint8_t> & packet, const connections::UdpSocket::RxMetadata & metadata) {
       receive_sensor_packet_callback(packet, metadata);

@@ -18,21 +18,20 @@
 #include <agnocast_cie_thread_configurator/cie_thread_configurator.hpp>
 #endif
 
-#include <functional>
+#include <nebula_core_common/util/thread_factory.hpp>
+
 #include <string>
-#include <thread>
 #include <utility>
 
 namespace nebula::ros
 {
 
 /// @brief Create a thread factory that registers spawned threads with the Agnocast CIE thread
-/// configurator under the given name. Returns nullptr (callers spawn plain std::threads) when
-/// Agnocast support is disabled.
+/// configurator under the given name. Returns a `StdThreadFactory` (spawning plain std::threads)
+/// when Agnocast support is disabled.
 /// @param thread_name Name announced to the configurator. Must be unique per process, so append
 /// the sensor frame_id when one node can host multiple sensors.
-inline std::function<std::thread(std::function<void()> &&)> make_cie_thread_factory(
-  std::string thread_name)
+inline util::thread_factory_t make_cie_thread_factory(std::string thread_name)
 {
 #ifdef USE_AGNOCAST_ENABLED
   return [thread_name = std::move(thread_name)](std::function<void()> && thread_body) {
@@ -41,7 +40,7 @@ inline std::function<std::thread(std::function<void()> &&)> make_cie_thread_fact
   };
 #else
   (void)thread_name;
-  return nullptr;
+  return util::StdThreadFactory{};
 #endif
 }
 

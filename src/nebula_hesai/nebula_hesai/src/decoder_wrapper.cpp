@@ -2,8 +2,8 @@
 
 #include "nebula_hesai/decoder_wrapper.hpp"
 
-#include "cie_thread_factory.hpp"
 #include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
+#include "nebula_core_ros/cie_thread_factory.hpp"
 #include "nebula_core_ros/point_cloud_conversions.hpp"
 #include "nebula_core_ros/rclcpp_logger.hpp"
 #include "nebula_hesai/diagnostics/functional_safety_advanced.hpp"

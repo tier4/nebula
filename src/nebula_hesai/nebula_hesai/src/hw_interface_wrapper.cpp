@@ -2,7 +2,7 @@
 
 #include "nebula_hesai/hw_interface_wrapper.hpp"
 
-#include "cie_thread_factory.hpp"
+#include "nebula_core_ros/cie_thread_factory.hpp"
 #include "nebula_core_ros/parameter_descriptors.hpp"
 #include "nebula_core_ros/rclcpp_logger.hpp"
 #include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
