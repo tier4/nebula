@@ -1,3 +1,6 @@
+/**
+ * Copyright (c) 2026, Ouster, Inc.  All rights reserved.  @file
+ */
 #include "ouster/typedefs.h"
 #include "ouster/visibility.h"
 

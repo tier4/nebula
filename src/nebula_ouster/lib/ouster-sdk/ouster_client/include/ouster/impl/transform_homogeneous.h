@@ -33,7 +33,7 @@ public:
   RotH() = default;
 
   template <typename OtherDerived>
-  RotH(const Eigen::MatrixBase<OtherDerived> & m) : Eigen::Matrix3d(m)
+  explicit RotH(const Eigen::MatrixBase<OtherDerived> & m) : Eigen::Matrix3d(m)
   {
   }
 
@@ -48,7 +48,7 @@ public:
   {
     return Eigen::Matrix3d::operator*(p);
   }
-  RotH operator*(const RotH & other) const { return Eigen::Matrix3d::operator*(other); }
+  RotH operator*(const RotH & other) const { return RotH(Eigen::Matrix3d::operator*(other)); }
   RotH transpose() const { return RotH(Eigen::Matrix3d::transpose()); }
   /**
    * Performs the logarithm of SO(3) to return an element of so(3).
@@ -79,7 +79,7 @@ public:
   PoseH() : Eigen::Matrix4d(Eigen::Matrix4d::Identity()) {}
 
   template <typename OtherDerived>
-  PoseH(const Eigen::MatrixBase<OtherDerived> & m) : Eigen::Matrix4d(m)
+  explicit PoseH(const Eigen::MatrixBase<OtherDerived> & m) : Eigen::Matrix4d(m)
   {
   }
 

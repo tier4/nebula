@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026, Ouster, Inc.  All rights reserved.  @file
+ */
+
 #include "ouster/impl/transform_quaternion.h"
 
 #include "ouster/impl/transform_vector.h"
