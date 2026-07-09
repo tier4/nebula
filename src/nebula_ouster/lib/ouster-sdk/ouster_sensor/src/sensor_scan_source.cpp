@@ -18,7 +18,6 @@
 #include <utility>
 #include <vector>
 
-using ouster::sdk::core::impl::Logger;
 using namespace ouster::sdk::core;
 
 namespace ouster
@@ -36,7 +35,7 @@ class SensorScanIteratorImpl : public ouster::sdk::core::ScanIteratorImpl
   int sensor_idx_ = -1;
 
 public:
-  SensorScanIteratorImpl(SensorScanSource * source, int sensor_idx = -1)
+  explicit SensorScanIteratorImpl(SensorScanSource * source, int sensor_idx = -1)
   {
     source_ = source;
     sensor_idx_ = sensor_idx < 0 ? -1 : sensor_idx;
@@ -204,7 +203,7 @@ void SensorScanSource::start_thread(unsigned int queue_size, bool soft_id_check)
         if (result == PacketValidationFailure::ID) {
           id_error_count_++;
           if (!soft_id_check) {
-            logger().warn(
+            ouster::sdk::core::impl::Logger().warn(
               "Metadata init_id/sn does not match: expected "
               "by metadata - {}/{}, but got from packet "
               "buffer - {}/{}",

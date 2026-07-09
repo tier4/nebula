@@ -38,12 +38,20 @@
 #include <thread>
 #include <vector>
 
-using namespace std::chrono_literals;
 namespace chrono = std::chrono;
 using ouster::sdk::core::logger;
 using ouster::sdk::core::impl::Logger;
 using ouster::sdk::sensor::SensorHttp;
-using namespace ouster::sdk::core;
+using ouster::sdk::core::ValidatorIssues;
+using ouster::sdk::core::SensorConfig;
+using ouster::sdk::core::LidarMode;
+using ouster::sdk::core::TimestampMode;
+using ouster::sdk::core::OperatingMode;
+using ouster::sdk::core::PacketFormat;
+using ouster::sdk::core::LidarPacket;
+using ouster::sdk::core::ImuPacket;
+using ouster::sdk::core::check_signal_multiplier;
+using ouster::sdk::core::to_string;
 
 namespace ouster
 {
@@ -238,7 +246,7 @@ jsoncons::json collect_metadata(SensorHttp & sensor_http, int timeout_sec)
     if (status != "INITIALIZING") {
       break;
     }
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(std::chrono::seconds{1});
   }
 
   std::string user_data;

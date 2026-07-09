@@ -263,6 +263,7 @@ bool Mesh::load_from_stl(const std::string & path)
 }
 
 // NOLINTBEGIN(readability-identifier-length)
+
 bool Mesh::intersects_with_bounding_sphere(const Ray & beam) const
 {
   // Derived from a method described in "Real Time Collision Detection"
@@ -282,6 +283,7 @@ bool Mesh::intersects_with_bounding_sphere(const Ray & beam) const
   // A negative discriminant corresponds to ray missing sphere
   return discr >= 0.0f;
 }
+
 // NOLINTEND(readability-identifier-length)
 
 bool Mesh::closest_and_farthest_intersections(const Ray & beam, BoundsF & z) const

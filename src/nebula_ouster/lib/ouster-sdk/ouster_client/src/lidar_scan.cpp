@@ -1491,27 +1491,26 @@ void ScanBatcher::batch_imu_packet(const ImuPacket & packet, LidarScan & lidar_s
 
 void ScanBatcher::batch_zone_packet(const ZonePacket & packet, LidarScan & lidar_scan)
 {
-  using namespace ouster::sdk::core::ChanField;
   const uint8_t * buf = packet.buf.data();
 
-  if (lidar_scan.has_field(ZONE_ALERT_FLAGS)) {
-    ArrayView1<uint8_t> alert_flags = lidar_scan.field(ZONE_ALERT_FLAGS);
+  if (lidar_scan.has_field(ChanField::ZONE_ALERT_FLAGS)) {
+    ArrayView1<uint8_t> alert_flags = lidar_scan.field(ChanField::ZONE_ALERT_FLAGS);
     alert_flags(0) = pf.alert_flags(buf);
   }
-  if (lidar_scan.has_field(ZONE_TIMESTAMP)) {
-    ArrayView1<uint64_t> zone_ts = lidar_scan.field(ZONE_TIMESTAMP);
+  if (lidar_scan.has_field(ChanField::ZONE_TIMESTAMP)) {
+    ArrayView1<uint64_t> zone_ts = lidar_scan.field(ChanField::ZONE_TIMESTAMP);
     zone_ts(0) = pf.zone_timestamp(buf);
   }
-  if (lidar_scan.has_field(ZONE_PACKET_TIMESTAMP)) {
-    ArrayView1<uint64_t> zone_packet_ts = lidar_scan.field(ZONE_PACKET_TIMESTAMP);
+  if (lidar_scan.has_field(ChanField::ZONE_PACKET_TIMESTAMP)) {
+    ArrayView1<uint64_t> zone_packet_ts = lidar_scan.field(ChanField::ZONE_PACKET_TIMESTAMP);
     zone_packet_ts(0) = packet.host_timestamp;
   }
-  if (lidar_scan.has_field(LIVE_ZONESET_HASH)) {
+  if (lidar_scan.has_field(ChanField::LIVE_ZONESET_HASH)) {
     std::array<uint8_t, 32> hash = pf.live_zoneset_hash(buf);
-    std::memcpy(lidar_scan.field(LIVE_ZONESET_HASH), hash.data(), sizeof(uint8_t) * hash.size());
+    std::memcpy(lidar_scan.field(ChanField::LIVE_ZONESET_HASH), hash.data(), sizeof(uint8_t) * hash.size());
   }
-  if (lidar_scan.has_field(ZONE_STATES)) {
-    ArrayView1<ZoneState> zones = lidar_scan.field(ZONE_STATES);
+  if (lidar_scan.has_field(ChanField::ZONE_STATES)) {
+    ArrayView1<ZoneState> zones = lidar_scan.field(ChanField::ZONE_STATES);
     for (size_t i = 0; i < zones.shape[0]; ++i) {
       const uint8_t * zone_ptr = pf.zone_nth_measurement(i, buf);
       ZoneState & zone = zones(i);
