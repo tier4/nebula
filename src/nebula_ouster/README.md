@@ -29,9 +29,9 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --package
 
 ```bash
 # Online mode (with hardware)
-ros2 launch nebula_ouster nebula_ouster.launch.xml
+ros2 launch nebula_ouster ouster_launch_all_hw.xml
 # Offline mode (replay from rosbag)
-ros2 launch nebula_ouster nebula_ouster.launch.xml launch_hw:=false
+ros2 launch nebula_ouster ouster_launch_all_hw.xml launch_hw:=false
 ```
 
 ## Maintenance

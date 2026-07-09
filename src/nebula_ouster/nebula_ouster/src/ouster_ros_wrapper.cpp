@@ -192,7 +192,6 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
   runtime_mode_(std::monostate{})
 {
   const bool launch_hw = declare_parameter<bool>("launch_hw", true, param_read_only());
-  declare_parameter<std::string>("sensor_model", "OusterSensor", param_read_only());
   frame_id_ = declare_parameter<std::string>("frame_id", "ouster_lidar", param_read_write());
 
   const auto config_or_error = load_config_from_ros_parameters(*this);
