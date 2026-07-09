@@ -904,24 +904,29 @@ LidarScanFieldTypes get_field_types(const DataFormat & format, const Version & f
       ChanField::POSITION_LAT_LONG, ChanFieldType::FLOAT64,
       std::vector<size_t>{format.imu_packets_per_frame, 2}, FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      ChanField::POSITION_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{format.imu_packets_per_frame},
-      FieldClass::SCAN_FIELD);
+      ChanField::POSITION_TIMESTAMP, ChanFieldType::UINT64,
+      std::vector<size_t>{format.imu_packets_per_frame}, FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      ChanField::IMU_ALERT_FLAGS, ChanFieldType::UINT8, std::vector<size_t>{format.imu_packets_per_frame},
-      FieldClass::SCAN_FIELD);
+      ChanField::IMU_ALERT_FLAGS, ChanFieldType::UINT8,
+      std::vector<size_t>{format.imu_packets_per_frame}, FieldClass::SCAN_FIELD);
   }
 
   if (format.zone_monitoring_enabled) {
     field_types.emplace_back(
-      ChanField::LIVE_ZONESET_HASH, ChanFieldType::UINT8, std::vector<size_t>{32}, FieldClass::SCAN_FIELD);
+      ChanField::LIVE_ZONESET_HASH, ChanFieldType::UINT8, std::vector<size_t>{32},
+      FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      ChanField::ZONE_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{1}, FieldClass::SCAN_FIELD);
+      ChanField::ZONE_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{1},
+      FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      ChanField::ZONE_PACKET_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{1}, FieldClass::SCAN_FIELD);
+      ChanField::ZONE_PACKET_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{1},
+      FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      ChanField::ZONE_ALERT_FLAGS, ChanFieldType::UINT8, std::vector<size_t>{1}, FieldClass::SCAN_FIELD);
+      ChanField::ZONE_ALERT_FLAGS, ChanFieldType::UINT8, std::vector<size_t>{1},
+      FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      ChanField::ZONE_STATES, ChanFieldType::ZONE_STATE, std::vector<size_t>{16}, FieldClass::SCAN_FIELD);
+      ChanField::ZONE_STATES, ChanFieldType::ZONE_STATE, std::vector<size_t>{16},
+      FieldClass::SCAN_FIELD);
   }
 
   // remove WINDOW if FW is < 3.2
@@ -1417,12 +1422,15 @@ void ScanBatcher::batch_imu_packet(const ImuPacket & packet, LidarScan & lidar_s
   size_t col_offset = packet_id * pf.imu_measurements_per_packet;
 
   // TODO(Tim T.): this pattern could be a method.
-  FieldView imu_ts_fview =
-    lidar_scan.has_field(ChanField::IMU_TIMESTAMP) ? lidar_scan.field(ChanField::IMU_TIMESTAMP) : FieldView{};
-  FieldView imu_m_id_fview =
-    lidar_scan.has_field(ChanField::IMU_MEASUREMENT_ID) ? lidar_scan.field(ChanField::IMU_MEASUREMENT_ID) : FieldView{};
-  FieldView imu_status_fview =
-    lidar_scan.has_field(ChanField::IMU_STATUS) ? lidar_scan.field(ChanField::IMU_STATUS) : FieldView{};
+  FieldView imu_ts_fview = lidar_scan.has_field(ChanField::IMU_TIMESTAMP)
+                             ? lidar_scan.field(ChanField::IMU_TIMESTAMP)
+                             : FieldView{};
+  FieldView imu_m_id_fview = lidar_scan.has_field(ChanField::IMU_MEASUREMENT_ID)
+                               ? lidar_scan.field(ChanField::IMU_MEASUREMENT_ID)
+                               : FieldView{};
+  FieldView imu_status_fview = lidar_scan.has_field(ChanField::IMU_STATUS)
+                                 ? lidar_scan.field(ChanField::IMU_STATUS)
+                                 : FieldView{};
 
   for (size_t i = 0; i < pf.imu_measurements_per_packet; ++i) {
     const uint8_t * col_buf = pf.imu_nth_measurement(i, buf);
