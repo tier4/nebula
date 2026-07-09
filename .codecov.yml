@@ -5,6 +5,10 @@ coverage:
         target: auto
         # allow slight decreases in coverage compared to the base ref
         threshold: 1%
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
 
 ignore:
   - ^build.* # for generated message wrappers
@@ -12,6 +16,7 @@ ignore:
   - (^|.*/)test/.* # unit test code
   - (^|.*/)tests/.* # unit test code
   - (^|.*/)vendor/.* # third-party vendored code
+  - src/nebula_ouster/.* # ouster packages not yet covered by CI tests
 
 comment:
   layout: header, diff, flags, components
