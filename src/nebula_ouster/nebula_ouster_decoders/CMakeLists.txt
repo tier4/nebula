@@ -4,7 +4,7 @@ project(nebula_ouster_decoders)
 find_package(autoware_cmake REQUIRED)
 autoware_package()
 
-set(_nebula_ouster_sdk "${CMAKE_CURRENT_SOURCE_DIR}/../lib/ouster-sdk")
+set(_nebula_ouster_sdk "${CMAKE_CURRENT_SOURCE_DIR}/../vendor/ouster-sdk")
 
 set(BUILD_SENSOR OFF CACHE BOOL "Ouster SDK: sensor module" FORCE)
 set(BUILD_PCAP OFF CACHE BOOL "Ouster SDK: pcap" FORCE)
