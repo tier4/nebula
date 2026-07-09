@@ -241,7 +241,7 @@ bool parse_and_validate_zone_set_config_zip(
     auto & zone_json = zone_json_it.value();
     ouster::sdk::core::Zone zone{};
 
-    // TODO[tws] encapsulate this in a function
+    // TODO(tws): encapsulate this in a function
     // Set zone trigger params
     zone.point_count = zone_json.at("point_count").as<int>();
     zone.frame_count = zone_json.at("frame_count").as<int>();
@@ -257,7 +257,7 @@ bool parse_and_validate_zone_set_config_zip(
     // Set label
     zone.label = zone_json.get_value_or<std::string>("label", "");
 
-    // TODO[tws] encapsulate this in a function
+    // TODO(tws): encapsulate this in a function
     // Set zone STL
     if (zone_json.contains("stl")) {
       auto stl_json = zone_json.at("stl");
@@ -275,13 +275,13 @@ bool parse_and_validate_zone_set_config_zip(
       }
     }
 
-    // TODO[tws] encapsulate this in a function
+    // TODO(tws): encapsulate this in a function
     // Set zone ZRB
     if (zone_json.contains("zrb")) {
       auto file_name = zone_json.at("zrb").at("file_name").as<std::string>();
       zone.zrb = ouster::sdk::core::Zrb(zip.get_file(file_name));
     }
-    // TODO[tws] error if zone.stl or zone.zrb are not set?
+    // TODO(tws): error if zone.stl or zone.zrb are not set?
 
     zone_set_config.zones.emplace(zone_id, zone);
   }
@@ -332,7 +332,7 @@ void ZoneSet::check_invariants() const
 ZoneSet::ZoneSet(const std::string & zip_path)
 {  // NOLINT(cppcoreguidelines-pro-type-member-init)
   auto zip_bytes = ouster::sdk::core::get_file_as_bytes(zip_path);
-  // TODO[tws] dedupe with below
+  // TODO(tws): dedupe with below
   ValidatorIssues issues;
   if (!parse_and_validate_zone_set_config_zip(zip_bytes, *this, issues)) {
     std::stringstream msg;
@@ -381,7 +381,7 @@ void ZoneSet::render(const SensorInfo & sensor_info)
         VectorStreamBuf sbuf(&buf);
         std::ostream out(&sbuf);
 
-        // TODO[tws] maybe change zone.render to return optional zrb,
+        // TODO(tws): maybe change zone.render to return optional zrb,
         // since the bool would be redundant
         if (zone.render(beam_config)) {
           auto & zrb = zone.zrb.value();
@@ -417,7 +417,7 @@ std::vector<uint8_t> ZoneSet::to_zip_blob(ZoneSetOutputFilter zone_set_output_fi
 
   for (const auto & pair : zones) {
     std::string zone_id = std::to_string(pair.first);
-    // TODO[tws] check that at least one of stl or zrb is present
+    // TODO(tws): check that at least one of stl or zrb is present
     auto & zone = pair.second;
     auto & stl = zone.stl;
     auto & zrb = zone.zrb;
@@ -470,7 +470,7 @@ std::string ZoneSet::to_json(ZoneSetOutputFilter zone_set_output_filter) const
     result["zones"][id]["mode"] = to_string(zone.mode);
     result["zones"][id]["label"] = zone.label;
 
-    // TODO[tws] dedupe stl/zrb?
+    // TODO(tws): dedupe stl/zrb?
     auto & stl = zone.stl;
     auto & zrb = zone.zrb;
     if (stl && zone_set_output_filter != ZoneSetOutputFilter::ZRB) {

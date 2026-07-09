@@ -689,7 +689,7 @@ ProductInfo ProductInfo::create_product_info(std::string product_info_string)
   return ProductInfo();
 }
 
-ProductInfo::ProductInfo() : ProductInfo("", "", false, "", 0) {};
+ProductInfo::ProductInfo() : ProductInfo("", "", false, "", 0) {}
 
 ProductInfo::ProductInfo(
   std::string product_info_string, std::string form_factor, bool short_range,
