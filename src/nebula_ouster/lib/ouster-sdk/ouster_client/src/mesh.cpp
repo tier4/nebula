@@ -2,7 +2,7 @@
  * Copyright (c) 2026, Ouster, Inc.  All rights reserved.  @file
  */
 
- #include "ouster/mesh.h"
+#include "ouster/mesh.h"
 
 #include "ouster/coord.h"
 #include "ouster/ray.h"
