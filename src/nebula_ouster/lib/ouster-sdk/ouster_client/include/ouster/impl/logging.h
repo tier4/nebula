@@ -112,8 +112,8 @@ private:
 
   std::shared_ptr<Logger::format_builder> make_builder(const std::string & format_string);
 
-  static const std::string LOGGER_NAME;
-  static const std::string LOGGER_PATTERN;
+  static const char* LOGGER_NAME;
+  static const char* LOGGER_PATTERN;
   std::unique_ptr<internal_logger> internal_logger_;
 };
 }  // namespace impl

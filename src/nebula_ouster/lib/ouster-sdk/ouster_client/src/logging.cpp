@@ -23,8 +23,8 @@
 
 using ouster::sdk::core::impl::Logger;
 
-const std::string Logger::LOGGER_NAME{"ouster::sdk::core"};
-const std::string Logger::LOGGER_PATTERN("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v");
+const char* Logger::LOGGER_NAME{"ouster::sdk::core"};
+const char* Logger::LOGGER_PATTERN{"[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v"};
 
 struct Logger::internal_logger
 {
@@ -253,7 +253,7 @@ void Logger::log(LOG_LEVEL /*level*/, const std::string & /*msg*/)
                                  LOGGER_PROCESS_ARG(int32_t);
                                  LOGGER_PROCESS_ARG(int64_t);
 #if defined(__EMSCRIPTEN__) || defined(__APPLE__) || defined(WIN32)
-                                 LOGGER_PROCESS_ARG(long);
+                                 LOGGER_PROCESS_ARG(int64_t);
 #endif
 
                                  LOGGER_PROCESS_ARG(uint8_t);
@@ -261,7 +261,7 @@ void Logger::log(LOG_LEVEL /*level*/, const std::string & /*msg*/)
                                  LOGGER_PROCESS_ARG(uint32_t);
                                  LOGGER_PROCESS_ARG(uint64_t);
 #if defined(__EMSCRIPTEN__) || defined(__APPLE__) || defined(WIN32)
-                                 LOGGER_PROCESS_ARG(unsigned long);
+                                 LOGGER_PROCESS_ARG(uint64_t);
 #endif
 
                                  LOGGER_PROCESS_ARG(float);
