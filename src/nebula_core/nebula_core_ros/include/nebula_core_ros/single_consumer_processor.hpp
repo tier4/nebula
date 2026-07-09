@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <nebula_core_common/util/thread_factory.hpp>
 #include <rcpputils/thread_safety_annotations.hpp>
 
 #include <cassert>
@@ -38,10 +39,16 @@ class SingleConsumerProcessor
 public:
   using callback_t = std::function<void(T &&)>;
 
+  /// Creates the consumer thread from a given thread body.
+  using thread_factory_t = util::thread_factory_t;
+
   /// @brief Constructor
   /// @param callback The callback function to execute on each item
   /// @param max_queue_size The maximum size of the queue
-  explicit SingleConsumerProcessor(callback_t callback, size_t max_queue_size)
+  /// @param thread_factory The factory used to create the consumer thread. Must not be null.
+  explicit SingleConsumerProcessor(
+    callback_t callback, size_t max_queue_size,
+    thread_factory_t thread_factory = util::StdThreadFactory{})
   : callback_(std::move(callback)), max_queue_size_(max_queue_size)
   {
     if (max_queue_size == 0) {
@@ -52,7 +59,14 @@ public:
       throw std::invalid_argument("Callback function must not be null");
     }
 
-    consumer_thread_ = std::thread(&SingleConsumerProcessor::consumer_loop, this);
+    if (!thread_factory) {
+      throw std::invalid_argument("Thread factory must not be null");
+    }
+
+    consumer_thread_ = thread_factory([this]() { consumer_loop(); });
+    if (!consumer_thread_.joinable()) {
+      throw std::invalid_argument("Thread factory must return a joinable thread");
+    }
   }
 
   /// @brief Destructor - stops the processing thread
