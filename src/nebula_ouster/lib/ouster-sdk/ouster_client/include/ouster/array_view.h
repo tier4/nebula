@@ -147,21 +147,21 @@ struct restrict_if_const_ptr<const T>
   using type = const T * RESTRICT;
 };
 
-// TODO: switch to fold expressions upon c++17 adoption
+// TODO(Tim T.): switch to fold expressions upon c++17 adoption
 template <typename ShapeT, typename Arg>
 bool _oob_check(const ShapeT & shape, int i, Arg idx0)
 {
   return impl::range_or_idx(idx0) >= static_cast<int>(shape[i]);
 }
 
-// TODO: switch to fold expressions upon c++17 adoption
+// TODO(Tim T.): switch to fold expressions upon c++17 adoption
 template <typename ShapeT, typename Arg, typename... Args>
 bool _oob_check(const ShapeT & shape, int i, Arg idx0, Args... idx)
 {
   return _oob_check(shape, i, idx0) + _oob_check(shape, i + 1, idx...);
 }
 
-// TODO: switch to fold expressions upon c++17 adoption
+// TODO(Tim T.): switch to fold expressions upon c++17 adoption
 template <typename ShapeT, typename... Args>
 bool subview_oob_check(const ShapeT & shape, Args... idx)
 {
@@ -169,24 +169,24 @@ bool subview_oob_check(const ShapeT & shape, Args... idx)
 }
 
 /**
- * TODO: this is a cpp14 regression, will not compile into CUDA.
+ * TODO(Tim T.): this is a cpp14 regression, will not compile into CUDA.
  *       Fix later -- Tim T.
  */
-// TODO: switch to fold expressions upon c++17 adoption
+// TODO(Tim T.): switch to fold expressions upon c++17 adoption
 template <typename StridesT, typename Arg>
 OSDK_FN int _strided_index(const StridesT & strides, int i, Arg idx0)
 {
   return idx0 * strides[i];
 }
 
-// TODO: switch to fold expressions upon c++17 adoption
+// TODO(Tim T.): switch to fold expressions upon c++17 adoption
 template <typename StridesT, typename Arg, typename... Args>
 OSDK_FN int _strided_index(const StridesT & strides, int i, Arg idx0, Args... idx)
 {
   return _strided_index(strides, i, idx0) + _strided_index(strides, i + 1, idx...);
 }
 
-// TODO: switch to fold expressions upon c++17 adoption
+// TODO(Tim T.): switch to fold expressions upon c++17 adoption
 template <typename StridesT, typename... Args>
 OSDK_FN int strided_index(const StridesT & strides, Args... idx)
 {

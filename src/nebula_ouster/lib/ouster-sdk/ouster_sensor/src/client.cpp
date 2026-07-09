@@ -225,7 +225,7 @@ jsoncons::json collect_metadata(SensorHttp & sensor_http, int timeout_sec)
   auto timeout_time = chrono::steady_clock::now() + chrono::seconds{timeout_sec};
 
   std::string status;
-  // TODO: can remove this loop when we drop support for FW 2.4
+  // TODO(UN): can remove this loop when we drop support for FW 2.4
   while (true) {
     if (chrono::steady_clock::now() >= timeout_time) {
       throw std::runtime_error(
@@ -261,7 +261,7 @@ jsoncons::json collect_metadata(SensorHttp & sensor_http, int timeout_sec)
     // advantage is that it doesn't make network calls but we need it to run
     // every time there is a valid connection to the sensor So we insert it
     // here
-    // TODO: remove after release of FW 3.2/3.3 (sufficient warning)
+    // TODO(Chris): remove after release of FW 3.2/3.3 (sufficient warning)
     const auto & fw_version = sensor_http.firmware_version();
 
     // only warn for people on the latest FW, as people on older FWs may not

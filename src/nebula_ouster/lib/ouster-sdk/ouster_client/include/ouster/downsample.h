@@ -1,8 +1,13 @@
+/**
+ * Copyright (c) 2026, Ouster, Inc.  All rights reserved.  @file
+ */
+
 #pragma once
 
 #include "ouster/impl/downsample_impl.h"
 
 #include <stdexcept>
+#include <unordered_map>
 
 namespace ouster
 {

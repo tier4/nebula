@@ -47,7 +47,7 @@ struct Logger::internal_logger
 
   void disable_auto_newline()
   {
-    // TODO: consider using an multi-threaded sinks
+    // TODO(UN): consider using an multi-threaded sinks
     // and add lock guards around the logger usage.
     auto formatter = std::make_unique<spdlog::pattern_formatter>(
       "%v", spdlog::pattern_time_type::local, std::string(""));

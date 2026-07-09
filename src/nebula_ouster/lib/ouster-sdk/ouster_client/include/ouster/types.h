@@ -1938,7 +1938,7 @@ class OUSTER_API_CLASS PacketFormat {
 
   // uint32_t imu_nmea_status(const uint8_t* imu_buf) const;
 
-  // TODO: would have been std::string_view if we had access to cpp17
+  // TODO(Tim T.): would have been std::string_view if we had access to cpp17
   /**
    * Read NMEA sentence from an IMU buffer.
    * Only available in PROFILE_ACCEL32_GYRO32_NMEA.
