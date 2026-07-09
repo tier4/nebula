@@ -21,7 +21,7 @@
 #include <string>
 #include <utility>
 
-using namespace ouster::sdk::core::impl;
+using ouster::sdk::core::impl::Logger;
 
 const std::string Logger::LOGGER_NAME{"ouster::sdk::core"};
 const std::string Logger::LOGGER_PATTERN("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v");

@@ -1597,7 +1597,7 @@ class OUSTER_API_CLASS PacketFormat {
      * @param[in] format data format
      */
     OUSTER_API_FUNCTION
-    PacketFormat(const DataFormat& format);
+    explicit PacketFormat(const DataFormat& format);
 
     /**
      * Construct packet format from sensor info
@@ -1605,7 +1605,7 @@ class OUSTER_API_CLASS PacketFormat {
      * @param[in] info sensor info
      */
     OUSTER_API_FUNCTION
-    PacketFormat(const SensorInfo& info);
+    explicit PacketFormat(const SensorInfo& info);
 
     using FieldIter =
         decltype(field_types_)::const_iterator;  ///< iterator over field types
