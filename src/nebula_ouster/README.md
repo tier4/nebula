@@ -1,15 +1,13 @@
 # Nebula ouster sensor package
 
-A minimal template sensor package for the Nebula LiDAR driver framework.
+A module extends the support Nebula driver framework to Ouster lidars and sensors.
 
 ## Purpose
 
-This package is a starting point for adding new sensor support to Nebula. It compiles, launches,
-and exercises the ROS packet/pointcloud pipeline with intentionally minimal behavior.
+This package integrates support for Ouster lidars into the Nebula framework.
 
-The ouster decoder does not invent fake sensor geometry. It only counts packets, reports a scan
-boundary every 10 packets, and emits an empty pointcloud for that scan. Replace that logic with
-real packet parsing and scan-cutting for your sensor.
+The ouster decoder receive packets from the sensor converts them into a Lidar scan and then into
+a pointcloud of Nebula point type before publishing them as a rostopic.
 
 ## Package structure
 
@@ -22,8 +20,9 @@ The ouster sensor consists of four packages:
 
 ## Building
 
+
 ```bash
-colcon build --packages-up-to nebula_ouster
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-up-to nebula_ouster
 ```
 
 ## Running
@@ -35,16 +34,6 @@ ros2 launch nebula_ouster nebula_ouster.launch.xml
 ros2 launch nebula_ouster nebula_ouster.launch.xml launch_hw:=false
 ```
 
-## Using as a template
-
-For detailed instructions on how to use this package as a template for adding a new sensor, please refer to the [Integration guide](../../docs/integration_guide.md).
-
-The guide covers:
-
-1. Cloning and renaming the package
-2. Implementing sensor-specific logic
-3. Verifying the new implementation
-
 ## Key components
 
 ### Configuration (`*_common`)
@@ -53,13 +42,13 @@ The guide covers:
 
 ### Decoder (`*_decoders`)
 
-- `OusterDecoder` - Minimal decoder stub with packet counting and scan-boundary callbacks
+- `OusterDecoder` - Decodes packets into Ouster LidarScan object before converting them into pointclouds
 - `PacketDecodeResult` - Decoder output containing metadata/error and performance counters
 - `DecodeError` - Decoder error codes for packet handling failures
 
 ### Hardware interface (`*_hw_interfaces`)
 
-- `OusterHwInterface` - Sensor communication interface
+- `OusterHwInterface` - Communicates with Ouster sensors via their API
 
 ### ROS wrapper
 
@@ -67,10 +56,3 @@ The guide covers:
 - Point cloud publisher on `/points`
 - Packet publish/replay topic on `/packets` (`nebula_msgs/msg/NebulaPackets`) depending on
   runtime mode (`launch_hw` parameter)
-
-## Reference implementation
-
-This package provides a template structure for adding new sensor support. For complete examples,
-refer to existing sensor packages like `nebula_hesai` or `nebula_velodyne`.
-
-**For detailed integration instructions, see the [Integration guide](../../docs/integration_guide.md) in the documentation.**

@@ -9,12 +9,7 @@ add_library(
   ouster_ros_wrapper SHARED
   src/ouster_ros_wrapper.cpp)
 
-set(_nebula_ouster_sdk "${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ouster_decoders/ouster-sdk")
-if(NOT EXISTS "${_nebula_ouster_sdk}/CMakeLists.txt")
-  message(
-    FATAL_ERROR
-      "nebula_ouster_decoders: bundled ouster-sdk is missing (${_nebula_ouster_sdk})")
-endif()
+set(_nebula_ouster_sdk "${CMAKE_CURRENT_SOURCE_DIR}/../lib/ouster-sdk")
 
 set(BUILD_SENSOR ON CACHE BOOL "Ouster SDK: sensor module" FORCE)
 set(BUILD_PCAP OFF CACHE BOOL "Ouster SDK: pcap" FORCE)
@@ -30,7 +25,7 @@ add_subdirectory("${_nebula_ouster_sdk}" "${CMAKE_CURRENT_BINARY_DIR}/ouster-sdk
 if(TARGET ouster_client)
   target_compile_options(ouster_client PRIVATE -Wno-pedantic)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(ouster_client PRIVATE -Wno-error=stringop-overflow)
+    target_compile_options(ouster_client PRIVATE -Wno-error=stringop-overflow)  # cspell:ignore stringop
   endif()
 endif()
 if(TARGET ouster_sensor)

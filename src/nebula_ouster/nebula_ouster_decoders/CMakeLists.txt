@@ -4,12 +4,7 @@ project(nebula_ouster_decoders)
 find_package(autoware_cmake REQUIRED)
 autoware_package()
 
-set(_nebula_ouster_sdk "${CMAKE_CURRENT_SOURCE_DIR}/ouster-sdk")
-if(NOT EXISTS "${_nebula_ouster_sdk}/CMakeLists.txt")
-  message(
-    FATAL_ERROR
-      "nebula_ouster_decoders: bundled ouster-sdk is missing (${_nebula_ouster_sdk})")
-endif()
+set(_nebula_ouster_sdk "${CMAKE_CURRENT_SOURCE_DIR}/../lib/ouster-sdk")
 
 set(BUILD_SENSOR OFF CACHE BOOL "Ouster SDK: sensor module" FORCE)
 set(BUILD_PCAP OFF CACHE BOOL "Ouster SDK: pcap" FORCE)
@@ -25,7 +20,7 @@ add_subdirectory("${_nebula_ouster_sdk}" "${CMAKE_CURRENT_BINARY_DIR}/ouster-sdk
 if(TARGET ouster_client)
   target_compile_options(ouster_client PRIVATE -Wno-pedantic)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(ouster_client PRIVATE -Wno-error=stringop-overflow)
+    target_compile_options(ouster_client PRIVATE -Wno-error=stringop-overflow)  # cspell:ignore stringop
   endif()
 endif()
 if(TARGET nmea)
@@ -36,6 +31,7 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
+
 pkg_check_modules(LIBZIP REQUIRED IMPORTED_TARGET libzip)
 
 # vcpkg / distro CMake config names differ; normalize to IMPORTED target @c libzip::zip .
