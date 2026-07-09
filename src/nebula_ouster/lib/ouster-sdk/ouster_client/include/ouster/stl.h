@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026, Ouster, Inc.  All rights reserved.  @file
+ */
+
 #pragma once
 
 #include "ouster/mesh.h"
@@ -6,6 +10,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
 
 namespace ouster
 {

@@ -160,7 +160,7 @@ bool Logger::configure_file_sink(
                                  {
                                    ~format_builder() = default;
                                    format_builder(const std::string & format_string)
-                                   : format_string(format_string) {};
+                                   : format_string(format_string) {}
                                    const std::string & format_string;
 #if defined(ENABLE_SPDLOG)
                                    fmt::dynamic_format_arg_store<fmt::format_context> store;
@@ -206,7 +206,7 @@ std::string Logger::finalize_format_builder(std::shared_ptr<Logger::format_build
                                      case Logger::LOG_LEVEL::LOG_CRITICAL:
                                        level_out = spdlog::level::critical;
                                        break;
-                                   };
+                                   }
 
                                    internal_logger_->logger_->log(level_out, msg);
                                  }
