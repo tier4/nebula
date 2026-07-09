@@ -14,6 +14,8 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <functional>
+#include <future>
 #include <optional>
 #include <string>
 #include <thread>
@@ -137,6 +139,11 @@ TEST(TestUdp, TestCorrectUsageIsEnforced)
 
   // Unsubscribing on a non-subscribed socket shall also be supported
   ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port).bind().unsubscribe());
+
+  // Null thread factories shall be rejected
+  ASSERT_THROW(
+    UdpSocket::Builder(g_localhost_ip, g_host_port).bind().subscribe(empty_cb(), nullptr),
+    UsageError);
 }
 
 TEST(TestUdp, TestReceiving)
@@ -213,6 +220,58 @@ TEST(TestUdp, TestMoveable)
 
   std::this_thread::sleep_for(100ms);
   ASSERT_EQ(n_received, 2);
+}
+
+TEST(TestUdp, TestThreadFactoryCreatesReceiverThread)
+{
+  const std::vector<uint8_t> payload{1, 2, 3};
+
+  std::promise<void> received_promise;
+  auto received_future = received_promise.get_future();
+  size_t n_factory_calls = 0;
+
+  auto sock = UdpSocket::Builder(g_localhost_ip, g_host_port).bind();
+  sock.subscribe(
+    [&received_promise](const auto &, const auto &) { received_promise.set_value(); },
+    [&n_factory_calls](std::function<void()> && thread_body) {
+      n_factory_calls++;
+      return std::thread(std::move(thread_body));
+    });
+
+  ASSERT_EQ(n_factory_calls, 1);
+
+  auto err_no_opt = udp_send(g_localhost_ip, g_host_port, payload);
+  if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
+
+  ASSERT_EQ(received_future.wait_for(g_send_receive_timeout), std::future_status::ready);
+
+  // Unsubscribing joins the factory-created thread without further factory calls
+  sock.unsubscribe();
+  ASSERT_EQ(n_factory_calls, 1);
+}
+
+TEST(TestUdp, TestThreadFactoryPersistsAcrossResubscribe)
+{
+  size_t n_factory_calls = 0;
+  UdpSocket::thread_factory_t factory = [&n_factory_calls](std::function<void()> && thread_body) {
+    n_factory_calls++;
+    return std::thread(std::move(thread_body));
+  };
+
+  auto sock = UdpSocket::Builder(g_localhost_ip, g_host_port).bind();
+  sock.subscribe(empty_cb(), factory);
+  ASSERT_EQ(n_factory_calls, 1);
+
+  // Unsubscribing keeps the socket usable; re-subscribing launches through the factory again
+  sock.unsubscribe();
+  sock.subscribe(empty_cb(), factory);
+  ASSERT_EQ(n_factory_calls, 2);
+
+  // The socket stores the factory as a member: moving a subscribed socket relaunches the
+  // receiver thread through the stored factory, without the caller re-passing it
+  UdpSocket sock2{std::move(sock)};
+  ASSERT_TRUE(sock2.is_subscribed());
+  ASSERT_EQ(n_factory_calls, 3);
 }
 
 TEST(TestUdp, TestSending)

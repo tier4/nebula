@@ -67,7 +67,8 @@ std::tuple<drivers::NebulaPointCloudPtr, double> Vlp16Decoder::get_pointcloud()
     auto current_azimuth = scan_pc_->back().azimuth;
     auto phase_diff =
       static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
-    while (phase_diff < M_PI_2 && !scan_pc_->empty()) {
+    size_t kQuarterTurnDeg = static_cast<size_t>(angles::to_degrees(M_PI_2));
+    while (phase_diff < kQuarterTurnDeg && !scan_pc_->empty()) {
       overflow_pc_->push_back(scan_pc_->back());
       scan_pc_->pop_back();
       current_azimuth = scan_pc_->back().azimuth;

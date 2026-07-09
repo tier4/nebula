@@ -89,8 +89,12 @@ bool ptp_config_matches_desired(
 }
 }  // namespace
 
-HesaiHwInterface::HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger)
-: logger_(logger), target_model_no_(nebula_model_to_hesai_model_no(SensorModel::UNKNOWN))
+HesaiHwInterface::HesaiHwInterface(
+  const std::shared_ptr<loggers::Logger> & logger,
+  connections::UdpSocket::thread_factory_t udp_thread_factory)
+: logger_(logger),
+  udp_thread_factory_(std::move(udp_thread_factory)),
+  target_model_no_(nebula_model_to_hesai_model_no(SensorModel::UNKNOWN))
 {
 }
 
@@ -239,10 +243,13 @@ Status HesaiHwInterface::sensor_interface_start()
 
   udp_socket_.emplace(std::move(builder).bind());
 
+  // Copy rather than move the factory: each sensor_interface_start() call creates a fresh
+  // socket, so the factory must remain available for subsequent restarts.
   udp_socket_->subscribe(
     [&](std::vector<uint8_t> & packet, const connections::UdpSocket::RxMetadata & metadata) {
       receive_sensor_packet_callback(packet, metadata);
-    });
+    },
+    udp_thread_factory_);
 
   return Status::OK;
 }

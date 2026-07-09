@@ -20,7 +20,9 @@
 
 #include <atomic>
 #include <chrono>
+#include <functional>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #define EXPECT_VEC_EQ(a, ...)     \
@@ -85,6 +87,10 @@ TEST_F(SingleConsumerProcessorTest, ConstructorValidation)
 
   // Test with zero max queue size
   EXPECT_THROW(SingleConsumerProcessor<int>([](int /*unused*/) {}, 0), std::invalid_argument);
+
+  // Test with null thread factory
+  EXPECT_THROW(
+    SingleConsumerProcessor<int>([](int /*unused*/) {}, 1, nullptr), std::invalid_argument);
 
   // Test with valid parameters
   EXPECT_NO_THROW(SingleConsumerProcessor<int>([](int /*unused*/) {}, 1));
@@ -306,4 +312,28 @@ TEST_F(SingleConsumerProcessorTest, MultipleStopCalls)
   // Should still have processed the items that were submitted before stop
   ASSERT_TRUE(wait_for_processed_count(2));
   EXPECT_VEC_EQ(get_processed_items(), 1, 2);
+}
+
+TEST_F(SingleConsumerProcessorTest, ThreadFactoryCreatesConsumerThread)
+{
+  std::atomic<int> factory_call_count{0};
+
+  {
+    SingleConsumerProcessor<int> processor(
+      make_recording_callback(), 3, [&factory_call_count](std::function<void()> && thread_body) {
+        factory_call_count.fetch_add(1);
+        return std::thread(std::move(thread_body));
+      });
+
+    EXPECT_EQ(factory_call_count.load(), 1);
+
+    processor.push(1);
+    processor.push(2);
+
+    ASSERT_TRUE(wait_for_processed_count(2));
+    EXPECT_VEC_EQ(get_processed_items(), 1, 2);
+  }
+
+  // Destruction joins the factory-created thread without further factory calls
+  EXPECT_EQ(factory_call_count.load(), 1);
 }
