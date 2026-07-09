@@ -156,7 +156,10 @@ private:
   /// @brief Decode one packet and publish relevant outputs.
   /// @param packet Raw packet payload.
   /// @param receive_duration_ns Time spent in transport receive path for this packet.
-  void process_packet(const std::vector<uint8_t> & packet, uint64_t receive_duration_ns);
+  /// @param host_time_ns Host arrival time of this packet (ns, epoch); scan-stamp anchor when
+  ///        use_sensor_time is false.
+  void process_packet(
+    const std::vector<uint8_t> & packet, uint64_t receive_duration_ns, uint64_t host_time_ns);
 
   /// @brief Publish receive/decode/publish debug durations.
   /// @param receive_duration_ns Time spent in transport receive path.
