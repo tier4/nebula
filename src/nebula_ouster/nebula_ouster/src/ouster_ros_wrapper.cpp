@@ -152,9 +152,6 @@ util::expected<drivers::OusterSensorConfiguration, ConfigError> load_config_from
   }
   config.connection.data_port = static_cast<uint16_t>(data_port.value());
 
-  config.connection.filter_sender_ip =
-    node.declare_parameter<bool>("connection.filter_sender_ip", true, param_read_only());
-
   const auto azimuth_min =
     declare_required_parameter<double>(node, "fov.azimuth.min_deg", param_read_write());
   if (!azimuth_min.has_value()) {
@@ -230,9 +227,9 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
 
   RCLCPP_INFO(
     get_logger(),
-    "Ouster UDP: listening on %s:%u filter_sender_ip=%s (sensor_ip=%s) receiver_mtu=%u",
+    "Ouster UDP: listening on %s:%u (sensor_ip=%s) receiver_mtu=%u",
     config_.connection.host_ip.c_str(), config_.connection.data_port,
-    config_.connection.filter_sender_ip ? "true" : "false", config_.connection.sensor_ip.c_str(),
+    config_.connection.sensor_ip.c_str(),
     config_.connection.receiver_mtu_bytes);
 
   decoder_.emplace(

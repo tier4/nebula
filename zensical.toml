@@ -45,6 +45,9 @@ nav = [
       { "ARS548" = "parameters/vendors/continental/ars548.md" },
       { "SRR520" = "parameters/vendors/continental/srr520.md" },
     ] },
+    { "Ouster" = [
+      { "Ouster" = "parameters/vendors/ouster/ouster.md" },
+    ] },
   ] },
   { "Point cloud types" = "point_types.md" },
   { "Design" = [
