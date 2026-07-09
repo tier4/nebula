@@ -14,8 +14,8 @@
   <build_depend>eigen3_cmake_module</build_depend>
   <!-- libcurl and libssl are used for communication with the sensor via http protocol -->
   <depend>curl</depend>
-  <depend>libssl-dev</depend>
   <depend>eigen</depend>
+  <depend>libssl-dev</depend>
   <depend>libzip-dev</depend>
   <depend>nebula_core_common</depend>
   <depend>nebula_core_decoders</depend>
