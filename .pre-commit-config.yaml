@@ -100,4 +100,4 @@ repos:
       - id: lint-system-design-format
         args: [--format=github-actions]
 
-exclude: .svg
+exclude: '(?:\.svg|(?:^|/)vendor/)'
