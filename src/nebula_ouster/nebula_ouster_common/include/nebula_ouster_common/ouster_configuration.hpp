@@ -33,10 +33,36 @@ struct ConnectionConfiguration
   std::string sensor_ip;
   /// UDP destination port on the host for sensor data.
   uint16_t data_port;
+  /// Maximum UDP payload we allocate for recv (Ouster frames are often 12k–64kB; default was 1500).
+  uint32_t receiver_mtu_bytes{65527};
+  /// If true, require LiDAR packets from @c sensor_ip (Nebula UDP filter checks IP only).
+  bool filter_sender_ip{true};
 };
 
-// Allow automatic JSON serialization/deserialization
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ConnectionConfiguration, host_ip, sensor_ip, data_port);
+// JSON: extra keys optional so older config files keep working.
+inline void to_json(nlohmann::json & j, const ConnectionConfiguration & c)
+{
+  j = nlohmann::json{
+    {"host_ip", c.host_ip},
+    {"sensor_ip", c.sensor_ip},
+    {"data_port", c.data_port},
+    {"receiver_mtu_bytes", c.receiver_mtu_bytes},
+    {"filter_sender_ip", c.filter_sender_ip},
+  };
+}
+
+inline void from_json(const nlohmann::json & j, ConnectionConfiguration & c)
+{
+  j.at("host_ip").get_to(c.host_ip);
+  j.at("sensor_ip").get_to(c.sensor_ip);
+  j.at("data_port").get_to(c.data_port);
+  if (j.contains("receiver_mtu_bytes")) {
+    j.at("receiver_mtu_bytes").get_to(c.receiver_mtu_bytes);
+  }
+  if (j.contains("filter_sender_ip")) {
+    j.at("filter_sender_ip").get_to(c.filter_sender_ip);
+  }
+}
 
 /// @brief Sensor-specific configuration for the Ouster LiDAR
 /// @details Minimal tutorial configuration that combines connection settings and angular filtering.
