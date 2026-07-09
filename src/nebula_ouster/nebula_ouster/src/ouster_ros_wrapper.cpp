@@ -226,11 +226,9 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
   config_.connection.receiver_mtu_bytes = packet_format->lidar_packet_size;
 
   RCLCPP_INFO(
-    get_logger(),
-    "Ouster UDP: listening on %s:%u (sensor_ip=%s) receiver_mtu=%u",
+    get_logger(), "Ouster UDP: listening on %s:%u (sensor_ip=%s) receiver_mtu=%u",
     config_.connection.host_ip.c_str(), config_.connection.data_port,
-    config_.connection.sensor_ip.c_str(),
-    config_.connection.receiver_mtu_bytes);
+    config_.connection.sensor_ip.c_str(), config_.connection.receiver_mtu_bytes);
 
   decoder_.emplace(
     config_.fov, sensor_info, use_sensor_extrinsics,
