@@ -120,7 +120,13 @@ public:
     y = static_cast<float>(-(r_minus_n * sin_theta * cos_phi) - n * sin_e);
     z = static_cast<float>(r_minus_n * sin_phi);
 
-    azimuth_rad = static_cast<float>(std::atan2(sin_theta, cos_theta));
+    // Azimuth is the point's bearing in the OUTPUT frame (+X forward, +Y left), derived from the
+    // final x/y so it stays consistent with the y-negation applied above, and normalized to
+    // [0, 2π). Downstream Autoware nodes (e.g. the ring_outlier_filter's azimuth binning over
+    // [min_azimuth_deg, max_azimuth_deg] = [0, 360]) assume this Velodyne-style range; a raw
+    // atan2() result of [-π, π) drops the negative-azimuth sector as out-of-range.
+    azimuth_rad = static_cast<float>(std::atan2(static_cast<double>(y), static_cast<double>(x)));
+    if (azimuth_rad < 0.0f) azimuth_rad += static_cast<float>(2.0 * M_PI);
     elevation_rad = static_cast<float>(std::asin(sin_phi));
   }
 

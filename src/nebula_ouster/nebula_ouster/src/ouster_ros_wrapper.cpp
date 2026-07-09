@@ -171,6 +171,11 @@ util::expected<drivers::OusterSensorConfiguration, ConfigError> load_config_from
   config.connection.filter_sender_ip =
     node.declare_parameter<bool>("connection.filter_sender_ip", true, param_read_only());
 
+  // SO_RCVBUF for the LiDAR socket. Default 128 MiB; the kernel default (~208 kB) drops packet
+  // bursts under full-stack load on the high-bitrate OS-128, carving a rotating wedge per scan.
+  config.connection.socket_buffer_bytes = static_cast<uint32_t>(node.declare_parameter<int64_t>(
+    "connection.socket_buffer_bytes", 134217728, param_read_only()));
+
   const auto azimuth_min =
     declare_required_parameter<double>(node, "fov.azimuth.min_deg", param_read_write());
   if (!azimuth_min.has_value()) return azimuth_min.error();
@@ -255,11 +260,21 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
     config_.connection.receiver_mtu_bytes, static_cast<int>(metadata.udp_profile_lidar),
     metadata.pixels_per_column, metadata.columns_per_frame, metadata.columns_per_packet);
 
+  // When false (default), scans are stamped with the host arrival time of the scan's first
+  // packet — matching nebula_velodyne — so timestamps are real epoch time without PTP/PPS sync.
+  // Set true only when the sensor clock is synchronized to the host (e.g. TIME_FROM_PTP_1588).
+  const bool use_sensor_time =
+    declare_parameter<bool>("use_sensor_time", false, param_read_only());
+  RCLCPP_INFO(
+    get_logger(), "Point cloud timestamp source: %s",
+    use_sensor_time ? "sensor internal clock" : "host packet-arrival time");
+
   decoder_.emplace(
     config_.fov, std::move(metadata),
     [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
       publish_pointcloud_callback(pointcloud, timestamp_s);
-    });
+    },
+    use_sensor_time);
   decoder_->set_imu_callback(
     [this](const drivers::OusterImuSample & sample) { publish_imu_callback(sample); });
 
@@ -434,6 +449,11 @@ void OusterRosWrapper::receive_cloud_packet_callback(
     return;
   }
 
+  // Host arrival time of this packet: the kernel RX timestamp when available (most accurate),
+  // otherwise wall-clock now. Used both for the recorded packets_msg stamp and, for the point
+  // cloud, as the scan-start anchor when use_sensor_time is false.
+  const auto packet_timestamp_ns = metadata.timestamp_ns.value_or(current_system_time_ns());
+
   auto * online_mode = std::get_if<OnlineMode>(&runtime_mode_);
   if (online_mode && online_mode->packets_pub) {
     // Two socket threads (lidar+imu) can enter this function concurrently — serialize the
@@ -443,7 +463,6 @@ void OusterRosWrapper::receive_cloud_packet_callback(
       online_mode->current_scan_packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
     }
 
-    const auto packet_timestamp_ns = metadata.timestamp_ns.value_or(current_system_time_ns());
     nebula_msgs::msg::NebulaPacket packet_msg{};
     packet_msg.stamp.sec = static_cast<int32_t>(packet_timestamp_ns / 1'000'000'000ULL);
     packet_msg.stamp.nanosec = static_cast<uint32_t>(packet_timestamp_ns % 1'000'000'000ULL);
@@ -455,7 +474,7 @@ void OusterRosWrapper::receive_cloud_packet_callback(
     online_mode->current_scan_packets_msg->packets.emplace_back(std::move(packet_msg));
   }
 
-  process_packet(packet, metadata.packet_perf_counters.receive_duration_ns);
+  process_packet(packet, metadata.packet_perf_counters.receive_duration_ns, packet_timestamp_ns);
 }
 
 void OusterRosWrapper::receive_packets_message_callback(
@@ -472,16 +491,20 @@ void OusterRosWrapper::receive_packets_message_callback(
 
   for (const auto & packet_msg : packets_msg->packets) {
     diagnostics_.packet_liveness->tick();
-    process_packet(packet_msg.data, 0U);
+    // Preserve the recorded arrival time so replayed scans keep their original stamps.
+    const auto host_time_ns =
+      static_cast<uint64_t>(rclcpp::Time(packet_msg.stamp).nanoseconds());
+    process_packet(packet_msg.data, 0U, host_time_ns);
   }
 }
 
 void OusterRosWrapper::process_packet(
-  const std::vector<uint8_t> & packet, const uint64_t receive_duration_ns)
+  const std::vector<uint8_t> & packet, const uint64_t receive_duration_ns,
+  const uint64_t host_time_ns)
 {
   if (!decoder_) return;
 
-  const auto decode_result = decoder_->unpack(packet);
+  const auto decode_result = decoder_->unpack(packet, host_time_ns);
   publish_debug_durations(
     receive_duration_ns, decode_result.performance_counters.decode_time_ns,
     decode_result.performance_counters.callback_time_ns);

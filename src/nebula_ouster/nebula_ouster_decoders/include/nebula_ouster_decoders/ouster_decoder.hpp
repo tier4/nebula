@@ -85,9 +85,13 @@ public:
   /// @param fov Angular crop in sensor spherical coordinates (degrees).
   /// @param metadata Parsed Ouster metadata (beam angles, packet geometry, profile).
   /// @param pointcloud_cb Callback invoked when a full scan is assembled.
+  /// @param use_sensor_time When true, scans are stamped with the sensor's internal timestamp.
+  ///        When false (default), scans are stamped with the host arrival time of the scan's
+  ///        first packet — matching nebula_velodyne, so the stamp is real epoch time even when
+  ///        the sensor clock runs on its free-running internal oscillator (no PTP/PPS sync).
   OusterDecoder(
     FieldOfView<float, Degrees> fov, OusterMetadata metadata,
-    pointcloud_callback_t pointcloud_cb);
+    pointcloud_callback_t pointcloud_cb, bool use_sensor_time = false);
 
   ~OusterDecoder();
 
@@ -98,9 +102,12 @@ public:
 
   /// @brief Decode a single UDP packet.
   /// @param packet Raw packet bytes from the sensor.
+  /// @param host_time_ns Host arrival time of this packet (ns, epoch). Used as the scan stamp
+  ///        anchor when use_sensor_time is false; ignored otherwise.
   /// @return PacketDecodeResult with metadata on success, or DecodeError on failure.
   /// @post performance_counters.decode_time_ns is always set.
-  [[nodiscard]] PacketDecodeResult unpack(const std::vector<uint8_t> & packet);
+  [[nodiscard]] PacketDecodeResult unpack(
+    const std::vector<uint8_t> & packet, uint64_t host_time_ns);
 
   /// @brief Replace the callback used for completed scans.
   void set_pointcloud_callback(pointcloud_callback_t pointcloud_cb);

@@ -40,6 +40,11 @@ struct ConnectionConfiguration
   uint32_t receiver_mtu_bytes{65527};
   /// If true, require LiDAR packets from @c sensor_ip (Nebula UDP filter checks IP only).
   bool filter_sender_ip{true};
+  /// UDP socket receive-buffer size (SO_RCVBUF) in bytes. The OS-128 at high modes pushes
+  /// ~250 Mbps; the kernel default (~208 kB) overflows under full-stack CPU load and drops
+  /// packet bursts, punching a rotating azimuth wedge out of each scan. 128 MiB (~4 s of data)
+  /// rides out scheduling spikes. Effective size is still capped by net.core.rmem_max.
+  uint32_t socket_buffer_bytes{134217728};
 };
 
 // JSON: extra keys optional so older config files keep working.
@@ -51,6 +56,7 @@ inline void to_json(nlohmann::json & j, const ConnectionConfiguration & c)
     {"data_port", c.data_port},
     {"receiver_mtu_bytes", c.receiver_mtu_bytes},
     {"filter_sender_ip", c.filter_sender_ip},
+    {"socket_buffer_bytes", c.socket_buffer_bytes},
   };
 }
 
@@ -67,6 +73,9 @@ inline void from_json(const nlohmann::json & j, ConnectionConfiguration & c)
   }
   if (j.contains("filter_sender_ip")) {
     j.at("filter_sender_ip").get_to(c.filter_sender_ip);
+  }
+  if (j.contains("socket_buffer_bytes")) {
+    j.at("socket_buffer_bytes").get_to(c.socket_buffer_bytes);
   }
 }
 

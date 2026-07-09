@@ -80,17 +80,25 @@ struct OusterDecoder::Impl
   // prev_measurement_id, prev_frame_id, scan_first_ts_ns) would otherwise race.
   std::mutex decode_mutex;
 
+  // When true, stamp scans with the sensor's internal clock; when false, with the host arrival
+  // time of the scan's first packet (see OusterDecoder constructor docs).
+  bool use_sensor_time{false};
+
   // Current scan state.
   NebulaPointCloudPtr scan_cloud;  ///< Accumulating cloud.
   uint64_t scan_first_ts_ns{0};    ///< Sensor timestamp of first valid column in the scan.
+  uint64_t scan_first_host_ns{0};  ///< Host arrival time of the scan's first packet (ns, epoch).
   int32_t prev_measurement_id{-1}; ///< Last column index seen, -1 before first packet.
   int32_t prev_frame_id{-1};       ///< Last frame_id from packet header, -1 before first packet.
 
-  Impl(FieldOfView<float, Degrees> fov_in, OusterMetadata md, pointcloud_callback_t cb)
+  Impl(
+    FieldOfView<float, Degrees> fov_in, OusterMetadata md, pointcloud_callback_t cb,
+    bool use_sensor_time_in)
   : fov(fov_in),
     metadata(std::move(md)),
     lut(metadata),
     pointcloud_callback(std::move(cb)),
+    use_sensor_time(use_sensor_time_in),
     scan_cloud(std::make_shared<NebulaPointCloud>())
   {
     // Pre-allocate for a typical OS-128 frame (1024 columns x 128 beams x up to 2 returns).
@@ -103,13 +111,18 @@ struct OusterDecoder::Impl
   void emit_and_reset_scan()
   {
     if (pointcloud_callback && !scan_cloud->empty()) {
-      const double timestamp_s = static_cast<double>(scan_first_ts_ns) * 1e-9;
+      // Per-point time_stamp offsets are relative to the scan's first column, so the header
+      // stamp must anchor at scan start (not scan completion) or downstream undistortion shifts
+      // by a full frame. Both candidate anchors below are captured at that first column.
+      const uint64_t anchor_ns = use_sensor_time ? scan_first_ts_ns : scan_first_host_ns;
+      const double timestamp_s = static_cast<double>(anchor_ns) * 1e-9;
       pointcloud_callback(scan_cloud, timestamp_s);
     }
     scan_cloud = std::make_shared<NebulaPointCloud>();
     scan_cloud->reserve(
       metadata.columns_per_frame * metadata.pixels_per_column * metadata.num_returns());
     scan_first_ts_ns = 0;
+    scan_first_host_ns = 0;
   }
 
   /// @brief Append one pixel to the current scan, applying FoV filter and return-type tag.
@@ -144,8 +157,10 @@ struct OusterDecoder::Impl
   }
 
   /// @brief Parse one lidar UDP packet and add its points to the current scan.
+  /// @param host_time_ns Host arrival time of this packet (ns, epoch), used as the scan-start
+  ///        anchor when host-time stamping is enabled.
   /// @return true if this packet closed out a scan.
-  bool process_lidar_packet(const std::vector<uint8_t> & packet)
+  bool process_lidar_packet(const std::vector<uint8_t> & packet, uint64_t host_time_ns)
   {
     using namespace ouster_packet;
     const auto layout = get_layout(metadata.udp_profile_lidar);
@@ -199,7 +214,10 @@ struct OusterDecoder::Impl
       }
       prev_measurement_id = mid;
 
-      if (scan_first_ts_ns == 0) scan_first_ts_ns = header.timestamp_ns;
+      if (scan_first_ts_ns == 0) {
+        scan_first_ts_ns = header.timestamp_ns;
+        scan_first_host_ns = host_time_ns;
+      }
 
       const uint32_t point_time_offset_ns =
         (header.timestamp_ns >= scan_first_ts_ns)
@@ -243,8 +261,9 @@ struct OusterDecoder::Impl
 
 OusterDecoder::OusterDecoder(
   FieldOfView<float, Degrees> fov, OusterMetadata metadata,
-  pointcloud_callback_t pointcloud_cb)
-: impl_(std::make_unique<Impl>(fov, std::move(metadata), std::move(pointcloud_cb)))
+  pointcloud_callback_t pointcloud_cb, bool use_sensor_time)
+: impl_(std::make_unique<Impl>(
+    fov, std::move(metadata), std::move(pointcloud_cb), use_sensor_time))
 {
 }
 
@@ -252,7 +271,8 @@ OusterDecoder::~OusterDecoder() = default;
 OusterDecoder::OusterDecoder(OusterDecoder &&) noexcept = default;
 OusterDecoder & OusterDecoder::operator=(OusterDecoder &&) noexcept = default;
 
-PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
+PacketDecodeResult OusterDecoder::unpack(
+  const std::vector<uint8_t> & packet, uint64_t host_time_ns)
 {
   const auto decode_begin = std::chrono::steady_clock::now();
   PacketDecodeResult result;
@@ -275,7 +295,7 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
   PacketMetadata metadata{};
 
   if (packet.size() == lidar_size) {
-    metadata.did_scan_complete = impl_->process_lidar_packet(packet);
+    metadata.did_scan_complete = impl_->process_lidar_packet(packet, host_time_ns);
     metadata.packet_timestamp_ns = impl_->scan_first_ts_ns;
   } else if (packet.size() == imu_size) {
     if (impl_->imu_callback) {

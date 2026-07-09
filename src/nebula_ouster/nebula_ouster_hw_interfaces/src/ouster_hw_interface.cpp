@@ -47,6 +47,9 @@ util::expected<std::monostate, OusterHwInterface::Error> OusterHwInterface::sens
     connections::UdpSocket::Builder builder(
       connection_configuration_.host_ip, connection_configuration_.data_port);
     builder.set_mtu(static_cast<size_t>(connection_configuration_.receiver_mtu_bytes));
+    // Enlarge SO_RCVBUF so full-stack CPU-load stalls don't overflow the socket and drop packet
+    // bursts (each dropped burst = a missing azimuth wedge in the scan).
+    builder.set_socket_buffer_size(static_cast<size_t>(connection_configuration_.socket_buffer_bytes));
 
     if (connection_configuration_.filter_sender_ip) {
       builder.limit_to_sender(
