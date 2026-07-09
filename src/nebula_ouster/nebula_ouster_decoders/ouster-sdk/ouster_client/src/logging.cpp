@@ -1,11 +1,16 @@
 #include "ouster/impl/logging.h"
 
-// #include <spdlog/fmt/bundled/args.h>
-// #include <spdlog/sinks/basic_file_sink.h>
-// #include <spdlog/sinks/ringbuffer_sink.h>
-// #include <spdlog/sinks/rotating_file_sink.h>
-// #include <spdlog/sinks/stdout_sinks.h>
-// #include <spdlog/spdlog.h>
+
+#if defined(ENABLE_SPDLOG)
+
+#include <spdlog/fmt/bundled/args.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/ringbuffer_sink.h>
+#include <spdlog/sinks/rotating_file_sink.h>
+#include <spdlog/sinks/stdout_sinks.h>
+#include <spdlog/spdlog.h>
+
+#endif
 
 #include <iostream>
 #include <memory>
@@ -21,36 +26,38 @@ const std::string Logger::LOGGER_PATTERN("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v");
 struct Logger::internal_logger {
     friend Logger;
 
-//     internal_logger(const std::string& logger_name, const std::string& pattern)
-//         : logger_(std::make_unique<spdlog::logger>(
-//               logger_name, std::make_shared<spdlog::sinks::stderr_sink_mt>())),
-//           pattern_(pattern) {}
+#if defined(ENABLE_SPDLOG)
+    internal_logger(const std::string& logger_name, const std::string& pattern)
+        : logger_(std::make_unique<spdlog::logger>(
+              logger_name, std::make_shared<spdlog::sinks::stderr_sink_mt>())),
+          pattern_(pattern) {}
 
-//     void configure_generic_sink(spdlog::sink_ptr sink,
-//                                 const std::string& log_level) {
-//         // replace the logger sink with the new sink
-//         logger_->sinks() = {sink};
-//         logger_->set_pattern(pattern_);
-//         auto log_level_val = spdlog::level::from_str(log_level);
-//         logger_->set_level(log_level_val);
-//         logger_->flush_on(log_level_val);
-//     }
+    void configure_generic_sink(spdlog::sink_ptr sink,
+                                const std::string& log_level) {
+        // replace the logger sink with the new sink
+        logger_->sinks() = {sink};
+        logger_->set_pattern(pattern_);
+        auto log_level_val = spdlog::level::from_str(log_level);
+        logger_->set_level(log_level_val);
+        logger_->flush_on(log_level_val);
+    }
 
-//     void disable_auto_newline() {
-//         // TODO: consider using an multi-threaded sinks
-//         // and add lock guards around the logger usage.
-//         auto formatter = std::make_unique<spdlog::pattern_formatter>(
-//             "%v", spdlog::pattern_time_type::local, std::string(""));
-//         logger_->set_formatter(std::move(formatter));
-//     }
+    void disable_auto_newline() {
+        // TODO: consider using an multi-threaded sinks
+        // and add lock guards around the logger usage.
+        auto formatter = std::make_unique<spdlog::pattern_formatter>(
+            "%v", spdlog::pattern_time_type::local, std::string(""));
+        logger_->set_formatter(std::move(formatter));
+    }
 
-//     void enable_auto_newline() { logger_->set_pattern(pattern_); }
+    void enable_auto_newline() { logger_->set_pattern(pattern_); }
 
-//     ~internal_logger() = default;
+    ~internal_logger() = default;
 
-//    private:
-//     std::unique_ptr<spdlog::logger> logger_;
-//     std::string pattern_;
+   private:
+    std::unique_ptr<spdlog::logger> logger_;
+    std::string pattern_;
+#endif
 };
 
 Logger& Logger::instance() {
@@ -58,61 +65,78 @@ Logger& Logger::instance() {
     return logger_singleton;
 }
 
-Logger::Logger() {
-    // : internal_logger_(std::make_unique<Logger::internal_logger>(
-    //       LOGGER_NAME, LOGGER_PATTERN)) {
-    // internal_logger_->logger_->set_level(spdlog::level::info);
-    // internal_logger_->logger_->flush_on(spdlog::level::info);
+#if defined(ENABLE_SPDLOG)
+Logger::Logger()
+    : internal_logger_(std::make_unique<Logger::internal_logger>(
+          LOGGER_NAME, LOGGER_PATTERN)) {
+    internal_logger_->logger_->set_level(spdlog::level::info);
+    internal_logger_->logger_->flush_on(spdlog::level::info);
 }
+#else
+Logger::Logger() = default;
+#endif
 
 bool Logger::configure_stdout_sink(const std::string& /*log_level*/) {
-    // try {
-    //     internal_logger_->configure_generic_sink(
-    //         std::make_shared<spdlog::sinks::stdout_sink_mt>(), log_level);
-    // } catch (const spdlog::spdlog_ex& ex) {
-    //     std::cerr << LOGGER_NAME << " init_logger failed: " << ex.what()
-    //               << std::endl;
-    //     return false;
-    // }
-
+#if defined(ENABLE_SPDLOG)
+    try {
+        internal_logger_->configure_generic_sink(
+            std::make_shared<spdlog::sinks::stdout_sink_mt>(), log_level);
+    } catch (const spdlog::spdlog_ex& ex) {
+        std::cerr << LOGGER_NAME << " init_logger failed: " << ex.what()
+                  << std::endl;
+        return false;
+    }
+#endif
     return true;
 }
 
+#if defined(ENABLE_SPDLOG)
+bool Logger::configure_stderr_sink(const std::string& log_level) {
+    try {
+        internal_logger_->configure_generic_sink(
+            std::make_shared<spdlog::sinks::stderr_sink_mt>(), log_level);
+    } catch (const spdlog::spdlog_ex& ex) {
+        std::cerr << LOGGER_NAME << " init_logger failed: " << ex.what()
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+#else
 bool Logger::configure_stderr_sink(const std::string& /*log_level*/) {
-    // try {
-    //     internal_logger_->configure_generic_sink(
-    //         std::make_shared<spdlog::sinks::stderr_sink_mt>(), log_level);
-    // } catch (const spdlog::spdlog_ex& ex) {
-    //     std::cerr << LOGGER_NAME << " init_logger failed: " << ex.what()
-    //               << std::endl;
-    //     return false;
-    // }
-
     return true;
 }
+#endif
 
+#if defined(ENABLE_SPDLOG)
+bool Logger::configure_file_sink(const std::string& log_level) {
+                                 const std::string& log_file_path,
+                                 bool rotating, int max_size_in_bytes,
+                                 int max_files) {
+    try {
+        std::shared_ptr<spdlog::sinks::base_sink<std::mutex>> file_sink;
+        if (rotating) {
+            file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+                log_file_path, max_size_in_bytes, max_files);
+        } else {
+            file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+                log_file_path, true);
+        }
+        internal_logger_->configure_generic_sink(file_sink, log_level);
+    } catch (const spdlog::spdlog_ex& ex) {
+        std::cerr << LOGGER_NAME << " init_logger failed: " << ex.what()
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+#else
 bool Logger::configure_file_sink(const std::string& /*log_level*/,
-                                 const std::string& /*log_file_path*/,
-                                 bool /*rotating*/, int /*max_size_in_bytes*/,
-                                 int /*max_files*/) {
-    // try {
-    //     std::shared_ptr<spdlog::sinks::base_sink<std::mutex>> file_sink;
-    //     if (rotating) {
-    //         file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-    //             log_file_path, max_size_in_bytes, max_files);
-    //     } else {
-    //         file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-    //             log_file_path, true);
-    //     }
-    //     internal_logger_->configure_generic_sink(file_sink, log_level);
-    // } catch (const spdlog::spdlog_ex& ex) {
-    //     std::cerr << LOGGER_NAME << " init_logger failed: " << ex.what()
-    //               << std::endl;
-    //     return false;
-    // }
-
+                                const std::string& /*log_file_path*/, bool /*rotating*/,
+                                int /*max_size_in_bytes*/, int /*max_files*/) {
     return true;
 }
+#endif
 
 std::shared_ptr<Logger::format_builder> Logger::make_builder(
     const std::string& format_string) {
@@ -123,51 +147,69 @@ struct Logger::format_builder {
     ~format_builder() = default;
     format_builder(const std::string& format_string)
         : format_string(format_string){};
-
     const std::string& format_string;
-    // fmt::dynamic_format_arg_store<fmt::format_context> store;
+#if defined(ENABLE_SPDLOG)
+    fmt::dynamic_format_arg_store<fmt::format_context> store;
+#endif
 };
 
 Logger::~Logger() = default;
 
+
+#if defined(ENABLE_SPDLOG)
 std::string Logger::finalize_format_builder(
-    std::shared_ptr<Logger::format_builder> /*builder*/) {
-    return "";  // fmt::vformat(builder->format_string, builder->store);
+    std::shared_ptr<Logger::format_builder> builder) {
+    return fmt::vformat(builder->format_string, builder->store);
 }
+#else
+std::string Logger::finalize_format_builder(
+    std::shared_ptr<Logger::format_builder> builder) {
+    return builder->format_string;
+}
+#endif
 
+#if defined(ENABLE_SPDLOG)
+void Logger::log(LOG_LEVEL level, const std::string& msg) {
+    spdlog::level::level_enum level_out = spdlog::level::debug;
+
+    switch (level) {
+        case Logger::LOG_LEVEL::LOG_TRACE:
+            level_out = spdlog::level::trace;
+            break;
+        case Logger::LOG_LEVEL::LOG_DEBUG:
+            level_out = spdlog::level::debug;
+            break;
+        case Logger::LOG_LEVEL::LOG_INFO:
+            level_out = spdlog::level::info;
+            break;
+        case Logger::LOG_LEVEL::LOG_WARN:
+            level_out = spdlog::level::warn;
+            break;
+        case Logger::LOG_LEVEL::LOG_ERROR:
+            level_out = spdlog::level::err;
+            break;
+        case Logger::LOG_LEVEL::LOG_CRITICAL:
+            level_out = spdlog::level::critical;
+            break;
+    };
+
+    internal_logger_->logger_->log(level_out, msg);
+}
+#else
 void Logger::log(LOG_LEVEL /*level*/, const std::string& /*msg*/) {
-    // spdlog::level::level_enum level_out = spdlog::level::debug;
-
-    // switch (level) {
-    //     case Logger::LOG_LEVEL::LOG_TRACE:
-    //         level_out = spdlog::level::trace;
-    //         break;
-    //     case Logger::LOG_LEVEL::LOG_DEBUG:
-    //         level_out = spdlog::level::debug;
-    //         break;
-    //     case Logger::LOG_LEVEL::LOG_INFO:
-    //         level_out = spdlog::level::info;
-    //         break;
-    //     case Logger::LOG_LEVEL::LOG_WARN:
-    //         level_out = spdlog::level::warn;
-    //         break;
-    //     case Logger::LOG_LEVEL::LOG_ERROR:
-    //         level_out = spdlog::level::err;
-    //         break;
-    //     case Logger::LOG_LEVEL::LOG_CRITICAL:
-    //         level_out = spdlog::level::critical;
-    //         break;
-    // };
-
-    // internal_logger_->logger_->log(level_out, msg);
 }
+#endif
 
 void Logger::disable_auto_newline() {
-    // internal_logger_->disable_auto_newline();
+#if defined(ENABLE_SPDLOG)
+    internal_logger_->disable_auto_newline();
+#endif
 }
 
 void Logger::enable_auto_newline() {
-    // internal_logger_->enable_auto_newline();
+#if defined(ENABLE_SPDLOG)
+    internal_logger_->enable_auto_newline();
+#endif
 }
 
 #define LOGGER_PROCESS_ARG(SINGLE_LOGGER_PROCESS_ARG_type) \
@@ -207,7 +249,9 @@ LOGGER_PROCESS_ARG(bool);
 template <typename T>
 void Logger::process_arg(std::shared_ptr<Logger::format_builder> /*builder*/,
                          T /*data*/) {
-    // builder->store.push_back(data);
+#if defined(ENABLE_SPDLOG)
+    builder->store.push_back(data);
+#endif
 }
 
 namespace ouster {
