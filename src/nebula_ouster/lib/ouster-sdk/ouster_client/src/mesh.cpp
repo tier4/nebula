@@ -262,7 +262,7 @@ bool Mesh::load_from_stl(const std::string & path)
   return load_from_stl_stream(input_stream);
 }
 
-// NOLINTBEGIN(readability-identifier-length)
+/* NOLINTBEGIN(readability-identifier-length) */
 
 bool Mesh::intersects_with_bounding_sphere(const Ray & beam) const
 {
@@ -284,7 +284,7 @@ bool Mesh::intersects_with_bounding_sphere(const Ray & beam) const
   return discr >= 0.0f;
 }
 
-// NOLINTEND(readability-identifier-length)
+/* NOLINTEND(readability-identifier-length) */
 
 bool Mesh::closest_and_farthest_intersections(const Ray & beam, BoundsF & z) const
 {
