@@ -12,12 +12,6 @@
         "frame_id": {
           "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/frame_id"
         },
-        "use_sensor_extrinsics": {
-          "type": "boolean",
-          "default": false,
-          "readOnly": true,
-          "description": "If true, apply the sensor-supplied extrinsic calibration when building the XYZ LUT."
-        },
         "connection": {
           "type": "object",
           "description": "Network connection parameters.",
@@ -129,7 +123,6 @@
       "required": [
         "launch_hw",
         "frame_id",
-        "use_sensor_extrinsics",
         "connection",
         "fov",
         "diagnostics"

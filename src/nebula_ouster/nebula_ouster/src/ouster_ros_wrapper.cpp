@@ -217,9 +217,6 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_INFO(
     get_logger(), "Loaded Ouster metadata via HTTP (%zu bytes)", sensor_metadata_json.size());
 
-  const bool use_sensor_extrinsics =
-    declare_parameter<bool>("use_sensor_extrinsics", false, param_read_only());
-
   auto sensor_info = std::make_shared<ouster::sdk::core::SensorInfo>(sensor_metadata_json);
   auto packet_format = std::make_shared<ouster::sdk::core::PacketFormat>(*sensor_info);
   config_.connection.receiver_mtu_bytes = packet_format->lidar_packet_size;
@@ -230,7 +227,7 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
     config_.connection.sensor_ip.c_str(), config_.connection.receiver_mtu_bytes);
 
   decoder_.emplace(
-    config_.fov, sensor_info, use_sensor_extrinsics,
+    config_.fov, sensor_info,
     [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
       publish_pointcloud_callback(pointcloud, timestamp_s);
     });
