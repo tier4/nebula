@@ -12,8 +12,7 @@
 #include <fstream>
 #include <functional>
 #include <ios>
-#include <jsoncons/json.hpp>
-#include <jsoncons/json_type.hpp>
+#include <ouster_json.hpp>
 #include <map>
 #include <memory>
 #include <nonstd/optional.hpp>

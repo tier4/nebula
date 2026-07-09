@@ -1,6 +1,6 @@
 #include "ouster/sensor_http.h"
 
-#include <jsoncons/json.hpp>
+#include <ouster_json.hpp>
 #include <memory>
 #include <mutex>
 #include <string>
