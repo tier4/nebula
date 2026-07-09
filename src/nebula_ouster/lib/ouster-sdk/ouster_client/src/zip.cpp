@@ -128,7 +128,7 @@ std::string Zip::get_file_as_string(const std::string & filename)
   return std::string(blob.begin(), blob.end());
 }
 
-// TODO[tws] consider refactoring to use move semantics so that we don't
+// TODO(tws) consider refactoring to use move semantics so that we don't
 // have to copy blobs
 void Zip::add_file(const std::string & name, const std::vector<uint8_t> & data)
 {

@@ -1030,7 +1030,7 @@ bool operator<(const DataFormat & lhs, const DataFormat & rhs)
            rhs.udp_profile_lidar, rhs.udp_profile_imu, rhs.header_type);
 }
 
-// TODO[tws] consider removal. This is only used when constructing a
+// TODO(tws) consider removal. This is only used when constructing a
 // ScanBatcher, which happens rarely.
 const PacketFormat & get_format(const DataFormat & format)
 {

@@ -61,7 +61,7 @@ public:
    * @param[in] update_every update every this number of frames.
    */
   OUSTER_API_FUNCTION
-  AutoExposure(int update_every);
+  explicit AutoExposure(int update_every);
 
   /**
    * Constructor specifying low and high percentiles, and update modulo.
