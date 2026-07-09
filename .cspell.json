@@ -2,7 +2,7 @@
   "version": "0.2",
   "language": "en",
   "allowCompoundWords": true,
-  "ignorePaths": ["*.drawio", "nebula_ouster/**"],
+  "ignorePaths": ["*.drawio", "src/nebula_ouster/**"],
   "words": [
     "adctp",
     "Adctp",
