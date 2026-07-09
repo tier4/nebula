@@ -10,8 +10,8 @@
 #include <cstdint>
 #include <fstream>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace ouster
 {
