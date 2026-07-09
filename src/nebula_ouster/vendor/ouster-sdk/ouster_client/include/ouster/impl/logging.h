@@ -45,37 +45,37 @@ public:
   void trace(const std::string & format_string, Args &&... args)
   {
     return log(LOG_LEVEL::LOG_TRACE, format_string, std::forward<Args>(args)...);
-  };
+  }
 
   template <typename... Args>
   void debug(const std::string & format_string, Args &&... args)
   {
     return log(LOG_LEVEL::LOG_DEBUG, format_string, std::forward<Args>(args)...);
-  };
+  }
 
   template <typename... Args>
   void info(const std::string & format_string, Args &&... args)
   {
     return log(LOG_LEVEL::LOG_INFO, format_string, std::forward<Args>(args)...);
-  };
+  }
 
   template <typename... Args>
   void warn(const std::string & format_string, Args &&... args)
   {
     return log(LOG_LEVEL::LOG_WARN, format_string, std::forward<Args>(args)...);
-  };
+  }
 
   template <typename... Args>
   void error(const std::string & format_string, Args &&... args)
   {
     return log(LOG_LEVEL::LOG_ERROR, format_string, std::forward<Args>(args)...);
-  };
+  }
 
   template <typename... Args>
   void critical(const std::string & format_string, Args &&... args)
   {
     return log(LOG_LEVEL::LOG_CRITICAL, format_string, std::forward<Args>(args)...);
-  };
+  }
 
   template <typename... Args>
   void log(LOG_LEVEL level, const std::string & format_string, Args &&... args)
