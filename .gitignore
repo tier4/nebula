@@ -43,3 +43,13 @@ CMakeLists.txt.user
 
 # pre-commit
 node_modules/
+
+# Local notes / scratch files
+claude.txt
+
+# Pasted screenshots and videos used for debugging
+Pasted image*.png
+Pasted image*.jpg
+*.MOV
+*.mov
+*.mp4

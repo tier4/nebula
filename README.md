@@ -19,6 +19,7 @@ Nebula works with ROS 2 and is the recommended sensor driver for the [Autoware](
   - [Quick start](#quick-start)
   - [Agnocast](#agnocast)
   - [Building only specific vendors](#building-only-specific-vendors)
+  - [Ouster](#ouster)
   - [Migration to Nebula 0.3.0](#migration-to-nebula-030)
 
 ## Documentation
@@ -178,7 +179,36 @@ Available vendor packages are:
 - `nebula_hesai` - Hesai LiDARs (Pandar series, AT128, OT128, etc.)
 - `nebula_velodyne` - Velodyne LiDARs (VLP-16, VLP-32, VLS-128)
 - `nebula_robosense` - Robosense LiDARs (Bpearl, Helios)
+- `nebula_ouster` - Ouster LiDARs (OS0, OS1, OS2 — all beam counts; native decoder, no external SDK)
 - `nebula_continental` - Continental radars (ARS548, SRR520)
+
+## Ouster
+
+The `nebula_ouster` package is a native Nebula driver for Ouster OS-0 / OS-1 / OS-2 sensors
+(any beam count, including OS-128). It decodes Ouster UDP packets directly and does not depend
+on `ouster-sdk`.
+
+Setup steps:
+
+1. Build the package:
+
+   ```bash
+   colcon build --packages-up-to nebula_ouster --cmake-args -DCMAKE_BUILD_TYPE=Release
+   ```
+
+2. Edit `src/nebula_ouster/nebula_ouster/config/ouster_sensor.param.yaml` and set
+   `connection.sensor_ip` and `connection.host_ip` to match your environment. Update
+   `frame_id` if needed.
+
+3. Launch:
+
+   ```bash
+   ros2 launch nebula_ouster ouster_launch_all_hw.xml
+   ```
+
+The decoder publishes point clouds on `/points`, IMU samples on `/imu`, and raw packets on
+`/packets`. For offline rosbag replay without the sensor, set `metadata_file` to a cached
+metadata JSON path and launch with `launch_hw:=false`.
 
 ## Migration to Nebula 0.3.0
 
