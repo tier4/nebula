@@ -79,8 +79,9 @@ public:
    * \param name The arbitrary string to be assigned for this diagnostic task.
    * This name will not be exposed in the actual published topics.
    */
+  template <typename NodeT>
   RateBoundStatus(
-    const rclcpp::Node * parent_node, const RateBoundStatusParam & ok_params,
+    const NodeT * parent_node, const RateBoundStatusParam & ok_params,
     const RateBoundStatusParam & warn_params, const size_t num_frame_transition = 1,
     const bool immediate_error_report = false, const bool immediate_relax_state = true,
     const std::string & name = "rate bound check")

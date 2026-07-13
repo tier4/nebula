@@ -63,10 +63,13 @@ inline ClockId make_sensor_clock_id(const std::string & frame_id)
 class SyncToolingWorker
 {
 public:
+  template <typename NodeT>
   SyncToolingWorker(
-    rclcpp::Node * const parent_node, const std::string & topic, const std::string & frame_id,
+    NodeT * const parent_node, const std::string & topic, const std::string & frame_id,
     uint8_t ptp_domain_id)
-  : publisher_(parent_node->create_publisher<std_msgs::msg::UInt8MultiArray>(topic, 10)),
+  : publisher_(
+      rclcpp::create_publisher<std_msgs::msg::UInt8MultiArray>(
+        *parent_node, topic, rclcpp::QoS(10))),
     hostname_(get_hostname()),
     sensor_id_(make_sensor_clock_id(frame_id)),
     ptp_domain_id_(ptp_domain_id)
