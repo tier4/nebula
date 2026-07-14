@@ -1,4 +1,4 @@
-// Copyright 2024 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,24 +44,13 @@ enum class ReturnType : uint8_t {
 /// @brief Return mode of each LiDAR
 enum class ReturnMode : uint8_t {
   UNKNOWN = 0,
-  SINGLE_STRONGEST,
-  SINGLE_LAST,
-  DUAL_FIRST,
-  DUAL_LAST,
-  DUAL_ONLY,
   SINGLE_FIRST,
-  DUAL_STRONGEST_FIRST,
-  DUAL_STRONGEST_LAST,
-  DUAL_WEAK_FIRST,
-  DUAL_WEAK_LAST,
-  TRIPLE,
-  LAST,
-  STRONGEST,
-  DUAL_LAST_STRONGEST,
-  FIRST,
-  DUAL_LAST_FIRST,
+  SINGLE_LAST,
+  SINGLE_STRONGEST,
+  DUAL_FIRST_LAST,
   DUAL_FIRST_STRONGEST,
-  DUAL
+  DUAL_STRONGEST_LAST,
+  TRIPLE
 };
 
 /// @brief Convert ReturnType enum to string (Overloading the << operator)
@@ -115,63 +104,29 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnType 
 inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode const & arg)
 {
   switch (arg) {
+    case ReturnMode::UNKNOWN:
+      os << "Unknown";
+      break;
     case ReturnMode::SINGLE_FIRST:
       os << "SingleFirst";
-      break;
-    case ReturnMode::SINGLE_STRONGEST:
-      os << "SingleStrongest";
       break;
     case ReturnMode::SINGLE_LAST:
       os << "SingleLast";
       break;
-    case ReturnMode::DUAL_ONLY:
-      os << "Dual";
+    case ReturnMode::SINGLE_STRONGEST:
+      os << "SingleStrongest";
       break;
-    case ReturnMode::DUAL_FIRST:
-      os << "DualFirst";
+    case ReturnMode::DUAL_FIRST_LAST:
+      os << "DualFirstLast";
       break;
-    case ReturnMode::DUAL_LAST:
-      os << "DualLast";
-      break;
-    case ReturnMode::DUAL_WEAK_FIRST:
-      os << "WeakFirst";
-      break;
-    case ReturnMode::DUAL_WEAK_LAST:
-      os << "WeakLast";
+    case ReturnMode::DUAL_FIRST_STRONGEST:
+      os << "DualFirstStrongest";
       break;
     case ReturnMode::DUAL_STRONGEST_LAST:
-      os << "StrongLast";
-      break;
-    case ReturnMode::DUAL_STRONGEST_FIRST:
-      os << "StrongFirst";
+      os << "DualStrongestLast";
       break;
     case ReturnMode::TRIPLE:
       os << "Triple";
-      break;
-    // for Hesai
-    case ReturnMode::LAST:
-      os << "Last";
-      break;
-    case ReturnMode::STRONGEST:
-      os << "Strongest";
-      break;
-    case ReturnMode::DUAL_LAST_STRONGEST:
-      os << "LastStrongest";
-      break;
-    case ReturnMode::FIRST:
-      os << "First";
-      break;
-    case ReturnMode::DUAL_LAST_FIRST:
-      os << "LastFirst";
-      break;
-    case ReturnMode::DUAL_FIRST_STRONGEST:
-      os << "FirstStrongest";
-      break;
-    case ReturnMode::DUAL:
-      os << "Dual";
-      break;
-    case ReturnMode::UNKNOWN:
-      os << "Unknown";
       break;
   }
   return os;
@@ -203,7 +158,8 @@ enum class SensorModel : uint8_t {
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
   CONTINENTAL_ARS548,
-  CONTINENTAL_SRR520
+  CONTINENTAL_SRR520,
+  SAMPLE
 };
 
 enum class PtpProfile : uint8_t {
@@ -290,6 +246,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::CONTINENTAL_SRR520:
       os << "SRR520";
       break;
+    case SensorModel::SAMPLE:
+      os << "Sample";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -300,7 +259,7 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
 /// @brief Base struct for Sensor configuration
 struct SensorConfigurationBase
 {
-  SensorModel sensor_model;
+  SensorModel sensor_model{SensorModel::UNKNOWN};
   std::string frame_id;
 };
 
@@ -327,10 +286,10 @@ struct CANSensorConfigurationBase : public SensorConfigurationBase
 /// @brief Base struct for Lidar configuration
 struct LidarConfigurationBase : public EthernetSensorConfigurationBase
 {
-  ReturnMode return_mode;
-  uint16_t packet_mtu_size;
-  double min_range;
-  double max_range;
+  ReturnMode return_mode{ReturnMode::UNKNOWN};
+  uint16_t packet_mtu_size{};
+  double min_range{0.1};
+  double max_range{200.0};
   bool use_sensor_time{false};
 };
 
@@ -424,6 +383,8 @@ inline SensorModel sensor_model_from_string(const std::string & sensor_model)
   // Continental
   if (sensor_model == "ARS548") return SensorModel::CONTINENTAL_ARS548;
   if (sensor_model == "SRR520") return SensorModel::CONTINENTAL_SRR520;
+  // Sample
+  if (sensor_model == "Sample") return SensorModel::SAMPLE;
   return SensorModel::UNKNOWN;
 }
 
@@ -476,6 +437,8 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
       return "ARS548";
     case SensorModel::CONTINENTAL_SRR520:
       return "SRR520";
+    case SensorModel::SAMPLE:
+      return "Sample";
     default:
       return "UNKNOWN";
   }
@@ -486,10 +449,20 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
 /// @return Corresponding ReturnMode
 inline ReturnMode return_mode_from_string(const std::string & return_mode)
 {
-  if (return_mode == "SingleFirst") return ReturnMode::SINGLE_FIRST;
-  if (return_mode == "SingleStrongest") return ReturnMode::SINGLE_STRONGEST;
-  if (return_mode == "SingleLast") return ReturnMode::SINGLE_LAST;
-  if (return_mode == "Dual") return ReturnMode::DUAL_ONLY;
+  if (return_mode == "Unknown") return ReturnMode::UNKNOWN;
+  if (return_mode == "First" || return_mode == "SingleFirst") return ReturnMode::SINGLE_FIRST;
+  if (return_mode == "Last" || return_mode == "SingleLast") return ReturnMode::SINGLE_LAST;
+  if (return_mode == "Strongest" || return_mode == "SingleStrongest")
+    return ReturnMode::SINGLE_STRONGEST;
+  if (
+    return_mode == "Dual" || return_mode == "DualStrongestLast" || return_mode == "StrongestLast" ||
+    return_mode == "LastStrongest")
+    return ReturnMode::DUAL_STRONGEST_LAST;
+  if (return_mode == "DualFirstLast" || return_mode == "FirstLast" || return_mode == "LastFirst")
+    return ReturnMode::DUAL_FIRST_LAST;
+  if (return_mode == "DualFirstStrongest" || return_mode == "FirstStrongest")
+    return ReturnMode::DUAL_FIRST_STRONGEST;
+  if (return_mode == "Triple") return ReturnMode::TRIPLE;
 
   return ReturnMode::UNKNOWN;
 }
@@ -537,4 +510,4 @@ static inline double rpm2hz(double rpm)
 
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_CONFIGURATION_BASE_H
+#endif  // NEBULA_COMMON_H
