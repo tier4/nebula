@@ -21,7 +21,8 @@ graph TB
             C1["<b>nebula_core_common</b><br/>Base types, status codes"]
             C2["<b>nebula_core_decoders</b><br/>Decoder interfaces"]
             C3["<b>nebula_core_hw_interfaces</b><br/>UDP/TCP sockets"]
-            C4["<b>nebula_core_ros</b><br/>ROS 2 utils"]
+            C4["<b>nebula_core_runtime</b><br/>Plugin registry<br/>replay/live runtime"]
+            C5["<b>nebula_core_ros</b><br/>ROS 2 utils"]
         end
 
         subgraph Vendors["<b>Vendor packages</b>"]
@@ -47,6 +48,12 @@ graph TB
 
 Except for the ROS wrappers, no package should depend on ROS 2. This allows users to run parts
 of Nebula as a library e.g. in ML pipelines without ROS 2.
+
+The [vendor-neutral runtime interface](vendor_neutral_runtime_interface.md) is the newer generic
+runtime layer for plugin discovery, packet routing, PCAP replay, and live transport graph
+composition. When starting a new integration, use that interface for new plugin-style decoder
+runtimes where possible. Existing vendor packages may still use their traditional ROS wrapper and
+hardware-interface wiring until they are migrated.
 
 !!! warning
 

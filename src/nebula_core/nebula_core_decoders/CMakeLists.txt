@@ -1,12 +1,19 @@
 cmake_minimum_required(VERSION 3.20)
 project(nebula_core_decoders)
 
-find_package(autoware_cmake REQUIRED)
+set(NEBULA_CORE_DECODERS_USE_ROS OFF)
+if(DEFINED ENV{AMENT_PREFIX_PATH})
+    set(NEBULA_CORE_DECODERS_USE_ROS ON)
+    find_package(autoware_cmake REQUIRED)
+    # TODO(drwnz): remove this ROS compatibility dependency once  # cspell: ignore drwnz
+    # vendor implementations no longer include the legacy driver base.
+    find_package(sensor_msgs REQUIRED)
+endif()
+
 find_package(PNG REQUIRED)
 find_package(Eigen3 REQUIRED NO_MODULE)
-find_package(Boost REQUIRED)
-autoware_package()
-
+find_package(Boost REQUIRED COMPONENTS filesystem system)
+find_package(nebula_core_common REQUIRED)
 
 add_library(nebula_core_decoders INTERFACE)
 
@@ -15,37 +22,86 @@ target_include_directories(
   INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>)
 target_link_libraries(nebula_core_decoders INTERFACE PNG::PNG Eigen3::Eigen
-                                                   Boost::headers)
-ament_target_dependencies(nebula_core_decoders INTERFACE nebula_core_common
-                          sensor_msgs)
-
-install(TARGETS nebula_core_decoders EXPORT export_nebula_core_decoders)
-install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-
-  find_package(ament_cmake_gtest REQUIRED)
-
-  add_definitions(
-    -D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
-
-  ament_add_gtest(test_downsample_mask
-                  tests/point_filters/test_downsample_mask.cpp)
-  target_include_directories(test_downsample_mask PRIVATE include)
-  target_link_libraries(test_downsample_mask nebula_core_decoders)
-
-  ament_add_gtest(test_scan_cutter tests/test_scan_cutter.cpp)
-  target_include_directories(test_scan_cutter PRIVATE include)
-  target_link_libraries(test_scan_cutter nebula_core_decoders)
-
-  ament_add_gtest(test_angles tests/test_angles.cpp)
-  target_include_directories(test_angles PRIVATE include)
-  target_link_libraries(test_angles nebula_core_decoders)
+                                                     Boost::headers
+                                                     nebula_core_common::nebula_core_common)
+if(DEFINED ENV{AMENT_PREFIX_PATH})
+  # TODO(drwnz): remove this when vendor implementations use  # cspell: ignore drwnz
+  # the vendor-neutral runtime interfaces directly.
+  ament_target_dependencies(nebula_core_decoders INTERFACE sensor_msgs)
 endif()
 
-ament_export_targets(export_nebula_core_decoders)
-ament_export_dependencies(Boost nebula_core_common sensor_msgs PNG Eigen3)
+# Standard CMake install and config generation
+include(CMakePackageConfigHelpers)
+set(CPACK_PACKAGE_VERSION "1.0.0")
 
-ament_package()
+install(TARGETS nebula_core_decoders
+        EXPORT export_${PROJECT_NAME}
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin)
+
+install(DIRECTORY include/ DESTINATION include)
+
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${CPACK_PACKAGE_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
+)
+
+install(EXPORT export_${PROJECT_NAME}
+  FILE ${PROJECT_NAME}Targets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  DESTINATION lib/cmake/${PROJECT_NAME}
+)
+
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  DESTINATION lib/cmake/${PROJECT_NAME}
+)
+
+if(BUILD_TESTING)
+  if(DEFINED ENV{AMENT_PREFIX_PATH})
+    find_package(ament_lint_auto REQUIRED)
+    find_package(ament_cmake_gtest REQUIRED)
+    ament_lint_auto_find_test_dependencies()
+  else()
+    find_package(GTest REQUIRED)
+    enable_testing()
+  endif()
+
+  function(nebula_add_test name)
+    if(DEFINED ENV{AMENT_PREFIX_PATH})
+      ament_add_gtest(${name} ${ARGN})
+    else()
+      add_executable(${name} ${ARGN})
+      target_link_libraries(${name} GTest::gtest_main)
+      add_test(NAME ${name} COMMAND ${name})
+    endif()
+    target_include_directories(${name} PRIVATE include)
+    target_link_libraries(${name} ${PROJECT_NAME})
+  endfunction()
+
+  nebula_add_test(test_angles tests/test_angles.cpp)
+  nebula_add_test(test_core_interfaces tests/test_core_interfaces.cpp)
+  nebula_add_test(test_scan_cutter tests/test_scan_cutter.cpp)
+  nebula_add_test(test_downsample_mask tests/point_filters/test_downsample_mask.cpp)
+  target_compile_definitions(test_downsample_mask PRIVATE
+    _TEST_RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test_resources")
+endif()
+
+if(DEFINED ENV{AMENT_PREFIX_PATH})
+    ament_export_include_directories(include)
+    ament_export_targets(export_${PROJECT_NAME})
+    # TODO(drwnz): remove sensor_msgs after the legacy  # cspell: ignore drwnz
+    # ROS-facing vendor decoder base is no longer part of this interface.
+    ament_export_dependencies(Boost nebula_core_common sensor_msgs PNG Eigen3)
+    autoware_package()
+    ament_package()
+endif()

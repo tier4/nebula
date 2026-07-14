@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Sample sensor parameters.",
+  "type": "object",
+  "definitions": {
+    "Sample": {
+      "type": "object",
+      "properties": {
+        "sensor_model": {
+          "type": "string",
+          "enum": [
+            "Sample",
+            "SampleSensor"
+          ],
+          "default": "SampleSensor"
+        },
+        "launch_hw": {
+          "type": "boolean",
+          "default": true
+        },
+        "frame_id": {
+          "type": "string",
+          "default": "sample_lidar"
+        },
+        "connection": {
+          "type": "object",
+          "properties": {
+            "sensor_ip": {
+              "type": "string",
+              "default": "192.168.1.201"
+            },
+            "host_ip": {
+              "type": "string",
+              "default": "192.168.1.100"
+            },
+            "data_port": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "default": 2368
+            }
+          },
+          "required": [
+            "sensor_ip",
+            "host_ip",
+            "data_port"
+          ],
+          "additionalProperties": false
+        },
+        "fov": {
+          "type": "object",
+          "properties": {
+            "azimuth": {
+              "type": "object",
+              "properties": {
+                "min_deg": {
+                  "type": "number",
+                  "default": 0.0
+                },
+                "max_deg": {
+                  "type": "number",
+                  "default": 360.0
+                }
+              },
+              "required": [
+                "min_deg",
+                "max_deg"
+              ],
+              "additionalProperties": false
+            },
+            "elevation": {
+              "type": "object",
+              "properties": {
+                "min_deg": {
+                  "type": "number",
+                  "default": -15.0
+                },
+                "max_deg": {
+                  "type": "number",
+                  "default": 15.0
+                }
+              },
+              "required": [
+                "min_deg",
+                "max_deg"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "azimuth",
+            "elevation"
+          ],
+          "additionalProperties": false
+        },
+        "diagnostics": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "sensor_model",
+        "launch_hw",
+        "frame_id",
+        "connection",
+        "fov"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/Sample"
+        }
+      },
+      "required": [
+        "ros__parameters"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}

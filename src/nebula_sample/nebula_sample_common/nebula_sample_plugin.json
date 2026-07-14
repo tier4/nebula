@@ -1,0 +1,9 @@
+{
+  "vendor": "nebula",
+  "package": "nebula_sample_decoders",
+  "library": "libnebula_sample_decoders_plugin.so",
+  "factory": "create_nebula_sensor_plugin",
+  "destroy": "destroy_nebula_sensor_plugin",
+  "models": ["Sample"],
+  "schema": "schemas/sample.schema.json"
+}

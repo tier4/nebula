@@ -49,6 +49,7 @@ nav = [
   { "Point cloud types" = "point_types.md" },
   { "Design" = [
     { "Design" = "design.md" },
+    { "Vendor-neutral runtime interface" = "vendor_neutral_runtime_interface.md" },
     { "Scan cutting" = "design/scan_cutting.md" },
   ] },
   { "Contributing" = [

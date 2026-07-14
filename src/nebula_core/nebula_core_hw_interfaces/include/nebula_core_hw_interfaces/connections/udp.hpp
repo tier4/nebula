@@ -39,6 +39,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <iostream>
 #include <optional>
 #include <string>
 #include <thread>
@@ -94,7 +95,7 @@ class UdpSocket
 
       bool counter_did_wrap = current_drop_counter < last;
       if (counter_did_wrap) {
-        return (UINT32_MAX - last) + current_drop_counter;
+        return (UINT32_MAX - last) + current_drop_counter + 1;
       }
 
       return current_drop_counter - last;
@@ -296,6 +297,12 @@ public:
   UdpSocket & unsubscribe()
   {
     running_ = false;
+    // Calling unsubscribe() from the receive thread is a self-join and is
+    // prohibited. Lifecycle calls (stop, configure, destruction) must be
+    // deferred to a thread that is not the receive thread.
+    assert(
+      receive_thread_.get_id() != std::this_thread::get_id() &&
+      "unsubscribe() must not be called from the receive thread itself");
     if (receive_thread_.joinable()) {
       receive_thread_.join();
     }
@@ -325,7 +332,10 @@ public:
   }
 
   UdpSocket(const UdpSocket &) = delete;
-  UdpSocket(UdpSocket && other) noexcept
+  // Not noexcept: unsubscribe() may throw from thread::join() and subscribe() may
+  // throw from std::thread construction. Marking noexcept would turn either into
+  // std::terminate.
+  UdpSocket(UdpSocket && other)
   : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))), config_(other.config_)
   {
     if (other.callback_) subscribe(std::move(other.callback_), std::move(other.thread_factory_));
@@ -391,7 +401,16 @@ private:
         metadata.packet_perf_counters = current_packet_perf_counters;
         current_packet_perf_counters = {};
 
-        callback_(buffer, metadata);
+        // A user callback that throws would escape the std::thread function and
+        // terminate the process. Log and continue so a single bad packet does
+        // not take down the receiver.
+        try {
+          callback_(buffer, metadata);
+        } catch (const std::exception & e) {
+          std::cerr << "UdpSocket receiver: user callback threw: " << e.what() << std::endl;
+        } catch (...) {
+          std::cerr << "UdpSocket receiver: user callback threw a non-std::exception" << std::endl;
+        }
       }
     };
 
@@ -430,7 +449,8 @@ private:
   bool is_accepted_sender(const sockaddr_in & sender_addr)
   {
     if (!config_.sender_filter) return true;
-    return sender_addr.sin_addr.s_addr == config_.sender_filter->ip.s_addr;
+    return sender_addr.sin_addr.s_addr == config_.sender_filter->ip.s_addr &&
+           ntohs(sender_addr.sin_port) == config_.sender_filter->port;
   }
 
   SockFd sock_fd_;

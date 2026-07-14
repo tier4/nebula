@@ -1,0 +1,67 @@
+// Copyright 2026 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef NEBULA_SENSOR_DECODER_RUNTIME_HPP
+#define NEBULA_SENSOR_DECODER_RUNTIME_HPP
+
+#include <nebula_core_common/sensor_output.hpp>
+#include <nebula_core_common/sensor_packet.hpp>
+#include <nebula_core_common/sensor_runtime_common.hpp>
+
+#include <functional>
+#include <memory>
+
+namespace nebula::drivers
+{
+using SensorOutputCallback = std::function<void(const SensorDecodedOutput &)>;
+// SensorErrorCallback is defined in sensor_runtime_common.hpp (included above).
+using SensorProgressCallback = std::function<void(const SensorProgress &)>;
+
+// RT-safe alternative to std::function callbacks. Implement this interface and
+// pass it to SensorDecoderRuntime::set_sink() on paths that must not heap-allocate.
+// The sink pointer must outlive the runtime it is registered with.
+class SensorOutputSink
+{
+public:
+  virtual ~SensorOutputSink() noexcept = default;
+  virtual void on_output(const SensorDecodedOutput &) = 0;
+  virtual void on_error(const SensorError &) {}
+  virtual void on_progress(const SensorProgress &) {}
+};
+
+class SensorDecoderRuntime
+{
+public:
+  virtual ~SensorDecoderRuntime() noexcept = default;
+
+  virtual void configure(const SensorConfiguration & config) = 0;
+
+  virtual void set_output_callback(SensorOutputCallback callback) = 0;
+  virtual void set_error_callback(SensorErrorCallback callback) = 0;
+  virtual void set_progress_callback(SensorProgressCallback callback) = 0;
+
+  // EXPERIMENTAL — not yet wired into SampleSensorDecoderRuntime or
+  // LiveTransportGraph. API is subject to change in future revisions.
+  // RT-safe alternative to set_*_callback() for runtimes that must avoid heap
+  // allocation on the output path. The sink pointer must outlive this runtime.
+  virtual void set_sink(SensorOutputSink * /*sink*/) {}
+
+  // Accepts a non-owning view to avoid copying the packet payload on the hot path.
+  virtual SensorPacketResult process_packet(const SensorPacketView & packet) = 0;
+  virtual void flush() = 0;
+};
+
+}  // namespace nebula::drivers
+
+#endif  // NEBULA_SENSOR_DECODER_RUNTIME_HPP

@@ -42,9 +42,11 @@
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -166,6 +168,12 @@ public:
   CanSocket & unsubscribe()
   {
     running_ = false;
+    // Calling unsubscribe() from the receive thread is a self-join and is
+    // prohibited. Lifecycle calls (stop, configure, destruction) must be
+    // deferred to a thread that is not the receive thread.
+    assert(
+      receive_thread_.get_id() != std::this_thread::get_id() &&
+      "unsubscribe() must not be called from the receive thread itself");
     if (receive_thread_.joinable()) {
       receive_thread_.join();
     }
@@ -240,9 +248,12 @@ public:
   void set_filters(const std::vector<can_filter> & filters)
   {
     if (config_.interface_name.rfind("mock_fd:", 0) == 0) return;
+    const size_t bytes = filters.size() * sizeof(can_filter);
+    if (bytes > static_cast<size_t>(std::numeric_limits<socklen_t>::max())) {
+      throw std::invalid_argument("CAN filter list too large for socklen_t");
+    }
     int result = ::setsockopt(
-      sock_fd_.get(), SOL_CAN_RAW, CAN_RAW_FILTER, filters.data(),
-      filters.size() * sizeof(can_filter));
+      sock_fd_.get(), SOL_CAN_RAW, CAN_RAW_FILTER, filters.data(), static_cast<socklen_t>(bytes));
     if (result == -1) throw SocketError(errno);
   }
 
@@ -378,11 +389,16 @@ private:
           } frame_buf{};
 
           RxMetadata metadata{};
-          ssize_t nbytes = receive_frame_with_metadata(&frame_buf, sizeof(frame_buf), metadata);
+          size_t nbytes = receive_frame_with_metadata(&frame_buf, sizeof(frame_buf), metadata);
 
           canfd_frame fd_frame{};
           if (nbytes == CAN_MTU) {
-            // Convert standard frame to FD frame format for uniform callback
+            // Convert standard frame to FD frame format for uniform callback.
+            // can_id retains the raw kernel flag bits (CAN_EFF_FLAG, CAN_RTR_FLAG,
+            // CAN_ERR_FLAG) so callers can derive frame attributes (e.g.
+            // is_extended_id, RTR) before masking with CAN_EFF_MASK to get the
+            // numeric ID. See CanPacketSource::on_can_frame() for the canonical
+            // consumer pattern.
             fd_frame.can_id = frame_buf.cc.can_id;
             fd_frame.len = frame_buf.cc.can_dlc;  // For standard, len is dlc
             // Note: standard can_frame doesn't rely on strict 0-8 mapping for len/dlc in same way
@@ -391,6 +407,7 @@ private:
             std::memcpy(fd_frame.data, frame_buf.cc.data, frame_buf.cc.can_dlc);
             fd_frame.flags = 0;  // Not FD
           } else if (nbytes == CANFD_MTU) {
+            // can_id retains the raw kernel flag bits; see comment in the CAN_MTU branch.
             fd_frame = frame_buf.cf;
           } else {
             // Invalid frame size or partial read
@@ -399,7 +416,14 @@ private:
             continue;
           }
 
-          callback_(fd_frame, metadata);
+          try {
+            callback_(fd_frame, metadata);
+          } catch (const std::exception & cb_e) {
+            std::cerr << "CanSocket receiver: user callback threw: " << cb_e.what() << std::endl;
+          } catch (...) {
+            std::cerr << "CanSocket receiver: user callback threw a non-std::exception"
+                      << std::endl;
+          }
         } catch (const SocketError & e) {
           std::cerr << "CanSocket receiver error: " << e.what() << std::endl;
         }

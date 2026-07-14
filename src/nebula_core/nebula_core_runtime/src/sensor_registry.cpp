@@ -1,0 +1,432 @@
+// Copyright 2026 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include <nebula_core_runtime/sensor_registry.hpp>
+#include <nlohmann/json.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+
+#include <dlfcn.h>
+
+#include <algorithm>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
+#include <vector>
+
+namespace nebula::drivers
+{
+namespace fs = boost::filesystem;
+
+struct SensorRegistry::LoadedLibrary
+{
+  explicit LoadedLibrary(void * library_handle) : handle(library_handle) {}
+
+  ~LoadedLibrary()
+  {
+    if (handle) {
+      dlclose(handle);
+    }
+  }
+
+  void * handle{nullptr};
+};
+
+namespace
+{
+std::string resolve_descriptor_path(
+  const fs::path & descriptor_path, const std::string & path_value)
+{
+  if (path_value.empty()) {
+    return {};
+  }
+
+  const fs::path raw_path(path_value);
+  if (raw_path.is_absolute()) {
+    return raw_path.string();
+  }
+
+  const fs::path relative_to_descriptor = descriptor_path.parent_path() / raw_path;
+  return relative_to_descriptor.string();
+}
+
+std::vector<std::string> split_env_paths(const char * env_value)
+{
+  std::vector<std::string> paths;
+  if (!env_value) {
+    return paths;
+  }
+
+  boost::split(paths, env_value, boost::is_any_of(":"));
+  paths.erase(
+    std::remove_if(
+      paths.begin(), paths.end(), [](const std::string & path) { return path.empty(); }),
+    paths.end());
+  return paths;
+}
+
+std::vector<std::string> get_prefix_paths()
+{
+  std::vector<std::string> prefixes;
+  for (const auto & env_name : {"AMENT_PREFIX_PATH", "COLCON_PREFIX_PATH"}) {
+    const auto env_prefixes = split_env_paths(std::getenv(env_name));
+    prefixes.insert(prefixes.end(), env_prefixes.begin(), env_prefixes.end());
+  }
+  return prefixes;
+}
+
+std::optional<std::string> resolve_library_from_prefixes(
+  const std::string & library_path, const std::string & package_name)
+{
+  for (const auto & prefix : get_prefix_paths()) {
+    const fs::path common_lib = fs::path(prefix) / "lib" / library_path;
+    if (fs::exists(common_lib)) {
+      return common_lib.string();
+    }
+
+    const fs::path isolated_lib = fs::path(prefix) / package_name / "lib" / library_path;
+    if (!package_name.empty() && fs::exists(isolated_lib)) {
+      return isolated_lib.string();
+    }
+  }
+  return std::nullopt;
+}
+
+std::string resolve_library_path(
+  const fs::path & descriptor_path, const std::string & library_path,
+  const std::string & package_name)
+{
+  const fs::path raw_path(library_path);
+  if (raw_path.is_absolute()) {
+    return library_path;
+  }
+
+  const fs::path relative_to_descriptor = descriptor_path.parent_path() / raw_path;
+  if (fs::exists(relative_to_descriptor)) {
+    return relative_to_descriptor.string();
+  }
+
+  auto resolved = resolve_library_from_prefixes(library_path, package_name);
+  return resolved.value_or(library_path);
+}
+
+void append_json_files_from_directory(
+  const fs::path & directory, std::vector<std::string> & descriptor_files)
+{
+  if (!fs::exists(directory) || !fs::is_directory(directory)) {
+    return;
+  }
+
+  std::vector<std::string> directory_files;
+  for (fs::directory_iterator it(directory); it != fs::directory_iterator(); ++it) {
+    if (!fs::is_regular_file(it->status()) || it->path().extension() != ".json") {
+      continue;
+    }
+    directory_files.push_back(it->path().string());
+  }
+  std::sort(directory_files.begin(), directory_files.end());
+  descriptor_files.insert(descriptor_files.end(), directory_files.begin(), directory_files.end());
+}
+
+std::vector<fs::path> child_directories(const fs::path & directory)
+{
+  std::vector<fs::path> directories;
+  if (!fs::exists(directory) || !fs::is_directory(directory)) {
+    return directories;
+  }
+
+  for (fs::directory_iterator it(directory); it != fs::directory_iterator(); ++it) {
+    if (fs::is_directory(it->status())) {
+      directories.push_back(it->path());
+    }
+  }
+  std::sort(directories.begin(), directories.end());
+  return directories;
+}
+
+void append_plugin_descriptors_from_share_path(
+  const fs::path & share_path, std::vector<std::string> & descriptor_files)
+{
+  for (const auto & package_share_path : child_directories(share_path)) {
+    append_json_files_from_directory(package_share_path, descriptor_files);
+  }
+}
+
+void append_prefix_descriptor_files(
+  const std::string & prefix, std::vector<std::string> & descriptor_files)
+{
+  append_plugin_descriptors_from_share_path(fs::path(prefix) / "share", descriptor_files);
+
+  // Isolated colcon installs use <prefix>/<package>/share/<package>.
+  if (!fs::exists(prefix) || !fs::is_directory(prefix)) {
+    return;
+  }
+  for (const auto & package_prefix : child_directories(prefix)) {
+    append_plugin_descriptors_from_share_path(package_prefix / "share", descriptor_files);
+  }
+}
+
+std::vector<std::string> collect_descriptor_files(const std::vector<std::string> & search_paths)
+{
+  std::vector<std::string> descriptor_files;
+
+  for (const auto & path : search_paths) {
+    append_json_files_from_directory(path, descriptor_files);
+  }
+
+  for (const auto & path : split_env_paths(std::getenv("NEBULA_PLUGINS_PATH"))) {
+    append_json_files_from_directory(path, descriptor_files);
+  }
+
+  for (const auto & env_name : {"AMENT_PREFIX_PATH", "COLCON_PREFIX_PATH"}) {
+    for (const auto & prefix : split_env_paths(std::getenv(env_name))) {
+      append_prefix_descriptor_files(prefix, descriptor_files);
+    }
+  }
+
+  std::set<std::string> seen_files;
+  std::vector<std::string> unique_files;
+  for (const auto & descriptor_file : descriptor_files) {
+    if (seen_files.insert(descriptor_file).second) {
+      unique_files.push_back(descriptor_file);
+    }
+  }
+
+  return unique_files;
+}
+
+std::optional<SensorPluginMetadata> parse_descriptor(const std::string & file_path)
+{
+  std::ifstream ifs(file_path);
+  nlohmann::json j = nlohmann::json::parse(ifs);
+
+  if (!j.contains("vendor") || !j.contains("package") || !j.contains("library")) {
+    return std::nullopt;
+  }
+
+  SensorPluginMetadata metadata;
+  metadata.vendor = j.at("vendor").get<std::string>();
+  metadata.package_name = j.at("package").get<std::string>();
+  metadata.library_path = j.at("library").get<std::string>();
+  metadata.factory_symbol = j.value("factory", "create_nebula_sensor_plugin");
+  metadata.destroy_symbol = j.value("destroy", "destroy_nebula_sensor_plugin");
+  metadata.descriptor_path = file_path;
+  metadata.package_share_path = fs::path(file_path).parent_path().string();
+  metadata.schema_path = resolve_descriptor_path(file_path, j.value("schema", ""));
+  metadata.config_defaults_path =
+    resolve_descriptor_path(file_path, j.value("config_defaults", ""));
+  metadata.calibration_assets_path =
+    resolve_descriptor_path(file_path, j.value("calibration_assets", ""));
+
+  if (!j.contains("models") || !j.at("models").is_array() || j.at("models").empty()) {
+    throw std::runtime_error("descriptor must declare at least one supported model");
+  }
+
+  for (const auto & m : j.at("models")) {
+    const auto model_name = m.get<std::string>();
+    const auto model = sensor_model_from_string(model_name);
+    if (model == SensorModel::UNKNOWN) {
+      throw std::runtime_error("unknown sensor model '" + model_name + "'");
+    }
+    metadata.supported_models.push_back(model);
+  }
+
+  metadata.library_path =
+    resolve_library_path(file_path, metadata.library_path, metadata.package_name);
+
+  return metadata;
+}
+}  // namespace
+
+SensorRegistry::~SensorRegistry()
+{
+  instantiated_plugins_.clear();
+  loaded_libraries_.clear();
+}
+
+void SensorRegistry::load_registry(const std::vector<std::string> & search_paths)
+{
+  if (finalized_) {
+    throw std::logic_error(
+      "SensorRegistry::load_registry called after finalize() — all descriptors must be loaded "
+      "before the registry is frozen");
+  }
+
+  for (const auto & file_path : collect_descriptor_files(search_paths)) {
+    try {
+      auto metadata = parse_descriptor(file_path);
+      if (!metadata) {
+        continue;
+      }
+      const auto [it, inserted] = registered_plugins_.emplace(metadata->package_name, *metadata);
+      if (!inserted) {
+        std::cerr << "Duplicate plugin descriptor for package '" << metadata->package_name
+                  << "' at " << metadata->descriptor_path << "; keeping existing descriptor "
+                  << it->second.descriptor_path << std::endl;
+      }
+    } catch (const std::exception & e) {
+      std::cerr << "Failed to parse plugin descriptor " << file_path << ": " << e.what()
+                << std::endl;
+    }
+  }
+}
+
+std::optional<SensorPluginMetadata> SensorRegistry::find_plugin_for_model(SensorModel model) const
+{
+  for (const auto & pair : registered_plugins_) {
+    for (const auto & supported_model : pair.second.supported_models) {
+      if (supported_model == model) {
+        return pair.second;
+      }
+    }
+  }
+  return std::nullopt;
+}
+
+void SensorRegistry::finalize()
+{
+  finalized_ = true;
+}
+
+std::shared_ptr<SensorPlugin> SensorRegistry::load_plugin(const SensorPluginMetadata & metadata)
+{
+  auto plugin_it = instantiated_plugins_.find(metadata.package_name);
+  if (plugin_it != instantiated_plugins_.end()) {
+    return plugin_it->second;
+  }
+
+  if (finalized_) {
+    throw std::logic_error(
+      "SensorRegistry::load_plugin called after finalize() — all plugins must be loaded before "
+      "the registry is frozen");
+  }
+
+  std::string load_error;
+  auto library = load_library(metadata.library_path, metadata.package_name, load_error);
+  if (!library) {
+    std::cerr << "Failed to load library " << metadata.library_path << " for plugin "
+              << metadata.package_name << ": " << load_error << std::endl;
+    return nullptr;
+  }
+
+  using CreateFunc = SensorPlugin * (*)();
+  using DestroyFunc = void (*)(SensorPlugin *);
+
+  auto create_func =
+    reinterpret_cast<CreateFunc>(dlsym(library->handle, metadata.factory_symbol.c_str()));
+  if (!create_func) {
+    std::cerr << "Failed to find factory symbol '" << metadata.factory_symbol << "' in "
+              << metadata.library_path << ": " << dlerror() << std::endl;
+    return nullptr;
+  }
+
+  const std::string destroy_symbol =
+    metadata.destroy_symbol.empty() ? "destroy_nebula_sensor_plugin" : metadata.destroy_symbol;
+  auto destroy_func = reinterpret_cast<DestroyFunc>(dlsym(library->handle, destroy_symbol.c_str()));
+  if (!destroy_func) {
+    std::cerr << "Failed to find destroy symbol '" << destroy_symbol << "' in "
+              << metadata.library_path << ": " << dlerror() << std::endl;
+    return nullptr;
+  }
+
+  using VersionFunc = uint32_t (*)();
+  auto version_func =
+    reinterpret_cast<VersionFunc>(dlsym(library->handle, "nebula_plugin_abi_version"));
+  if (version_func) {
+    const uint32_t plugin_version = version_func();
+    if (plugin_version != kNebulaPluginAbiVersion) {
+      std::cerr << "Plugin ABI version mismatch for " << metadata.package_name << ": host expects "
+                << kNebulaPluginAbiVersion << ", plugin reports " << plugin_version << std::endl;
+      return nullptr;
+    }
+  } else {
+    std::cerr << "Warning: plugin " << metadata.package_name
+              << " does not export nebula_plugin_abi_version(); assuming compatible" << std::endl;
+  }
+
+  std::shared_ptr<SensorPlugin> plugin(create_func(), [library, destroy_func](SensorPlugin * ptr) {
+    if (ptr) {
+      destroy_func(ptr);
+    }
+  });
+  if (plugin) {
+    instantiated_plugins_[metadata.package_name] = plugin;
+  } else {
+    std::cerr << "Factory function '" << metadata.factory_symbol << "' returned nullptr for plugin "
+              << metadata.package_name << std::endl;
+  }
+  return plugin;
+}
+
+const std::map<std::string, SensorPluginMetadata> & SensorRegistry::get_registered_plugins() const
+{
+  return registered_plugins_;
+}
+
+std::shared_ptr<SensorRegistry::LoadedLibrary> SensorRegistry::load_library(
+  const std::string & library_path, const std::string & package_name, std::string & error)
+{
+  auto library_it = loaded_libraries_.find(library_path);
+  if (library_it != loaded_libraries_.end()) {
+    return library_it->second;
+  }
+  auto failure_it = failed_library_errors_.find(library_path);
+  if (failure_it != failed_library_errors_.end()) {
+    error = failure_it->second;
+    return nullptr;
+  }
+
+  void * handle = dlopen(library_path.c_str(), RTLD_LAZY | RTLD_LOCAL);
+  // Capture dlerror() immediately into std::string before any subsequent dlopen()
+  // call could overwrite the thread-local error buffer.
+  if (!handle) {
+    const char * raw = dlerror();
+    error = raw ? raw : "unknown dlopen error";
+  }
+
+  if (!handle && fs::path(library_path).is_relative()) {
+    auto resolved = resolve_library_from_prefixes(library_path, package_name);
+    if (resolved) {
+      handle = dlopen(resolved->c_str(), RTLD_LAZY | RTLD_LOCAL);
+      if (!handle) {
+        const char * raw = dlerror();
+        error = raw ? raw : "unknown dlopen error";
+      }
+    }
+  }
+
+  if (handle) {
+    auto library = std::make_shared<LoadedLibrary>(handle);
+    // Intentional: successful loads are cached so subsequent calls return the
+    // same shared_ptr (and thus the same dlopen handle). Once in loaded_libraries_,
+    // a path is never retried even after a factory symbol error — callers that
+    // need a fresh load must construct a new SensorRegistry.
+    loaded_libraries_[library_path] = library;
+    return library;
+  } else {
+    if (error.empty()) {
+      error = "library was not found in the configured plugin search paths";
+    }
+    failed_library_errors_[library_path] = error;
+    return nullptr;
+  }
+}
+
+}  // namespace nebula::drivers
