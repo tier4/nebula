@@ -94,19 +94,36 @@ inline std::string status_to_string(drivers::FunctionalSafetySeverity severity, 
 
 using std::chrono_literals::operator""ms;
 
+/// @brief Result of evaluating a FuSa status update.
+struct FunctionalSafetyEvaluation
+{
+  diagnostic_msgs::msg::DiagnosticStatus diagnostic_status;
+  drivers::FunctionalSafetyErrorCodes received_error_codes;
+  drivers::FunctionalSafetyErrorCodes non_exempted_error_codes;
+  drivers::FunctionalSafetyErrorCodes exempted_error_codes;
+  drivers::FunctionalSafetyErrorCodes triggering_error_codes;
+};
+
 class FunctionalSafetyStatusProcessor
 {
 public:
   virtual ~FunctionalSafetyStatusProcessor() = default;
-  virtual void populate_status(
+
+  /// @brief Evaluate a FuSa status update into a diagnostic status and actionable code groups.
+  /// @param severity Severity reported by the sensor.
+  /// @param error_codes Aggregated FuSa error codes for the current update.
+  /// @return Evaluation result containing the diagnostic status and filtered code groups.
+  virtual FunctionalSafetyEvaluation evaluate_status(
     drivers::FunctionalSafetySeverity severity,
-    const drivers::FunctionalSafetyErrorCodes & error_codes,
-    diagnostic_msgs::msg::DiagnosticStatus & inout_status) = 0;
+    const drivers::FunctionalSafetyErrorCodes & error_codes) = 0;
 };
 
 class FunctionalSafetyDiagnosticTask : public diagnostic_updater::CompositeDiagnosticTask
 {
 public:
+  /// @brief Construct a FuSa diagnostic task.
+  /// @param parent_node ROS node used for liveness timing.
+  /// @param status_processor Processor that evaluates incoming FuSa statuses.
   explicit FunctionalSafetyDiagnosticTask(
     rclcpp::Node * const parent_node,
     std::unique_ptr<FunctionalSafetyStatusProcessor> status_processor)
@@ -121,13 +138,17 @@ public:
     addTask(&stuck_latch_);
   }
 
-  void on_status(
+  /// @brief Submit a FuSa status update.
+  /// @param severity Severity reported by the sensor.
+  /// @param error_codes Aggregated FuSa error codes for the current update.
+  /// @return Evaluated FuSa result after diagnostic status generation.
+  FunctionalSafetyEvaluation on_status(
     drivers::FunctionalSafetySeverity severity,
     const drivers::FunctionalSafetyErrorCodes & error_codes)
   {
-    diagnostic_msgs::msg::DiagnosticStatus status;
-    status_processor_->populate_status(severity, error_codes, status);
-    status_latch_.submit(status);
+    auto evaluation = status_processor_->evaluate_status(severity, error_codes);
+    status_latch_.submit(evaluation.diagnostic_status);
+    return evaluation;
   }
 
   void on_alive() { liveness_monitor_.tick(); }

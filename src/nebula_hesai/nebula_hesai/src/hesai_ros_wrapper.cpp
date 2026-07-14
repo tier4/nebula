@@ -30,10 +30,51 @@
 
 namespace nebula::ros
 {
+namespace
+{
+
+const char * diagnostic_level_to_string(const uint8_t level)
+{
+  switch (level) {
+    case diagnostic_msgs::msg::DiagnosticStatus::OK:
+      return "OK";
+    case diagnostic_msgs::msg::DiagnosticStatus::WARN:
+      return "WARN";
+    case diagnostic_msgs::msg::DiagnosticStatus::ERROR:
+      return "ERROR";
+    case diagnostic_msgs::msg::DiagnosticStatus::STALE:
+      return "STALE";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+std::string format_functional_safety_evaluation(const FunctionalSafetyEvaluation & evaluation)
+{
+  std::stringstream ss;
+  ss << "level=" << diagnostic_level_to_string(evaluation.diagnostic_status.level) << " ("
+     << evaluation.diagnostic_status.message << ")"
+     << ", received codes=" << detail::error_codes_to_string(evaluation.received_error_codes)
+     << ", non-ignored codes=" << detail::error_codes_to_string(evaluation.non_exempted_error_codes)
+     << ", reset-triggering codes="
+     << detail::error_codes_to_string(evaluation.triggering_error_codes);
+  if (!evaluation.exempted_error_codes.empty()) {
+    ss << ", ignored codes=" << detail::error_codes_to_string(evaluation.exempted_error_codes);
+  }
+  return ss.str();
+}
+
+}  // namespace
+
 HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
   sensor_cfg_ptr_(nullptr),
+  functional_safety_reset_processor_(
+    [this](FunctionalSafetyEvaluation && evaluation) {
+      send_functional_safety_reset(std::move(evaluation));
+    },
+    1),
   diagnostic_updater_general_((declare_parameter<bool>("diagnostic_updater.use_fqn", true), this)),
   diagnostic_updater_functional_safety_(this)
 {
@@ -97,9 +138,16 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     }
   }
 
+  HesaiDecoderWrapper::functional_safety_evaluation_cb_t functional_safety_evaluation_cb;
+  if (launch_hw_ && !use_udp_only) {
+    functional_safety_evaluation_cb = [this](const FunctionalSafetyEvaluation & evaluation) {
+      on_functional_safety_evaluation(evaluation);
+    };
+  }
+
   decoder_wrapper_.emplace(
     this, sensor_cfg_ptr_, calibration_result.value(), diagnostic_updater_functional_safety_,
-    launch_hw_);
+    launch_hw_, std::move(functional_safety_evaluation_cb));
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
@@ -134,6 +182,73 @@ void HesaiRosWrapper::initialize_sync_tooling(const drivers::HesaiSensorConfigur
     this, *config.sync_diagnostics_topic, config.frame_id, config.ptp_domain);
 
   sync_tooling_plugin_.emplace(SyncToolingPlugin{sync_tooling_worker, util::RateLimiter(100ms)});
+}
+
+void HesaiRosWrapper::on_functional_safety_evaluation(const FunctionalSafetyEvaluation & evaluation)
+{
+  const bool has_reset_trigger =
+    hw_interface_wrapper_ &&
+    evaluation.diagnostic_status.level == diagnostic_msgs::msg::DiagnosticStatus::ERROR &&
+    !evaluation.triggering_error_codes.empty();
+
+  if (!has_reset_trigger) {
+    auto expected_state = FunctionalSafetyResetState::WaitingForRecovery;
+    if (
+      functional_safety_reset_state_.compare_exchange_strong(
+        expected_state, FunctionalSafetyResetState::Healthy)) {
+      RCLCPP_INFO_STREAM(
+        get_logger(),
+        "FuSa error state cleared. Sensor recovered to a non-error state and automatic Hesai "
+        "soft-reset is re-armed. "
+          << format_functional_safety_evaluation(evaluation));
+    }
+    return;
+  }
+
+  auto expected_state = FunctionalSafetyResetState::Healthy;
+  if (!functional_safety_reset_state_.compare_exchange_strong(
+        expected_state, FunctionalSafetyResetState::ResetPendingOrInFlight)) {
+    return;
+  }
+
+  if (!functional_safety_reset_processor_.try_push(FunctionalSafetyEvaluation{evaluation})) {
+    functional_safety_reset_state_.store(FunctionalSafetyResetState::Healthy);
+    RCLCPP_WARN_STREAM(
+      get_logger(), "FuSa-triggered Hesai soft-reset could not be queued. "
+                      << format_functional_safety_evaluation(evaluation));
+    return;
+  }
+
+  RCLCPP_ERROR_STREAM(
+    get_logger(),
+    "FuSa entered a latched error state and is now waiting for recovery before another automatic "
+    "Hesai soft-reset can be requested. "
+      << format_functional_safety_evaluation(evaluation));
+}
+
+void HesaiRosWrapper::send_functional_safety_reset(FunctionalSafetyEvaluation && evaluation)
+{
+  struct ResetStateGuard
+  {
+    std::atomic<FunctionalSafetyResetState> & state;
+    ~ResetStateGuard() { state.store(FunctionalSafetyResetState::WaitingForRecovery); }
+  } guard{functional_safety_reset_state_};
+
+  RCLCPP_ERROR_STREAM(
+    get_logger(), "Sending Hesai PTC soft-reset command for the latched FuSa error state. "
+                    << format_functional_safety_evaluation(evaluation));
+
+  try {
+    hw_interface_wrapper_->hw_interface()->send_restart();
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "FuSa-triggered Hesai PTC soft-reset command completed for codes "
+                      << detail::error_codes_to_string(evaluation.triggering_error_codes));
+  } catch (const std::exception & ex) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "FuSa-triggered Hesai PTC soft-reset command failed for codes "
+                      << detail::error_codes_to_string(evaluation.triggering_error_codes) << ": "
+                      << ex.what());
+  }
 }
 
 nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()

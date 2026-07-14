@@ -38,13 +38,15 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   rclcpp::Node * parent_node,
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
   const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration,
-  diagnostic_updater::Updater & diagnostic_updater, bool publish_packets)
+  diagnostic_updater::Updater & diagnostic_updater, bool publish_packets,
+  functional_safety_evaluation_cb_t functional_safety_evaluation_cb)
 : status_(nebula::Status::NOT_INITIALIZED),
   logger_(parent_node->get_logger().get_child("HesaiDecoder")),
   parent_node_(*parent_node),
   sensor_cfg_(config),
   calibration_cfg_ptr_(calibration),
   publish_diagnostic_(make_rate_bound_status(sensor_cfg_->rotation_speed, *parent_node)),
+  functional_safety_evaluation_cb_(std::move(functional_safety_evaluation_cb)),
   debug_publisher_(parent_node, "nebula")
 {
   if (!sensor_cfg_) {
@@ -327,7 +329,10 @@ std::shared_ptr<drivers::HesaiDriver> HesaiDecoderWrapper::initialize_driver(
     status_cb = [this](
                   drivers::FunctionalSafetySeverity severity,
                   const drivers::FunctionalSafetyErrorCodes & codes) {
-      functional_safety_diagnostic_->on_status(severity, codes);
+      const auto evaluation = functional_safety_diagnostic_->on_status(severity, codes);
+      if (functional_safety_evaluation_cb_) {
+        functional_safety_evaluation_cb_(evaluation);
+      }
     };
   }
 
