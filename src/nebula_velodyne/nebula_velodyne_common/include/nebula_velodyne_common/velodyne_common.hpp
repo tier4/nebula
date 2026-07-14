@@ -76,7 +76,8 @@ inline ReturnMode return_mode_from_string_velodyne(const std::string & return_mo
 {
   if (return_mode == "Strongest") return ReturnMode::SINGLE_STRONGEST;
   if (return_mode == "Last") return ReturnMode::SINGLE_LAST;
-  if (return_mode == "Dual") return ReturnMode::DUAL_ONLY;
+  if (return_mode == "Dual" || return_mode == "DualStrongestLast" || return_mode == "StrongestLast")
+    return ReturnMode::DUAL_STRONGEST_LAST;
 
   return ReturnMode::UNKNOWN;
 }

@@ -101,6 +101,8 @@
             "Last",
             "Strongest",
             "LastStrongest",
+            "DualStrongestLast",
+            "StrongestLast",
             "Dual"
           ]
         },

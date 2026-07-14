@@ -394,7 +394,7 @@ TEST_F(TestHesaiHwInterface, TestCheckAndSetConfig)
   config->host_ip = "127.0.0.1";
   config->data_port = 2368;
   config->ptp_profile = nebula::drivers::PtpProfile::IEEE_802_1AS_AUTO;
-  config->return_mode = nebula::drivers::ReturnMode::DUAL_ONLY;
+  config->return_mode = nebula::drivers::ReturnMode::DUAL_STRONGEST_LAST;
   config->rotation_speed = 600;
   config->sync_angle = 180;
 
@@ -414,7 +414,7 @@ TEST_F(TestHesaiHwInterface, TestCheckAndSetConfigHTTP)
   config->host_ip = "127.0.0.1";
   config->data_port = 2368;
   config->ptp_profile = nebula::drivers::PtpProfile::IEEE_802_1AS_AUTO;
-  config->return_mode = nebula::drivers::ReturnMode::DUAL_ONLY;
+  config->return_mode = nebula::drivers::ReturnMode::DUAL_STRONGEST_LAST;
   config->rotation_speed = 600;
   config->sync_angle = 180;
 

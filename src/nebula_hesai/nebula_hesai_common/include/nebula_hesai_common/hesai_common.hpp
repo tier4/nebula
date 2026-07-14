@@ -623,26 +623,36 @@ inline ReturnMode return_mode_from_string_hesai(
     case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
-      if (return_mode == "Last") return ReturnMode::LAST;
-      if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-      if (return_mode == "Dual" || return_mode == "LastStrongest")
-        return ReturnMode::DUAL_LAST_STRONGEST;
-      if (return_mode == "First") return ReturnMode::FIRST;
-      if (return_mode == "LastFirst") return ReturnMode::DUAL_LAST_FIRST;
-      if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
+      if (return_mode == "Last") return ReturnMode::SINGLE_LAST;
+      if (return_mode == "Strongest") return ReturnMode::SINGLE_STRONGEST;
+      if (
+        return_mode == "Dual" || return_mode == "DualStrongestLast" ||
+        return_mode == "StrongestLast" || return_mode == "LastStrongest")
+        return ReturnMode::DUAL_STRONGEST_LAST;
+      if (return_mode == "First") return ReturnMode::SINGLE_FIRST;
+      if (
+        return_mode == "DualFirstLast" || return_mode == "FirstLast" || return_mode == "LastFirst")
+        return ReturnMode::DUAL_FIRST_LAST;
+      if (return_mode == "DualFirstStrongest" || return_mode == "FirstStrongest")
+        return ReturnMode::DUAL_FIRST_STRONGEST;
       break;
     case SensorModel::HESAI_PANDARQT64:
-      if (return_mode == "Last") return ReturnMode::LAST;
-      if (return_mode == "Dual" || return_mode == "LastFirst") return ReturnMode::DUAL_LAST_FIRST;
-      if (return_mode == "First") return ReturnMode::FIRST;
+      if (return_mode == "Last") return ReturnMode::SINGLE_LAST;
+      if (
+        return_mode == "Dual" || return_mode == "DualFirstLast" || return_mode == "FirstLast" ||
+        return_mode == "LastFirst")
+        return ReturnMode::DUAL_FIRST_LAST;
+      if (return_mode == "First") return ReturnMode::SINGLE_FIRST;
       break;
     case SensorModel::HESAI_PANDARAT128:
     case SensorModel::HESAI_PANDAR64:
     case SensorModel::HESAI_PANDAR40P:
-      if (return_mode == "Last") return ReturnMode::LAST;
-      if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-      if (return_mode == "Dual" || return_mode == "LastStrongest")
-        return ReturnMode::DUAL_LAST_STRONGEST;
+      if (return_mode == "Last") return ReturnMode::SINGLE_LAST;
+      if (return_mode == "Strongest") return ReturnMode::SINGLE_STRONGEST;
+      if (
+        return_mode == "Dual" || return_mode == "DualStrongestLast" ||
+        return_mode == "StrongestLast" || return_mode == "LastStrongest")
+        return ReturnMode::DUAL_STRONGEST_LAST;
       break;
     default:
       throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
@@ -665,24 +675,24 @@ inline ReturnMode return_mode_from_int_hesai(
     case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
-      if (return_mode == 0) return ReturnMode::LAST;
-      if (return_mode == 1) return ReturnMode::STRONGEST;
-      if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
-      if (return_mode == 3) return ReturnMode::FIRST;
-      if (return_mode == 4) return ReturnMode::DUAL_LAST_FIRST;
+      if (return_mode == 0) return ReturnMode::SINGLE_LAST;
+      if (return_mode == 1) return ReturnMode::SINGLE_STRONGEST;
+      if (return_mode == 2) return ReturnMode::DUAL_STRONGEST_LAST;
+      if (return_mode == 3) return ReturnMode::SINGLE_FIRST;
+      if (return_mode == 4) return ReturnMode::DUAL_FIRST_LAST;
       if (return_mode == 5) return ReturnMode::DUAL_FIRST_STRONGEST;
       break;
     case SensorModel::HESAI_PANDARQT64:
-      if (return_mode == 0) return ReturnMode::LAST;
-      if (return_mode == 2) return ReturnMode::DUAL_LAST_FIRST;
-      if (return_mode == 3) return ReturnMode::FIRST;
+      if (return_mode == 0) return ReturnMode::SINGLE_LAST;
+      if (return_mode == 2) return ReturnMode::DUAL_FIRST_LAST;
+      if (return_mode == 3) return ReturnMode::SINGLE_FIRST;
       break;
     case SensorModel::HESAI_PANDARAT128:
     case SensorModel::HESAI_PANDAR64:
     case SensorModel::HESAI_PANDAR40P:
-      if (return_mode == 0) return ReturnMode::LAST;
-      if (return_mode == 1) return ReturnMode::STRONGEST;
-      if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
+      if (return_mode == 0) return ReturnMode::SINGLE_LAST;
+      if (return_mode == 1) return ReturnMode::SINGLE_STRONGEST;
+      if (return_mode == 2) return ReturnMode::DUAL_STRONGEST_LAST;
       break;
     default:
       throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
@@ -705,26 +715,24 @@ inline int int_from_return_mode_hesai(
     case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
-      if (return_mode == ReturnMode::LAST) return 0;
-      if (return_mode == ReturnMode::STRONGEST) return 1;
-      if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_STRONGEST)
-        return 2;
-      if (return_mode == ReturnMode::FIRST) return 3;
-      if (return_mode == ReturnMode::DUAL_LAST_FIRST) return 4;
+      if (return_mode == ReturnMode::SINGLE_LAST) return 0;
+      if (return_mode == ReturnMode::SINGLE_STRONGEST) return 1;
+      if (return_mode == ReturnMode::DUAL_STRONGEST_LAST) return 2;
+      if (return_mode == ReturnMode::SINGLE_FIRST) return 3;
+      if (return_mode == ReturnMode::DUAL_FIRST_LAST) return 4;
       if (return_mode == ReturnMode::DUAL_FIRST_STRONGEST) return 5;
       break;
     case SensorModel::HESAI_PANDARQT64:
-      if (return_mode == ReturnMode::LAST) return 0;
-      if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_FIRST) return 2;
-      if (return_mode == ReturnMode::FIRST) return 3;
+      if (return_mode == ReturnMode::SINGLE_LAST) return 0;
+      if (return_mode == ReturnMode::DUAL_FIRST_LAST) return 2;
+      if (return_mode == ReturnMode::SINGLE_FIRST) return 3;
       break;
     case SensorModel::HESAI_PANDARAT128:
     case SensorModel::HESAI_PANDAR64:
     case SensorModel::HESAI_PANDAR40P:
-      if (return_mode == ReturnMode::LAST) return 0;
-      if (return_mode == ReturnMode::STRONGEST) return 1;
-      if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_STRONGEST)
-        return 2;
+      if (return_mode == ReturnMode::SINGLE_LAST) return 0;
+      if (return_mode == ReturnMode::SINGLE_STRONGEST) return 1;
+      if (return_mode == ReturnMode::DUAL_STRONGEST_LAST) return 2;
       break;
     default:
       throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
