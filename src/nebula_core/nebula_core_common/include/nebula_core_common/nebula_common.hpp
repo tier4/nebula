@@ -15,6 +15,7 @@
 #ifndef NEBULA_COMMON_H
 #define NEBULA_COMMON_H
 
+#include <nebula_core_common/cuda_compat.hpp>
 #include <nebula_core_common/point_types.hpp>
 
 #include <boost/tokenizer.hpp>
@@ -507,13 +508,15 @@ PointCloud<PointXYZ> convert_point_xyzircaedt_to_point_xyz(
 /// @param radians
 /// @return degrees
 template <typename T>
-static inline std::enable_if_t<std::is_floating_point_v<T>, T> deg2rad(T degrees)
+NEBULA_HOST_DEVICE static inline constexpr std::enable_if_t<std::is_floating_point_v<T>, T> deg2rad(
+  T degrees)
 {
   return degrees * static_cast<T>(M_PI / 180.0);
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_integral_v<T>, double> deg2rad(T degrees)
+NEBULA_HOST_DEVICE static inline constexpr std::enable_if_t<std::is_integral_v<T>, double> deg2rad(
+  T degrees)
 {
   return deg2rad<double>(static_cast<double>(degrees));
 }
@@ -522,7 +525,8 @@ static inline std::enable_if_t<std::is_integral_v<T>, double> deg2rad(T degrees)
 /// @param radians
 /// @return degrees
 template <typename T>
-static inline std::enable_if_t<std::is_floating_point_v<T>, T> rad2deg(T radians)
+NEBULA_HOST_DEVICE static inline constexpr std::enable_if_t<std::is_floating_point_v<T>, T> rad2deg(
+  T radians)
 {
   return radians * static_cast<T>(180.0 / M_PI);
 }
