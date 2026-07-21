@@ -6,6 +6,7 @@
     - source: .github/workflows/semantic-pull-request.yaml
     - source: .github/workflows/spell-check-differential.yaml
     - source: .github/workflows/sync-files.yaml
+    - source: .github/workflows/lint-autoware-system-design-format.yaml
     - source: .clang-format
     - source: .markdown-link-check.json
     - source: .markdownlint.yaml

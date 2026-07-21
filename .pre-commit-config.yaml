@@ -95,7 +95,7 @@ repos:
         exclude: .cu
 
   - repo: https://github.com/autowarefoundation/autoware_system_designer
-    rev: v0.3.2
+    rev: v0.4.1
     hooks:
       - id: lint-system-design-format
         args: [--format=github-actions]
