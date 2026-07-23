@@ -31,7 +31,8 @@
 namespace nebula::ros
 {
 HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
-: rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
+: nebula::agnocast_wrapper::Node(
+    "hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
   sensor_cfg_ptr_(nullptr),
   diagnostic_updater_general_((declare_parameter<bool>("diagnostic_updater.use_fqn", true), this)),
@@ -114,8 +115,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       "pandar_packets", rclcpp::SensorDataQoS(),
       std::bind(&HesaiRosWrapper::receive_scan_message_callback, this, std::placeholders::_1));
     RCLCPP_INFO_STREAM(
-      get_logger(),
-      "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
+      get_logger(), "Hardware connection disabled, listening for packets on " << "pandar_packets");
   }
 
   // Register parameter callback after all params have been declared. Otherwise it would be called
@@ -406,7 +406,7 @@ Status HesaiRosWrapper::validate_and_set_config(
 }
 
 void HesaiRosWrapper::receive_scan_message_callback(
-  std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg)
+  NEBULA_MESSAGE_CONST_SHARED_PTR(pandar_msgs::msg::PandarScan) scan_msg)
 {
   util::Stopwatch receive_watch;
   if (hw_interface_wrapper_) {
@@ -424,7 +424,7 @@ void HesaiRosWrapper::receive_scan_message_callback(
     replay_state_ = ReplayState{scan_msg->packets.front().stamp};
   }
 
-  for (auto & pkt : scan_msg->packets) {
+  for (const auto & pkt : scan_msg->packets) {
     auto nebula_pkt_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
     nebula_pkt_ptr->stamp = pkt.stamp;
     std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_core_ros/agnocast_wrapper/node.hpp"
 #include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
 #include "nebula_core_ros/diagnostics/severity_latch.hpp"
 
@@ -108,7 +109,7 @@ class FunctionalSafetyDiagnosticTask : public diagnostic_updater::CompositeDiagn
 {
 public:
   explicit FunctionalSafetyDiagnosticTask(
-    rclcpp::Node * const parent_node,
+    nebula::agnocast_wrapper::Node * const parent_node,
     std::unique_ptr<FunctionalSafetyStatusProcessor> status_processor)
   : CompositeDiagnosticTask("Functional safety status"),
     liveness_monitor_("Liveness", parent_node, 100ms),
