@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_core_ros/agnocast_wrapper/node.hpp"
 #include "nebula_core_ros/parameter_descriptors.hpp"
 
 #include <nebula_continental_common/continental_ars548.hpp>
@@ -37,7 +38,7 @@ class ContinentalARS548HwInterfaceWrapper
 {
 public:
   ContinentalARS548HwInterfaceWrapper(
-    rclcpp::Node * const parent_node,
+    nebula::agnocast_wrapper::Node * const parent_node,
     std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
       config);
 
@@ -57,15 +58,17 @@ public:
 private:
   /// @brief Callback to send the odometry information to the radar device
   /// @param msg The odometry message
-  void odometry_callback(const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg);
+  void odometry_callback(
+    NEBULA_MESSAGE_CONST_SHARED_PTR(geometry_msgs::msg::TwistWithCovarianceStamped) msg);
 
   /// @brief Callback to send the acceleration information to the radar device
   /// @param msg The acceleration message
-  void acceleration_callback(const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr msg);
+  void acceleration_callback(
+    NEBULA_MESSAGE_CONST_SHARED_PTR(geometry_msgs::msg::AccelWithCovarianceStamped) msg);
 
   /// @brief Callback to send the steering angle information to the radar device
   /// @param msg The steering angle message
-  void steering_angle_callback(const std_msgs::msg::Float32::SharedPtr msg);
+  void steering_angle_callback(NEBULA_MESSAGE_CONST_SHARED_PTR(std_msgs::msg::Float32) msg);
 
   /// @brief Service callback to set the new sensor ip
   /// @param request service request
@@ -103,17 +106,16 @@ private:
     const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetRadarParameters::Response>
       response);
 
-  rclcpp::Node * const parent_node_;
+  nebula::agnocast_wrapper::Node * const parent_node_;
   std::shared_ptr<drivers::continental_ars548::ContinentalARS548HwInterface> hw_interface_{};
   rclcpp::Logger logger_;
   nebula::Status status_{};
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration>
     config_ptr_{};
 
-  rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr odometry_sub_{};
-  rclcpp::Subscription<geometry_msgs::msg::AccelWithCovarianceStamped>::SharedPtr
-    acceleration_sub_{};
-  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr steering_angle_sub_{};
+  NEBULA_SUBSCRIPTION_PTR(geometry_msgs::msg::TwistWithCovarianceStamped) odometry_sub_ {};
+  NEBULA_SUBSCRIPTION_PTR(geometry_msgs::msg::AccelWithCovarianceStamped) acceleration_sub_ {};
+  NEBULA_SUBSCRIPTION_PTR(std_msgs::msg::Float32) steering_angle_sub_ {};
 
   nebula::util::RateChecker odometry_rate_checker_;
   nebula::util::RateChecker acceleration_rate_checker_;
@@ -121,13 +123,13 @@ private:
 
   bool standstill_{true};
 
-  rclcpp::Service<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration>::SharedPtr
-    set_network_configuration_service_server_{};
-  rclcpp::Service<continental_srvs::srv::ContinentalArs548SetSensorMounting>::SharedPtr
-    set_sensor_mounting_service_server_{};
-  rclcpp::Service<continental_srvs::srv::ContinentalArs548SetVehicleParameters>::SharedPtr
-    set_vehicle_parameters_service_server_{};
-  rclcpp::Service<continental_srvs::srv::ContinentalArs548SetRadarParameters>::SharedPtr
-    set_radar_parameters_service_server_{};
+  NEBULA_SERVICE_PTR(continental_srvs::srv::ContinentalArs548SetNetworkConfiguration)
+  set_network_configuration_service_server_{};
+  NEBULA_SERVICE_PTR(continental_srvs::srv::ContinentalArs548SetSensorMounting)
+  set_sensor_mounting_service_server_{};
+  NEBULA_SERVICE_PTR(continental_srvs::srv::ContinentalArs548SetVehicleParameters)
+  set_vehicle_parameters_service_server_{};
+  NEBULA_SERVICE_PTR(continental_srvs::srv::ContinentalArs548SetRadarParameters)
+  set_radar_parameters_service_server_{};
 };
 }  // namespace nebula::ros

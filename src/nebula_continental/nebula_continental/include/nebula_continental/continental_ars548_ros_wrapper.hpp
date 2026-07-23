@@ -16,6 +16,7 @@
 
 #include "nebula_continental/continental_ars548_decoder_wrapper.hpp"
 #include "nebula_continental/continental_ars548_hw_interface_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/node.hpp"
 #include "nebula_core_ros/parameter_descriptors.hpp"
 
 #include <nebula_continental_common/continental_ars548.hpp>
@@ -39,7 +40,7 @@ namespace nebula::ros
 {
 
 /// @brief Ros wrapper of continental ars548 driver
-class ContinentalARS548RosWrapper final : public rclcpp::Node
+class ContinentalARS548RosWrapper final : public nebula::agnocast_wrapper::Node
 {
 public:
   explicit ContinentalARS548RosWrapper(const rclcpp::NodeOptions & options);
@@ -58,7 +59,8 @@ private:
   void receive_packet_callback(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg_ptr);
 
   /// @brief Callback from replayed NebulaPackets
-  void receive_packets_callback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg_ptr);
+  void receive_packets_callback(NEBULA_MESSAGE_CONST_SHARED_PTR(nebula_msgs::msg::NebulaPackets)
+                                  packets_msg_ptr);
 
   /// @brief Retrieve the parameters from ROS and set the driver and hw interface
   /// @return Resulting status
@@ -79,7 +81,7 @@ private:
   std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration>
     config_ptr_{};
 
-  rclcpp::Subscription<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_sub_{};
+  NEBULA_SUBSCRIPTION_PTR(nebula_msgs::msg::NebulaPackets) packets_sub_ {};
 
   bool launch_hw_{};
 
@@ -88,7 +90,7 @@ private:
 
   std::mutex mtx_config_;
 
-  OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_{};
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_{};
 };
 
 }  // namespace nebula::ros
