@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_HESAI_COMMON_H
-#define NEBULA_HESAI_COMMON_H
+#ifndef NEBULA_HESAI_COMMON__HESAI_COMMON_HPP_
+#define NEBULA_HESAI_COMMON__HESAI_COMMON_HPP_
 
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
@@ -805,4 +805,4 @@ inline bool supports_blockage_mask(const SensorModel & sensor_model)
 }  // namespace drivers
 }  // namespace nebula
 
-#endif  // NEBULA_HESAI_COMMON_H
+#endif  // NEBULA_HESAI_COMMON__HESAI_COMMON_HPP_
