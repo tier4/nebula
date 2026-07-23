@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_VelodyneRosDecoderTestVls128_H
-#define NEBULA_VelodyneRosDecoderTestVls128_H
+#ifndef NEBULA_VELODYNE__NEBULA_VELODYNE__TESTS__VELODYNE_ROS_DECODER_TEST_VLS128_HPP_
+#define NEBULA_VELODYNE__NEBULA_VELODYNE__TESTS__VELODYNE_ROS_DECODER_TEST_VLS128_HPP_
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_core_common/nebula_common.hpp>
@@ -72,4 +72,4 @@ private:
 
 }  // namespace nebula::ros
 
-#endif  // NEBULA_VelodyneRosDecoderTestVls128_H
+#endif  // NEBULA_VELODYNE__NEBULA_VELODYNE__TESTS__VELODYNE_ROS_DECODER_TEST_VLS128_HPP_
