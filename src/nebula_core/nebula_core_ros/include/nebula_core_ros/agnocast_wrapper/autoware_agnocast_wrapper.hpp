@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include "autoware_utils_rclcpp/polling_subscriber.hpp"
-
 #include <rclcpp/exceptions/exceptions.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -62,8 +60,6 @@
   typename nebula::agnocast_wrapper::Subscription<MessageT>::SharedPtr
 #define NEBULA_PUBLISHER_PTR(MessageT) \
   typename nebula::agnocast_wrapper::Publisher<MessageT>::SharedPtr
-#define NEBULA_POLLING_SUBSCRIBER_PTR(...) \
-  typename nebula::agnocast_wrapper::PollingSubscriber<__VA_ARGS__>::SharedPtr
 #define NEBULA_CLIENT_PTR(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::SharedPtr
 #define NEBULA_SERVICE_PTR(ServiceT) typename nebula::agnocast_wrapper::Service<ServiceT>::SharedPtr
 #define NEBULA_CLIENT_FUTURE(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::Future
@@ -88,11 +84,6 @@
   nebula::agnocast_wrapper::create_publisher<message_type>(node, arg1, arg2)
 #define NEBULA_CREATE_PUBLISHER3_ON_NODE(message_type, node, arg1, arg2, arg3) \
   nebula::agnocast_wrapper::create_publisher<message_type>(node, arg1, arg2, arg3)
-
-#define NEBULA_CREATE_POLLING_SUBSCRIBER(message_type, policy, topic, qos) \
-  nebula::agnocast_wrapper::create_polling_subscriber<message_type, policy>(this, topic, qos)
-#define NEBULA_CREATE_POLLING_SUBSCRIBER_ON_NODE(message_type, policy, node, topic, qos) \
-  nebula::agnocast_wrapper::create_polling_subscriber<message_type, policy>(node, topic, qos)
 
 #define NEBULA_CREATE_CLIENT1(service_type, service_name) \
   nebula::agnocast_wrapper::create_client<service_type>(this, service_name)
@@ -553,140 +544,6 @@ typename Subscription<MessageT>::SharedPtr create_subscription(
     return std::make_shared<ROS2Subscription<MessageT>>(
       node, topic_name, rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)),
       std::forward<Func>(callback), options);
-  }
-}
-
-// Reuse the polling policy tag types (Latest / Newest / All) from autoware_utils_rclcpp so that
-// node code can specify the policy by type, exactly as with the original
-// InterProcessPollingSubscriber.
-namespace polling_policy = autoware_utils_rclcpp::polling_policy;
-
-// Default value for take_data(allow_same_message): Latest re-delivers the cached message (true),
-// Newest only delivers a message that is new since the last take (false).
-template <typename MessageT, template <typename> class PollingPolicy>
-inline constexpr bool polling_default_allow_same_message_v =
-  !std::is_same_v<PollingPolicy<MessageT>, polling_policy::Newest<MessageT>>;
-
-// The wrapper's PollingSubscriber interface returns a single message from take_data(), so the
-// All policy (which yields a std::vector in InterProcessPollingSubscriber, and has no equivalent
-// in agnocast's native polling subscriber) cannot be represented. Reject it at compile time.
-template <typename MessageT, template <typename> class PollingPolicy>
-inline constexpr bool polling_policy_supported_v =
-  !std::is_same_v<PollingPolicy<MessageT>, polling_policy::All<MessageT>>;
-
-template <typename MessageT, template <typename> class PollingPolicy = polling_policy::Latest>
-class PollingSubscriber
-{
-public:
-  static_assert(
-    polling_policy_supported_v<MessageT, PollingPolicy>,
-    "polling_policy::All is not supported by nebula::agnocast_wrapper::create_polling_subscriber "
-    "(take_data() returns a single message, not a vector). Use polling_policy::Latest or "
-    "polling_policy::Newest.");
-
-  using SharedPtr = std::shared_ptr<PollingSubscriber<MessageT, PollingPolicy>>;
-
-  static constexpr bool default_allow_same_message =
-    polling_default_allow_same_message_v<MessageT, PollingPolicy>;
-
-  virtual ~PollingSubscriber() = default;
-
-  virtual NEBULA_MESSAGE_SHARED_PTR(const MessageT)
-    takeData(bool allow_same_message = default_allow_same_message) = 0;
-  virtual NEBULA_MESSAGE_SHARED_PTR(const MessageT)
-    take_data(bool allow_same_message = default_allow_same_message) = 0;
-};
-
-template <typename MessageT, template <typename> class PollingPolicy = polling_policy::Latest>
-class AgnocastPollingSubscriber : public PollingSubscriber<MessageT, PollingPolicy>
-{
-  typename agnocast::TakeSubscription<MessageT>::SharedPtr subscriber_;
-
-  static constexpr bool default_allow_same_message =
-    polling_default_allow_same_message_v<MessageT, PollingPolicy>;
-
-public:
-  template <typename NodeT>
-  explicit AgnocastPollingSubscriber(
-    NodeT * node, const std::string & topic_name, const rclcpp::QoS & qos)
-  : subscriber_(std::make_shared<agnocast::TakeSubscription<MessageT>>(node, topic_name, qos))
-  {
-  }
-
-  NEBULA_MESSAGE_SHARED_PTR(const MessageT)
-  takeData(bool allow_same_message = default_allow_same_message) override
-  {
-    auto data = subscriber_->take(allow_same_message);
-    return NEBULA_MESSAGE_SHARED_PTR(const MessageT)(std::move(data));
-  }
-
-  NEBULA_MESSAGE_SHARED_PTR(const MessageT)
-  take_data(bool allow_same_message = default_allow_same_message) override
-  {
-    auto data = subscriber_->take(allow_same_message);
-    return NEBULA_MESSAGE_SHARED_PTR(const MessageT)(std::move(data));
-  }
-};
-
-template <typename MessageT, template <typename> class PollingPolicy = polling_policy::Latest>
-class ROS2PollingSubscriber : public PollingSubscriber<MessageT, PollingPolicy>
-{
-  typename autoware_utils_rclcpp::InterProcessPollingSubscriber<MessageT, PollingPolicy>::SharedPtr
-    subscriber_;
-
-  static constexpr bool default_allow_same_message =
-    polling_default_allow_same_message_v<MessageT, PollingPolicy>;
-
-  NEBULA_MESSAGE_SHARED_PTR(const MessageT) take_data_impl(bool allow_same_message)
-  {
-    (void)allow_same_message;
-    return NEBULA_MESSAGE_SHARED_PTR(const MessageT)(std::move(subscriber_->take_data()));
-  }
-
-public:
-  explicit ROS2PollingSubscriber(
-    rclcpp::Node * node, const std::string & topic_name, const rclcpp::QoS & qos)
-  : subscriber_(
-      autoware_utils_rclcpp::InterProcessPollingSubscriber<
-        MessageT, PollingPolicy>::create_subscription(node, topic_name, qos))
-  {
-  }
-
-  NEBULA_MESSAGE_SHARED_PTR(const MessageT)
-  takeData(bool allow_same_message = default_allow_same_message) override
-  {
-    return take_data_impl(allow_same_message);
-  }
-
-  NEBULA_MESSAGE_SHARED_PTR(const MessageT)
-  take_data(bool allow_same_message = default_allow_same_message) override
-  {
-    return take_data_impl(allow_same_message);
-  }
-};
-
-template <typename MessageT, template <typename> class PollingPolicy = polling_policy::Latest>
-typename PollingSubscriber<MessageT, PollingPolicy>::SharedPtr create_polling_subscriber(
-  rclcpp::Node * node, const std::string & topic_name, const size_t qos_history_depth)
-{
-  if (use_agnocast()) {
-    return std::make_shared<AgnocastPollingSubscriber<MessageT, PollingPolicy>>(
-      node, topic_name, rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)));
-  } else {
-    return std::make_shared<ROS2PollingSubscriber<MessageT, PollingPolicy>>(
-      node, topic_name, rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)));
-  }
-}
-
-template <typename MessageT, template <typename> class PollingPolicy = polling_policy::Latest>
-typename PollingSubscriber<MessageT, PollingPolicy>::SharedPtr create_polling_subscriber(
-  rclcpp::Node * node, const std::string & topic_name, const rclcpp::QoS & qos = rclcpp::QoS{1})
-{
-  if (use_agnocast()) {
-    return std::make_shared<AgnocastPollingSubscriber<MessageT, PollingPolicy>>(
-      node, topic_name, qos);
-  } else {
-    return std::make_shared<ROS2PollingSubscriber<MessageT, PollingPolicy>>(node, topic_name, qos);
   }
 }
 
@@ -1331,8 +1188,6 @@ inline void set_period(const Timer::SharedPtr & timer, std::chrono::nanoseconds 
 #define NEBULA_CLIENT_RESPONSE_PTR(ServiceT) std::shared_ptr<const typename ServiceT::Response>
 #define NEBULA_SUBSCRIPTION_PTR(MessageT) typename rclcpp::Subscription<MessageT>::SharedPtr
 #define NEBULA_PUBLISHER_PTR(MessageT) typename rclcpp::Publisher<MessageT>::SharedPtr
-#define NEBULA_POLLING_SUBSCRIBER_PTR(...) \
-  typename autoware_utils_rclcpp::InterProcessPollingSubscriber<__VA_ARGS__>::SharedPtr
 #define NEBULA_CLIENT_PTR(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::SharedPtr
 #define NEBULA_SERVICE_PTR(ServiceT) typename nebula::agnocast_wrapper::Service<ServiceT>::SharedPtr
 #define NEBULA_CLIENT_FUTURE(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::Future
@@ -1357,13 +1212,6 @@ inline void set_period(const Timer::SharedPtr & timer, std::chrono::nanoseconds 
   node->create_publisher<message_type>(arg1, arg2)
 #define NEBULA_CREATE_PUBLISHER3_ON_NODE(message_type, node, arg1, arg2, arg3) \
   node->create_publisher<message_type>(arg1, arg2, arg3)
-
-#define NEBULA_CREATE_POLLING_SUBSCRIBER(message_type, policy, topic, qos)                         \
-  autoware_utils_rclcpp::InterProcessPollingSubscriber<message_type, policy>::create_subscription( \
-    this, topic, qos)
-#define NEBULA_CREATE_POLLING_SUBSCRIBER_ON_NODE(message_type, policy, node, topic, qos)           \
-  autoware_utils_rclcpp::InterProcessPollingSubscriber<message_type, policy>::create_subscription( \
-    node, topic, qos)
 
 #define NEBULA_CREATE_CLIENT1(service_type, service_name) \
   nebula::agnocast_wrapper::create_client<service_type>(this, service_name)
@@ -1622,10 +1470,6 @@ create_service(
 
 namespace nebula::agnocast_wrapper
 {
-
-// Mirror the Agnocast-build alias so node code can name the polling policy the same way in both
-// builds (e.g. nebula::agnocast_wrapper::polling_policy::Newest).
-namespace polling_policy = autoware_utils_rclcpp::polling_policy;
 
 /// @brief Set the timer period (non-Agnocast build).
 ///
