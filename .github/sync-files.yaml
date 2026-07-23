@@ -16,3 +16,40 @@
     - source: .yamllint.yaml
     - source: CPPLINT.cfg
     - source: setup.cfg
+
+# Mirror the autoware::agnocast_wrapper CORE headers (Method-2 Node + pub/sub/tf2/message_filters/
+# diagnostic_updater) from autoware.core into nebula, renamed into the nebula::agnocast_wrapper /
+# NEBULA_ namespace. The polling bridge (polling_subscriber.hpp) is intentionally NOT synced so that
+# nebula never pulls autoware_utils_rclcpp (that file is the wrapper's only autoware_utils dependency).
+- repository: autowarefoundation/autoware.core
+  files:
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/autoware_agnocast_wrapper.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/autoware_agnocast_wrapper.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/node.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/node.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/message_filters.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/message_filters.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/tf2.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/tf2.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/diagnostic_updater.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/diagnostic_updater.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
