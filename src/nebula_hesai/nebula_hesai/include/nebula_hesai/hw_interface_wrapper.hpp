@@ -15,7 +15,6 @@
 #pragma once
 
 #include "nebula_core_ros/agnocast_wrapper/node.hpp"
-
 #include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
 #include <nebula_hesai_common/hesai_common.hpp>
