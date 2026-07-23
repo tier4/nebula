@@ -10,8 +10,20 @@
     - source: .markdown-link-check.json
     - source: .markdownlint.yaml
     - source: .pre-commit-config.yaml
+      # Re-apply Nebula's cpplint deviation that the raw sync would clobber: keep the
+      # -runtime/arrays and -readability/casting filters. runtime/arrays infers const-ness
+      # from the variable name, which clashes with our naming conventions; readability/casting
+      # flags intentional C-style casts in the socket code. (-build/c++17 now lives in the
+      # synced CPPLINT.cfg.)
+      pre-commands: |
+        sed -i "s|args: \[--quiet\]|args: [--quiet, '--filter=-runtime/arrays,-readability/casting']|" {source}
     - source: .pre-commit-config-optional.yaml
     - source: .prettierignore
+      # Nebula's calibration data files (e.g. the velodyne .yaml files) use a flow style
+      # that Prettier and yamllint format incompatibly, so keep all *.yaml Prettier-ignored
+      # as before (yamllint still lints them).
+      pre-commands: |
+        sed -i 's|\*\.param\.yaml|*.yaml|' {source}
     - source: .prettierrc.yaml
     - source: .yamllint.yaml
     - source: CPPLINT.cfg
