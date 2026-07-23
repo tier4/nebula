@@ -29,7 +29,7 @@
 namespace nebula::ros
 {
 ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptions & options)
-: rclcpp::Node(
+: nebula::agnocast_wrapper::Node(
     "continental_ars548_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED)
 {
@@ -64,8 +64,7 @@ ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptio
       std::bind(
         &ContinentalARS548RosWrapper::receive_packets_callback, this, std::placeholders::_1));
     RCLCPP_INFO_STREAM(
-      get_logger(),
-      "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
+      get_logger(), "Hardware connection disabled, listening for packets on " << "nebula_packets");
   }
 
   // Register parameter callback after all params have been declared. Otherwise it would be called
@@ -161,7 +160,7 @@ Status ContinentalARS548RosWrapper::validate_and_set_config(
 }
 
 void ContinentalARS548RosWrapper::receive_packets_callback(
-  std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg_ptr)
+  NEBULA_MESSAGE_CONST_SHARED_PTR(nebula_msgs::msg::NebulaPackets) packets_msg_ptr)
 {
   if (hw_interface_wrapper_) {
     RCLCPP_ERROR_THROTTLE(
@@ -171,10 +170,10 @@ void ContinentalARS548RosWrapper::receive_packets_callback(
     return;
   }
 
-  for (auto & packet : packets_msg_ptr->packets) {
+  for (const auto & packet : packets_msg_ptr->packets) {
     auto nebula_packet_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
     nebula_packet_ptr->stamp = packet.stamp;
-    nebula_packet_ptr->data = std::move(packet.data);
+    nebula_packet_ptr->data = packet.data;
 
     decoder_wrapper_->process_packet(std::move(nebula_packet_ptr));
   }

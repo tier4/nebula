@@ -50,7 +50,7 @@ if("$ENV{ENABLE_AGNOCAST}")
   agnocast_components_register_node(
     continental_ars548_ros_wrapper PLUGIN "ContinentalARS548RosWrapper"
     EXECUTABLE continental_ars548_ros_wrapper_node
-    EXECUTOR CallbackIsolatedAgnocastExecutor)
+    EXECUTOR AgnocastOnlyCallbackIsolatedExecutor)
 else()
   rclcpp_components_register_node(
     continental_ars548_ros_wrapper PLUGIN "ContinentalARS548RosWrapper"

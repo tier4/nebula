@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "nebula_core_ros/agnocast_wrapper/diagnostic_updater.hpp"
+#include "nebula_core_ros/agnocast_wrapper/node.hpp"
 #include "nebula_core_ros/diagnostics/hysteresis_state_machine.hpp"
 #include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
 #include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
@@ -66,7 +68,7 @@ class ContinentalARS548DecoderWrapper
 {
 public:
   ContinentalARS548DecoderWrapper(
-    rclcpp::Node * const parent_node,
+    nebula::agnocast_wrapper::Node * const parent_node,
     std::shared_ptr<
       const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config,
     bool launch_hw);
@@ -130,7 +132,7 @@ private:
   autoware_sensing_msgs::msg::RadarObjects convert_to_autoware_radar_objects(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
-  void initialize_sync_diagnostics(rclcpp::Node * parent_node);
+  void initialize_sync_diagnostics(nebula::agnocast_wrapper::Node * parent_node);
 
   /// @brief Convert ARS548 detections to a pointcloud
   /// @param msg The ARS548 detection list msg
@@ -176,7 +178,7 @@ private:
   /// @param name The name of the rate bound status
   /// @return RateBoundStatus for OK and WARN diagnostics
   static custom_diagnostic_tasks::RateBoundStatus make_rate_bound_status(
-    rclcpp::Node * const node, const std::string & name)
+    nebula::agnocast_wrapper::Node * const node, const std::string & name)
   {
     static constexpr bool immediate_error_report = false;
     static constexpr bool immediate_relax_state = true;
@@ -217,7 +219,7 @@ private:
   /// @param diagnostics_ns The diagnostics namespace for parameter
   /// @return HysteresisStateMachine for internal diagnostics
   static custom_diagnostic_tasks::HysteresisStateMachine make_hysteresis_status(
-    rclcpp::Node * const node, const std::string & diagnostics_ns)
+    nebula::agnocast_wrapper::Node * const node, const std::string & diagnostics_ns)
   {
     static constexpr bool immediate_error_report = false;
     static constexpr bool immediate_relax_state = true;
@@ -241,13 +243,13 @@ private:
   custom_diagnostic_tasks::HysteresisStateMachine blockage_status_;
   custom_diagnostic_tasks::HysteresisStateMachine internal_status_;
   nebula::ros::LivenessMonitor liveness_monitor_;
-  diagnostic_updater::Updater objects_diagnostics_updater_;
-  diagnostic_updater::Updater detections_diagnostics_updater_;
-  diagnostic_updater::Updater liveness_diagnostics_updater_;
+  nebula::agnocast_wrapper::diagnostic_updater::Updater objects_diagnostics_updater_;
+  nebula::agnocast_wrapper::diagnostic_updater::Updater detections_diagnostics_updater_;
+  nebula::agnocast_wrapper::diagnostic_updater::Updater liveness_diagnostics_updater_;
 
   nebula::Status status_;
   rclcpp::Logger logger_;
-  rclcpp::Node * const parent_node_;
+  nebula::agnocast_wrapper::Node * const parent_node_;
 
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration>
     config_ptr_ RCPPUTILS_TSA_GUARDED_BY(mtx_config_ptr_);
@@ -258,20 +260,19 @@ private:
   std::mutex mtx_driver_ptr_;
   std::shared_mutex mtx_config_ptr_;
 
-  rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_{};
+  NEBULA_PUBLISHER_PTR(nebula_msgs::msg::NebulaPackets) packets_pub_ {};
 
-  rclcpp::Publisher<continental_msgs::msg::ContinentalArs548DetectionList>::SharedPtr
-    detection_list_pub_{};
-  rclcpp::Publisher<continental_msgs::msg::ContinentalArs548ObjectList>::SharedPtr
-    object_list_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr object_pointcloud_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr detection_pointcloud_pub_{};
-  rclcpp::Publisher<autoware_sensing_msgs::msg::RadarObjects>::SharedPtr autoware_objects_pub_{};
-  rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr scan_raw_pub_{};
-  rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_{};
-  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_{};
-  rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_{};
-  rclcpp::Publisher<autoware_sensing_msgs::msg::RadarInfo>::SharedPtr radar_info_pub_{};
+  NEBULA_PUBLISHER_PTR(continental_msgs::msg::ContinentalArs548DetectionList)
+  detection_list_pub_{};
+  NEBULA_PUBLISHER_PTR(continental_msgs::msg::ContinentalArs548ObjectList) object_list_pub_ {};
+  NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) object_pointcloud_pub_ {};
+  NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) detection_pointcloud_pub_ {};
+  NEBULA_PUBLISHER_PTR(autoware_sensing_msgs::msg::RadarObjects) autoware_objects_pub_ {};
+  NEBULA_PUBLISHER_PTR(radar_msgs::msg::RadarScan) scan_raw_pub_ {};
+  NEBULA_PUBLISHER_PTR(radar_msgs::msg::RadarTracks) objects_raw_pub_ {};
+  NEBULA_PUBLISHER_PTR(visualization_msgs::msg::MarkerArray) objects_markers_pub_ {};
+  NEBULA_PUBLISHER_PTR(diagnostic_msgs::msg::DiagnosticArray) diagnostics_pub_ {};
+  NEBULA_PUBLISHER_PTR(autoware_sensing_msgs::msg::RadarInfo) radar_info_pub_ {};
 
   autoware_sensing_msgs::msg::RadarInfo radar_info_msg_{};
   std::size_t detection_msgs_counter_{0};
