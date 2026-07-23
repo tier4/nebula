@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/autoware_agnocast_wrapper.hpp"
 #include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
 #include "nebula_core_ros/single_consumer_processor.hpp"
 #include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"

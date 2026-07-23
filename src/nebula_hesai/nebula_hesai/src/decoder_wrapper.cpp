@@ -2,7 +2,7 @@
 
 #include "nebula_hesai/decoder_wrapper.hpp"
 
-#include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/autoware_agnocast_wrapper.hpp"
 #include "nebula_core_ros/cie_thread_factory.hpp"
 #include "nebula_core_ros/point_cloud_conversions.hpp"
 #include "nebula_core_ros/rclcpp_logger.hpp"
@@ -89,11 +89,11 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   auto pointcloud_qos =
     rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
 
-  nebula_points_pub_ = NEBULA_CREATE_PUBLISHER2(
+  nebula_points_pub_ = NEBULA_CREATE_PUBLISHER2_ON_NODE(
     sensor_msgs::msg::PointCloud2, &parent_node_, "pandar_points", pointcloud_qos);
-  aw_points_base_pub_ = NEBULA_CREATE_PUBLISHER2(
+  aw_points_base_pub_ = NEBULA_CREATE_PUBLISHER2_ON_NODE(
     sensor_msgs::msg::PointCloud2, &parent_node_, "aw_points", pointcloud_qos);
-  aw_points_ex_pub_ = NEBULA_CREATE_PUBLISHER2(
+  aw_points_ex_pub_ = NEBULA_CREATE_PUBLISHER2_ON_NODE(
     sensor_msgs::msg::PointCloud2, &parent_node_, "aw_points_ex", pointcloud_qos);
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
@@ -176,13 +176,17 @@ void HesaiDecoderWrapper::on_pointcloud_decoded(
 
   rclcpp::Time cloud_stamp = rclcpp::Time(seconds_to_chrono_nano_seconds(timestamp_s).count());
 
-  if (NEBULA_HAS_ANY_SUBSCRIPTIONS(nebula_points_pub_)) {
+  if (
+    nebula_points_pub_->get_subscription_count() > 0 ||
+    nebula_points_pub_->get_intra_process_subscription_count() > 0) {
     auto ros_pc_msg_ptr = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(nebula_points_pub_);
     *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*pointcloud);
     ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
   }
-  if (NEBULA_HAS_ANY_SUBSCRIPTIONS(aw_points_base_pub_)) {
+  if (
+    aw_points_base_pub_->get_subscription_count() > 0 ||
+    aw_points_base_pub_->get_intra_process_subscription_count() > 0) {
     auto autoware_cloud_xyzi =
       nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(*pointcloud);
     auto ros_pc_msg_ptr = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(aw_points_base_pub_);
@@ -190,7 +194,9 @@ void HesaiDecoderWrapper::on_pointcloud_decoded(
     ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
   }
-  if (NEBULA_HAS_ANY_SUBSCRIPTIONS(aw_points_ex_pub_)) {
+  if (
+    aw_points_ex_pub_->get_subscription_count() > 0 ||
+    aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
     auto autoware_ex_cloud =
       nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(*pointcloud, timestamp_s);
     auto ros_pc_msg_ptr = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(aw_points_ex_pub_);
@@ -285,7 +291,7 @@ HesaiDecoderWrapper::initialize_blockage_mask_plugin()
 
   auto blockage_mask_plugin = std::make_shared<drivers::point_filters::BlockageMaskPlugin>(
     sensor_cfg_->blockage_mask_horizontal_bin_size_mdeg.value());
-  auto blockage_mask_pub = NEBULA_CREATE_PUBLISHER2(
+  auto blockage_mask_pub = NEBULA_CREATE_PUBLISHER2_ON_NODE(
     sensor_msgs::msg::Image, &parent_node_, "blockage_mask", rclcpp::SensorDataQoS());
 
   blockage_mask_plugin->set_callback(
