@@ -101,8 +101,8 @@ void HesaiHwInterfaceWrapper::on_config_change(
     } catch (const std::exception & e) {
       RCLCPP_ERROR_STREAM(
         logger_,
-        "Could not apply new configuration; the sensor may be left in a partially applied, "
-        "undefined state: "
+        "Could not apply new configuration; the sensor may be left in a partially reconfigured "
+        "state: "
           << e.what());
     }
   }
