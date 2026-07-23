@@ -2,7 +2,7 @@
 
 #include "nebula_hesai/decoder_wrapper.hpp"
 
-#include "nebula_core_ros/agnocast_wrapper/autoware_agnocast_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_core_ros/cie_thread_factory.hpp"
 #include "nebula_core_ros/point_cloud_conversions.hpp"
 #include "nebula_core_ros/rclcpp_logger.hpp"
