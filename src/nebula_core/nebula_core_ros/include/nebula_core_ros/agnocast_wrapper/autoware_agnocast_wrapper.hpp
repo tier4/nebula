@@ -36,12 +36,10 @@
 #include <cstdlib>
 
 #define NEBULA_MESSAGE_UNIQUE_PTR(MessageT) \
-  nebula::agnocast_wrapper::message_ptr<    \
-    MessageT, nebula::agnocast_wrapper::OwnershipType::Unique>
+  nebula::agnocast_wrapper::message_ptr<MessageT, nebula::agnocast_wrapper::OwnershipType::Unique>
 // For publisher (mutable message)
 #define NEBULA_MESSAGE_SHARED_PTR(MessageT) \
-  nebula::agnocast_wrapper::message_ptr<    \
-    MessageT, nebula::agnocast_wrapper::OwnershipType::Shared>
+  nebula::agnocast_wrapper::message_ptr<MessageT, nebula::agnocast_wrapper::OwnershipType::Shared>
 // For subscription (read-only message)
 #define NEBULA_MESSAGE_CONST_SHARED_PTR(MessageT) \
   nebula::agnocast_wrapper::message_ptr<          \
@@ -62,12 +60,9 @@
   typename nebula::agnocast_wrapper::Subscription<MessageT>::SharedPtr
 #define NEBULA_PUBLISHER_PTR(MessageT) \
   typename nebula::agnocast_wrapper::Publisher<MessageT>::SharedPtr
-#define NEBULA_CLIENT_PTR(ServiceT) \
-  typename nebula::agnocast_wrapper::Client<ServiceT>::SharedPtr
-#define NEBULA_SERVICE_PTR(ServiceT) \
-  typename nebula::agnocast_wrapper::Service<ServiceT>::SharedPtr
-#define NEBULA_CLIENT_FUTURE(ServiceT) \
-  typename nebula::agnocast_wrapper::Client<ServiceT>::Future
+#define NEBULA_CLIENT_PTR(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::SharedPtr
+#define NEBULA_SERVICE_PTR(ServiceT) typename nebula::agnocast_wrapper::Service<ServiceT>::SharedPtr
+#define NEBULA_CLIENT_FUTURE(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::Future
 #define NEBULA_CLIENT_SHARED_FUTURE(ServiceT) \
   typename nebula::agnocast_wrapper::Client<ServiceT>::SharedFuture
 #define NEBULA_CLIENT_FUTURE_AND_REQUEST_ID(ServiceT) \
@@ -766,11 +761,9 @@ public:
     return wait_for_service_impl(std::chrono::duration_cast<std::chrono::nanoseconds>(timeout));
   }
 
-  virtual FutureAndRequestId async_send_request(
-    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request) = 0;
+  virtual FutureAndRequestId async_send_request(NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request) = 0;
   virtual SharedFutureAndRequestId async_send_request(
-    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request,
-    std::function<void(SharedFuture)> callback) = 0;
+    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request, std::function<void(SharedFuture)> callback) = 0;
 };
 
 template <typename ServiceT>
@@ -1195,12 +1188,9 @@ inline void set_period(const Timer::SharedPtr & timer, std::chrono::nanoseconds 
 #define NEBULA_CLIENT_RESPONSE_PTR(ServiceT) std::shared_ptr<const typename ServiceT::Response>
 #define NEBULA_SUBSCRIPTION_PTR(MessageT) typename rclcpp::Subscription<MessageT>::SharedPtr
 #define NEBULA_PUBLISHER_PTR(MessageT) typename rclcpp::Publisher<MessageT>::SharedPtr
-#define NEBULA_CLIENT_PTR(ServiceT) \
-  typename nebula::agnocast_wrapper::Client<ServiceT>::SharedPtr
-#define NEBULA_SERVICE_PTR(ServiceT) \
-  typename nebula::agnocast_wrapper::Service<ServiceT>::SharedPtr
-#define NEBULA_CLIENT_FUTURE(ServiceT) \
-  typename nebula::agnocast_wrapper::Client<ServiceT>::Future
+#define NEBULA_CLIENT_PTR(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::SharedPtr
+#define NEBULA_SERVICE_PTR(ServiceT) typename nebula::agnocast_wrapper::Service<ServiceT>::SharedPtr
+#define NEBULA_CLIENT_FUTURE(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::Future
 #define NEBULA_CLIENT_SHARED_FUTURE(ServiceT) \
   typename nebula::agnocast_wrapper::Client<ServiceT>::SharedFuture
 #define NEBULA_CLIENT_FUTURE_AND_REQUEST_ID(ServiceT) \
@@ -1306,11 +1296,9 @@ public:
     return wait_for_service_impl(std::chrono::duration_cast<std::chrono::nanoseconds>(timeout));
   }
 
-  virtual FutureAndRequestId async_send_request(
-    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request) = 0;
+  virtual FutureAndRequestId async_send_request(NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request) = 0;
   virtual SharedFutureAndRequestId async_send_request(
-    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request,
-    std::function<void(SharedFuture)> callback) = 0;
+    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request, std::function<void(SharedFuture)> callback) = 0;
 };
 
 template <typename ServiceT>
