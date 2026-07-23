@@ -17,13 +17,14 @@
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_core_hw_interfaces/connections/udp.hpp"
+#include "nebula_core_ros/agnocast_wrapper/diagnostic_updater.hpp"
+#include "nebula_core_ros/agnocast_wrapper/node.hpp"
 #include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 #include "nebula_hesai/decoder_wrapper.hpp"
 #include "nebula_hesai/hw_interface_wrapper.hpp"
 #include "nebula_hesai/hw_monitor_wrapper.hpp"
 #include "nebula_hesai_common/hesai_common.hpp"
 
-#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
@@ -44,7 +45,7 @@ namespace nebula::ros
 {
 
 /// @brief Ros wrapper of hesai driver
-class HesaiRosWrapper final : public rclcpp::Node
+class HesaiRosWrapper final : public nebula::agnocast_wrapper::Node
 {
   using get_calibration_result_t = nebula::util::expected<
     std::shared_ptr<drivers::HesaiCalibrationConfigurationBase>, nebula::Status>;
@@ -87,7 +88,8 @@ private:
     const std::vector<uint8_t> & packet,
     const drivers::connections::UdpSocket::RxMetadata & metadata);
 
-  void receive_scan_message_callback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg);
+  void receive_scan_message_callback(NEBULA_MESSAGE_CONST_SHARED_PTR(pandar_msgs::msg::PandarScan)
+                                       scan_msg);
 
   Status declare_and_get_sensor_config_params();
 
@@ -123,7 +125,7 @@ private:
 
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_ptr_{};
 
-  rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr packets_sub_{};
+  NEBULA_SUBSCRIPTION_PTR(pandar_msgs::msg::PandarScan) packets_sub_ {};
 
   bool launch_hw_;
   /// @brief Only exists if launch_hw_ is false. Tracks replay state, e.g. to reset state when a
@@ -137,13 +139,13 @@ private:
   std::optional<HesaiDecoderWrapper> decoder_wrapper_;
 
   /// @brief Diagnostics that are not time or safety-critical
-  diagnostic_updater::Updater diagnostic_updater_general_;
+  nebula::agnocast_wrapper::diagnostic_updater::Updater diagnostic_updater_general_;
   /// @brief Diagnostics that are related to functional safety
-  diagnostic_updater::Updater diagnostic_updater_functional_safety_;
+  nebula::agnocast_wrapper::diagnostic_updater::Updater diagnostic_updater_functional_safety_;
 
   std::mutex mtx_config_;
 
-  OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
 };
 
 }  // namespace nebula::ros

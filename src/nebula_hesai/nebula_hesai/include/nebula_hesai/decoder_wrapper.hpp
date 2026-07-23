@@ -14,7 +14,9 @@
 
 #pragma once
 
-#include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/autoware_agnocast_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/diagnostic_updater.hpp"
+#include "nebula_core_ros/agnocast_wrapper/node.hpp"
 #include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
 #include "nebula_core_ros/single_consumer_processor.hpp"
 #include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
@@ -47,10 +49,11 @@ class HesaiDecoderWrapper
 {
 public:
   HesaiDecoderWrapper(
-    rclcpp::Node * parent_node,
+    nebula::agnocast_wrapper::Node * parent_node,
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
     const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & calibration,
-    diagnostic_updater::Updater & diagnostic_updater, bool publish_packets);
+    nebula::agnocast_wrapper::diagnostic_updater::Updater & diagnostic_updater,
+    bool publish_packets);
 
   /// @brief Process a cloud packet and return metadata
   /// @param packet_msg The packet to process
@@ -91,7 +94,7 @@ private:
   }
 
   static custom_diagnostic_tasks::RateBoundStatus make_rate_bound_status(
-    uint16_t rpm, rclcpp::Node & node)
+    uint16_t rpm, nebula::agnocast_wrapper::Node & node)
   {
     double nominal_rate_hz = drivers::rpm2hz(rpm);
 
@@ -124,10 +127,11 @@ private:
   }
 
   void initialize_functional_safety(
-    diagnostic_updater::Updater & diagnostic_updater,
+    nebula::agnocast_wrapper::diagnostic_updater::Updater & diagnostic_updater,
     const std::optional<drivers::AdvancedFunctionalSafetyConfiguration> & fs_config);
 
-  void initialize_packet_loss_diagnostic(diagnostic_updater::Updater & diagnostic_updater);
+  void initialize_packet_loss_diagnostic(
+    nebula::agnocast_wrapper::diagnostic_updater::Updater & diagnostic_updater);
 
   std::pair<
     std::shared_ptr<drivers::point_filters::BlockageMaskPlugin>,
@@ -140,7 +144,7 @@ private:
 
   nebula::Status status_;
   rclcpp::Logger logger_;
-  rclcpp::Node & parent_node_;
+  nebula::agnocast_wrapper::Node & parent_node_;
 
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_;
   std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> calibration_cfg_ptr_;
@@ -149,7 +153,7 @@ private:
   std::mutex mtx_driver_ptr_;
 
   pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_;
-  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_;
+  NEBULA_PUBLISHER_PTR(pandar_msgs::msg::PandarScan) packets_pub_;
   std::optional<SingleConsumerProcessor<pandar_msgs::msg::PandarScan::UniquePtr>>
     packets_pub_thread_;
 
@@ -163,7 +167,7 @@ private:
   std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;
   std::optional<PacketLossDiagnosticTask> packet_loss_diagnostic_;
 
-  autoware_utils_debug::DebugPublisher debug_publisher_;
+  autoware_utils_debug::BasicDebugPublisher<nebula::agnocast_wrapper::Node> debug_publisher_;
 
   struct PerformanceCounters
   {

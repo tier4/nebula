@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "nebula_core_ros/agnocast_wrapper/node.hpp"
+
 #include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
 #include <nebula_hesai_common/hesai_common.hpp>
@@ -28,7 +30,7 @@ class HesaiHwInterfaceWrapper
 {
 public:
   HesaiHwInterfaceWrapper(
-    rclcpp::Node * const parent_node,
+    nebula::agnocast_wrapper::Node * const parent_node,
     std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
     bool use_udp_only = false);
 
