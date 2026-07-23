@@ -56,9 +56,7 @@
         },
         "sensor_model": {
           "$ref": "lidar_velodyne.json#/definitions/sensor_model",
-          "enum": [
-            "VLP16"
-          ]
+          "enum": ["VLP16"]
         },
         "calibration_file": {
           "$ref": "lidar_velodyne.json#/definitions/calibration_file"
@@ -103,14 +101,10 @@
           "$ref": "#/definitions/VLP16"
         }
       },
-      "required": [
-        "ros__parameters"
-      ],
+      "required": ["ros__parameters"],
       "additionalProperties": false
     }
   },
-  "required": [
-    "/**"
-  ],
+  "required": ["/**"],
   "additionalProperties": false
 }
