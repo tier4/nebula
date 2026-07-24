@@ -14,6 +14,9 @@
 
 #pragma once
 
+#include "nebula_core_ros/agnocast_wrapper/autoware_agnocast_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/node.hpp"
+
 #include <nebula_core_common/util/errno.hpp>
 #include <nebula_core_common/util/expected.hpp>
 #include <nebula_core_common/util/rate_limiter.hpp>
@@ -63,13 +66,10 @@ inline ClockId make_sensor_clock_id(const std::string & frame_id)
 class SyncToolingWorker
 {
 public:
-  template <typename NodeT>
   SyncToolingWorker(
-    NodeT * const parent_node, const std::string & topic, const std::string & frame_id,
-    uint8_t ptp_domain_id)
-  : publisher_(
-      rclcpp::create_publisher<std_msgs::msg::UInt8MultiArray>(
-        *parent_node, topic, rclcpp::QoS(10))),
+    nebula::agnocast_wrapper::Node * const parent_node, const std::string & topic,
+    const std::string & frame_id, uint8_t ptp_domain_id)
+  : publisher_(parent_node->create_publisher<std_msgs::msg::UInt8MultiArray>(topic, 10)),
     hostname_(get_hostname()),
     sensor_id_(make_sensor_clock_id(frame_id)),
     ptp_domain_id_(ptp_domain_id)
@@ -172,7 +172,7 @@ private:
     publisher_->publish(ros2_msg);
   }
 
-  rclcpp::Publisher<std_msgs::msg::UInt8MultiArray>::SharedPtr publisher_;
+  NEBULA_PUBLISHER_PTR(std_msgs::msg::UInt8MultiArray) publisher_;
 
   std::string hostname_;
   ClockId sensor_id_;
