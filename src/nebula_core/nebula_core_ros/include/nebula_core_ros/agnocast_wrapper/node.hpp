@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_core_ros/agnocast_wrapper/autoware_agnocast_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -303,7 +303,8 @@ public:
     return create_service<ServiceT>(
       service_name,
       [callback = std::forward<Func>(callback)](
-        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req, NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
+        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req,
+        NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
         auto request = std::make_shared<typename ServiceT::Request>(*req);
         auto response = std::make_shared<typename ServiceT::Response>();
         callback(request, response);
@@ -434,7 +435,7 @@ namespace nebula::agnocast_wrapper
 {
 
 // is_message_ptr_service_callback_v / is_shared_ptr_service_callback_v are defined in
-// autoware_agnocast_wrapper.hpp, identically named in both builds.
+// nebula_agnocast_wrapper.hpp, identically named in both builds.
 
 /// @brief Node class for the non-Agnocast build.
 ///
@@ -675,7 +676,8 @@ public:
     const std::string & service_name, const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
     rclcpp::CallbackGroup::SharedPtr group = nullptr)
   {
-    return nebula::agnocast_wrapper::create_client<ServiceT>(node_.get(), service_name, qos, group);
+    return nebula::agnocast_wrapper::create_client<ServiceT>(
+      node_.get(), service_name, qos, group);
   }
 
   // ===== Service =====
@@ -711,7 +713,8 @@ public:
     return create_service<ServiceT>(
       service_name,
       [callback = std::forward<Func>(callback)](
-        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req, NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
+        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req,
+        NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
         auto request = std::make_shared<typename ServiceT::Request>(*req);
         auto response = std::make_shared<typename ServiceT::Response>();
         callback(request, response);
