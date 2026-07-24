@@ -36,7 +36,7 @@ namespace nebula::ros
 using std::chrono_literals::operator""ms;
 
 ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
-  rclcpp::Node * const parent_node,
+  nebula::agnocast_wrapper::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     config_ptr,
   bool launch_hw)
@@ -147,7 +147,8 @@ Status ContinentalARS548DecoderWrapper::initialize_driver(
   return Status::OK;
 }
 
-void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node * const parent_node)
+void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(
+  nebula::agnocast_wrapper::Node * const parent_node)
 {
   std::scoped_lock lock(mtx_config_ptr_, mtx_driver_ptr_);
   if (!config_ptr_->sync_diagnostics_topic) {
@@ -204,7 +205,7 @@ void ContinentalARS548DecoderWrapper::detection_list_callback(
     detection_pointcloud_pub_->get_subscription_count() > 0 ||
     detection_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
     const auto detection_pointcloud = convert_to_pointcloud(*msg);
-    auto detection_pointcloud_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
+    auto detection_pointcloud_msg_ptr = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(detection_pointcloud_pub_);
     *detection_pointcloud_msg_ptr = nebula::ros::to_ros_msg(detection_pointcloud);
 
     detection_pointcloud_msg_ptr->header = msg->header;
@@ -222,7 +223,9 @@ void ContinentalARS548DecoderWrapper::detection_list_callback(
   if (
     detection_list_pub_->get_subscription_count() > 0 ||
     detection_list_pub_->get_intra_process_subscription_count() > 0) {
-    detection_list_pub_->publish(std::move(msg));
+    auto out = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(detection_list_pub_);
+    *out = *msg;
+    detection_list_pub_->publish(std::move(out));
   }
 
   std::shared_lock lock_cfg(mtx_config_ptr_);
@@ -245,7 +248,7 @@ void ContinentalARS548DecoderWrapper::object_list_callback(
     object_pointcloud_pub_->get_subscription_count() > 0 ||
     object_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
     const auto object_pointcloud = convert_to_pointcloud(*msg);
-    auto object_pointcloud_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
+    auto object_pointcloud_msg_ptr = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(object_pointcloud_pub_);
     *object_pointcloud_msg_ptr = nebula::ros::to_ros_msg(object_pointcloud);
 
     object_pointcloud_msg_ptr->header = msg->header;
@@ -277,7 +280,9 @@ void ContinentalARS548DecoderWrapper::object_list_callback(
   if (
     object_list_pub_->get_subscription_count() > 0 ||
     object_list_pub_->get_intra_process_subscription_count() > 0) {
-    object_list_pub_->publish(std::move(msg));
+    auto out = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(object_list_pub_);
+    *out = std::move(*msg);
+    object_list_pub_->publish(std::move(out));
   }
   objects_rate_bound_status_.tick();
 }
@@ -448,7 +453,9 @@ void ContinentalARS548DecoderWrapper::packets_callback(
   if (
     packets_pub_ && (packets_pub_->get_subscription_count() > 0 ||
                      packets_pub_->get_intra_process_subscription_count() > 0)) {
-    packets_pub_->publish(std::move(msg));
+    auto out = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(packets_pub_);
+    *out = std::move(*msg);
+    packets_pub_->publish(std::move(out));
   }
 }
 
