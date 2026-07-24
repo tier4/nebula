@@ -2,7 +2,6 @@
 
 #include "nebula_hesai/hw_interface_wrapper.hpp"
 
-#include "nebula_core_ros/cie_thread_factory.hpp"
 #include "nebula_core_ros/parameter_descriptors.hpp"
 #include "nebula_core_ros/rclcpp_logger.hpp"
 #include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
@@ -16,12 +15,11 @@ namespace nebula::ros
 {
 
 HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
-  rclcpp::Node * const parent_node,
+  nebula::agnocast_wrapper::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config, bool use_udp_only)
 : hw_interface_(
     std::make_shared<drivers::HesaiHwInterface>(
-      drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"),
-      make_cie_thread_factory("nebula_hesai_udp_receiver@" + config->frame_id))),
+      drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"))),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
   use_udp_only_(use_udp_only)
