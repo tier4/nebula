@@ -193,6 +193,7 @@ enum class SensorModel : uint8_t {
   HESAI_PANDARAT128,
   HESAI_PANDAR128_E3X,
   HESAI_PANDAR128_E4X,
+  HESAI_PANDARFT120,
   VELODYNE_VLS128,
   VELODYNE_HDL64,
   VELODYNE_VLP32,
@@ -256,6 +257,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
       break;
     case SensorModel::HESAI_PANDAR128_E4X:
       os << "Pandar128_E4X_OT";
+      break;
+    case SensorModel::HESAI_PANDARFT120:
+      os << "PandarFT120";
       break;
     case SensorModel::VELODYNE_VLS128:
       os << "VLS128";
@@ -409,6 +413,7 @@ inline SensorModel sensor_model_from_string(const std::string & sensor_model)
   if (sensor_model == "PandarQT64") return SensorModel::HESAI_PANDARQT64;
   if (sensor_model == "PandarQT128") return SensorModel::HESAI_PANDARQT128;
   if (sensor_model == "Pandar128E4X") return SensorModel::HESAI_PANDAR128_E4X;
+  if (sensor_model == "PandarFT120") return SensorModel::HESAI_PANDARFT120;
   // Velodyne
   if (sensor_model == "VLS128") return SensorModel::VELODYNE_VLS128;
   if (sensor_model == "HDL64") return SensorModel::VELODYNE_HDL64;
@@ -451,6 +456,8 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
       return "PandarQT128";
     case SensorModel::HESAI_PANDAR128_E4X:
       return "Pandar128E4X";
+    case SensorModel::HESAI_PANDARFT120:
+      return "PandarFT120";
     // Velodyne
     case SensorModel::VELODYNE_VLS128:
       return "VLS128";

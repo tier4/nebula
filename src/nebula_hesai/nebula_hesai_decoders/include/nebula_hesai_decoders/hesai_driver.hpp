@@ -108,8 +108,10 @@ public:
   HesaiDriver() = delete;
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this driver
-  /// @param calibration_configuration CalibrationConfiguration for this driver (either
-  /// HesaiCalibrationConfiguration for sensors other than AT128 or HesaiCorrection for AT128)
+  /// @param calibration_configuration CalibrationConfiguration for this driver (
+  /// HesaiCalibrationConfiguration for rotating sensors other than AT128 or
+  /// HesaiCorrection for AT128 or
+  /// HesaiSolidStateCalibration for FT120 )
   HesaiDriver(
     const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &

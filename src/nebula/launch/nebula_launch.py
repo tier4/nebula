@@ -33,6 +33,7 @@ SENSOR_MODELS_HESAI = [
     "PandarXT16",
     "PandarXT32",
     "PandarXT32M",
+    "PandarFT120",
 ]
 SENSOR_MODELS_ROBOSENSE = ["Bpearl", "Helios"]
 SENSOR_MODELS_CONTINENTAL = ["ARS548", "SRR520"]
