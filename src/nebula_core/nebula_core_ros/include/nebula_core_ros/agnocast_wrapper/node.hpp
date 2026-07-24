@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_core_ros/agnocast_wrapper/autoware_agnocast_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -434,7 +434,7 @@ namespace nebula::agnocast_wrapper
 {
 
 // is_message_ptr_service_callback_v / is_shared_ptr_service_callback_v are defined in
-// autoware_agnocast_wrapper.hpp, identically named in both builds.
+// nebula_agnocast_wrapper.hpp, identically named in both builds.
 
 /// @brief Node class for the non-Agnocast build.
 ///

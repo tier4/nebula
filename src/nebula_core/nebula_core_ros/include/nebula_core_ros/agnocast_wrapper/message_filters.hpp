@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_core_ros/agnocast_wrapper/autoware_agnocast_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_core_ros/agnocast_wrapper/node.hpp"
 
 #include <message_filters/subscriber.h>
