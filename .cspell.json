@@ -2,10 +2,12 @@
   "version": "0.2",
   "language": "en",
   "allowCompoundWords": true,
-  "ignorePaths": ["*.drawio"],
+  "ignorePaths": [
+    "*.drawio"
+  ],
   "words": [
-    "adctp",
     "Adctp",
+    "adctp",
     "Agnocast",
     "applicate",
     "asio",
@@ -22,8 +24,8 @@
     "demarked",
     "DHAVE",
     "Difop",
-    "extrinsics",
     "elts",
+    "extrinsics",
     "fout",
     "gprmc",
     "gptp",
@@ -48,8 +50,8 @@
     "nsec",
     "ntoa",
     "OVFL",
-    "pandar",
     "PANDAR",
+    "pandar",
     "PANDARAT",
     "PANDARQT",
     "PANDARXT",
@@ -59,9 +61,9 @@
     "QT",
     "rclcpp",
     "RCPPUTILS",
-    "rviz",
     "rosbag",
     "rosbags",
+    "rviz",
     "schedutil",
     "sharey",
     "srvs",
@@ -75,14 +77,14 @@
     "UDP_SEQ",
     "UNSYNCHRONIZED",
     "usec",
-    "vccint",
     "Vccint",
+    "vccint",
     "Vdat",
     "Wbitwise",
     "XT",
     "XTM",
     "yukkysaito",
-    "zensical",
-    "Zensical"
+    "Zensical",
+    "zensical"
   ]
 }

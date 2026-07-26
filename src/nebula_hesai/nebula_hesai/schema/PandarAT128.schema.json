@@ -77,9 +77,7 @@
         },
         "sensor_model": {
           "$ref": "lidar_hesai.json#/definitions/sensor_model",
-          "enum": [
-            "PandarAT128"
-          ]
+          "enum": ["PandarAT128"]
         },
         "calibration_file": {
           "$ref": "lidar_hesai.json#/definitions/calibration_file"
@@ -90,19 +88,11 @@
         "rotation_speed": {
           "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/rotation_speed",
           "default": "200",
-          "enum": [
-            200,
-            400
-          ]
+          "enum": [200, 400]
         },
         "return_mode": {
           "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/return_mode",
-          "enum": [
-            "Last",
-            "Strongest",
-            "LastStrongest",
-            "Dual"
-          ]
+          "enum": ["Last", "Strongest", "LastStrongest", "Dual"]
         },
         "ptp_profile": {
           "$ref": "lidar_hesai.json#/definitions/ptp_profile"
@@ -130,10 +120,7 @@
         },
         "diagnostics": {
           "$ref": "lidar_hesai.json#/definitions/diagnostics",
-          "required": [
-            "pointcloud_publish_rate",
-            "packet_loss"
-          ]
+          "required": ["pointcloud_publish_rate", "packet_loss"]
         },
         "sync_diagnostics": {
           "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/sync_diagnostics"
@@ -183,13 +170,9 @@
         },
         "additionalProperties": false
       },
-      "required": [
-        "ros__parameters"
-      ]
+      "required": ["ros__parameters"]
     }
   },
-  "required": [
-    "/**"
-  ],
+  "required": ["/**"],
   "additionalProperties": false
 }

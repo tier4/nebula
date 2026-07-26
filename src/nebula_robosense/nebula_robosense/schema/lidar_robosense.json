@@ -5,19 +5,11 @@
   "definitions": {
     "sensor_model": {
       "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/sensor_model",
-      "enum": [
-        "Helios",
-        "Bpearl"
-      ]
+      "enum": ["Helios", "Bpearl"]
     },
     "return_mode": {
       "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/return_mode",
-      "enum": [
-        "Dual",
-        "Strongest",
-        "Last",
-        "First"
-      ]
+      "enum": ["Dual", "Strongest", "Last", "First"]
     }
   },
   "$id": "nebula_robosense/schema/lidar_robosense.json"

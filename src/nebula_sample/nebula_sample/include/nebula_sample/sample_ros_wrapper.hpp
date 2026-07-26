@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_SAMPLE_ROS_WRAPPER_HPP
-#define NEBULA_SAMPLE_ROS_WRAPPER_HPP
+#ifndef NEBULA_SAMPLE__SAMPLE_ROS_WRAPPER_HPP_
+#define NEBULA_SAMPLE__SAMPLE_ROS_WRAPPER_HPP_
 
 #include "nebula_sample_decoders/sample_decoder.hpp"
 #include "nebula_sample_hw_interfaces/sample_hw_interface.hpp"
@@ -172,4 +172,4 @@ private:
 
 }  // namespace nebula::ros
 
-#endif  // NEBULA_SAMPLE_ROS_WRAPPER_HPP
+#endif  // NEBULA_SAMPLE__SAMPLE_ROS_WRAPPER_HPP_

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_SAMPLE_DECODER_HPP
-#define NEBULA_SAMPLE_DECODER_HPP
+#ifndef NEBULA_SAMPLE_DECODERS__SAMPLE_DECODER_HPP_
+#define NEBULA_SAMPLE_DECODERS__SAMPLE_DECODER_HPP_
 
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_common/util/expected.hpp>
@@ -98,4 +98,4 @@ private:
 
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_SAMPLE_DECODER_HPP
+#endif  // NEBULA_SAMPLE_DECODERS__SAMPLE_DECODER_HPP_
