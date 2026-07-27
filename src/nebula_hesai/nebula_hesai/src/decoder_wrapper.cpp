@@ -2,7 +2,8 @@
 
 #include "nebula_hesai/decoder_wrapper.hpp"
 
-#include "nebula_core_ros/agnocast_wrapper/autoware_agnocast_wrapper.hpp"
+#include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
+#include "nebula_core_ros/cie_thread_factory.hpp"
 #include "nebula_core_ros/point_cloud_conversions.hpp"
 #include "nebula_core_ros/rclcpp_logger.hpp"
 #include "nebula_hesai/diagnostics/functional_safety_advanced.hpp"
@@ -77,12 +78,10 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
     packets_pub_thread_.emplace(
       [this](pandar_msgs::msg::PandarScan::UniquePtr && msg) {
         if (packets_pub_) {
-          auto out = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(packets_pub_);
-          *out = std::move(*msg);
-          packets_pub_->publish(std::move(out));
+          packets_pub_->publish(*msg);
         }
       },
-      10);
+      10, make_cie_thread_factory("nebula_hesai_packets_pub@" + sensor_cfg_->frame_id));
   }
 
   auto qos_profile = rmw_qos_profile_sensor_data;
