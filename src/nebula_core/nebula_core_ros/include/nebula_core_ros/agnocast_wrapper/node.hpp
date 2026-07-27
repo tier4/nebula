@@ -303,7 +303,8 @@ public:
     return create_service<ServiceT>(
       service_name,
       [callback = std::forward<Func>(callback)](
-        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req, NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
+        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req,
+        NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
         auto request = std::make_shared<typename ServiceT::Request>(*req);
         auto response = std::make_shared<typename ServiceT::Response>();
         callback(request, response);
@@ -675,7 +676,8 @@ public:
     const std::string & service_name, const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
     rclcpp::CallbackGroup::SharedPtr group = nullptr)
   {
-    return nebula::agnocast_wrapper::create_client<ServiceT>(node_.get(), service_name, qos, group);
+    return nebula::agnocast_wrapper::create_client<ServiceT>(
+      node_.get(), service_name, qos, group);
   }
 
   // ===== Service =====
@@ -711,7 +713,8 @@ public:
     return create_service<ServiceT>(
       service_name,
       [callback = std::forward<Func>(callback)](
-        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req, NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
+        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req,
+        NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
         auto request = std::make_shared<typename ServiceT::Request>(*req);
         auto response = std::make_shared<typename ServiceT::Response>();
         callback(request, response);
