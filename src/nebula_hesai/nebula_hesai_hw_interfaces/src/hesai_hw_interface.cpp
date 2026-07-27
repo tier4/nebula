@@ -742,37 +742,47 @@ Status HesaiHwInterface::set_ptp_config(
     return Status::ERROR_1;
   }
 
-  // Handle the OT128 differently - it has TSN settings and defines the PTP profile
-  // for automotive as 0x03 instead of 0x02 for other sensors.
-  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
-    if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
-      return Status::SENSOR_CONFIG_ERROR;
-    }
-    profile = 3;
-  }
-
   std::vector<unsigned char> request_payload;
-  request_payload.emplace_back(profile & 0xff);
-  request_payload.emplace_back(domain & 0xff);
-  request_payload.emplace_back(network & 0xff);
 
-  if (profile == 0) {
-    request_payload.emplace_back(logAnnounceInterval & 0xff);
-    request_payload.emplace_back(logSyncInterval & 0xff);
-    request_payload.emplace_back(logMinDelayReqInterval & 0xff);
-
-    // Check if we need to append the reserved byte (New Generation sensors)
-    bool is_new_gen =
-      (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT128 ||
-       sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
-       sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X);
-
-    if (is_new_gen) {
-      request_payload.emplace_back(0);  // Reserved byte
+  // Handle different sensor models with different PTP config formats
+  switch (sensor_configuration_->sensor_model) {
+    case SensorModel::HESAI_PANDARAT128: {
+      if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
+        return Status::SENSOR_CONFIG_ERROR;
+      }
+      // AT128 uses status, profile, domain, network, tsn_switch format
+      request_payload.emplace_back(1);  // status: enabled
+      request_payload.emplace_back(profile & 0xff);
+      request_payload.emplace_back(domain & 0xff);
+      request_payload.emplace_back(network & 0xff);
+      request_payload.emplace_back(switch_type & 0xff);  // tsn_switch
+      break;
     }
-
-  } else if (profile == 2 || profile == 3) {
-    request_payload.emplace_back(switch_type & 0xff);
+    case SensorModel::HESAI_PANDAR128_E4X: {
+      // OT128 uses profile 3 for automotive on the wire
+      if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
+        return Status::SENSOR_CONFIG_ERROR;
+      }
+      int ot128_profile = 3;
+      request_payload.emplace_back(ot128_profile & 0xff);
+      request_payload.emplace_back(domain & 0xff);
+      request_payload.emplace_back(network & 0xff);
+      request_payload.emplace_back(switch_type & 0xff);
+      break;
+    }
+    default: {
+      request_payload.emplace_back(profile & 0xff);
+      request_payload.emplace_back(domain & 0xff);
+      request_payload.emplace_back(network & 0xff);
+      if (profile == 0) {
+        request_payload.emplace_back(logAnnounceInterval & 0xff);
+        request_payload.emplace_back(logSyncInterval & 0xff);
+        request_payload.emplace_back(logMinDelayReqInterval & 0xff);
+      } else if (profile == 2 || profile == 3) {
+        request_payload.emplace_back(switch_type & 0xff);
+      }
+      break;
+    }
   }
 
   auto response_or_err = send_receive(g_ptc_command_set_ptp_config, request_payload);
@@ -795,13 +805,7 @@ std::shared_ptr<HesaiPtpConfigBase> HesaiHwInterface::get_ptp_config()
   uint8_t domain = response[2];
   uint8_t network = response[3];
 
-  // Base fields are 4 bytes.
-
   if (profile == 0) {
-    // 1588v2
-    // Check payload size to determine if it's extended or legacy
-    // Legacy: 4 + 3 = 7 bytes
-    // Extended: 4 + 4 = 8 bytes
     if (response.size() >= 8) {
       auto config = std::make_shared<HesaiPtpConfig1588v2Extended>();
       config->status = status;
@@ -825,8 +829,6 @@ std::shared_ptr<HesaiPtpConfigBase> HesaiHwInterface::get_ptp_config()
       return config;
     }
   } else if (profile == 2 || profile == 3) {
-    // 802.1AS
-    // Expect 4 + 1 = 5 bytes
     if (response.size() >= 5) {
       auto config = std::make_shared<HesaiPtpConfig8021AS>();
       config->status = status;
@@ -1112,94 +1114,79 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
     std::this_thread::sleep_for(wait_time);
   }
 
-  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128) {
+  set_flg = true;
+  auto sensor_sync_angle = static_cast<int>(hesai_config.sync_angle.value() / 100);
+  auto config_sync_angle = sensor_configuration->sync_angle;
+  int sync_flg = 1;
+  if (config_sync_angle != sensor_sync_angle) {
     set_flg = true;
-    auto sensor_sync_angle = static_cast<int>(hesai_config.sync_angle.value() / 100);
-    auto config_sync_angle = sensor_configuration->sync_angle;
-    int sync_flg = 1;
-    if (config_sync_angle != sensor_sync_angle) {
-      set_flg = true;
-    }
-    if (sync_flg && set_flg) {
-      logger_->info("current lidar sync: " + std::to_string(hesai_config.sync));
-      logger_->info("current lidar sync_angle: " + std::to_string(sensor_sync_angle));
-      logger_->info("current configuration sync_angle: " + std::to_string(config_sync_angle));
-      std::thread t(
-        [this, sync_flg, config_sync_angle] { set_sync_angle(sync_flg, config_sync_angle); });
-      t.join();
-      std::this_thread::sleep_for(wait_time);
-    }
-
-    std::thread t([this, sensor_configuration] {
-      if (
-        sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR40P ||
-        sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR64 ||
-        sensor_configuration->sensor_model == SensorModel::HESAI_PANDARQT64 ||
-        sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT16 ||
-        sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32 ||
-        sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32M) {
-        logger_->info("Trying to set Clock source to PTP");
-        set_clock_source(g_hesai_lidar_ptp_clock_source);
-      }
-
-      auto current_ptp = get_ptp_config();
-      bool needs_ptp_update = !ptp_config_matches_desired(*current_ptp, *sensor_configuration);
-
-      if (needs_ptp_update) {
-        std::ostringstream tmp_ostringstream;
-        tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
-                          << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
-                          << ", Transport: " << sensor_configuration->ptp_transport_type
-                          << ", Switch Type: " << sensor_configuration->ptp_switch_type
-                          << " via TCP";
-        logger_->info(tmp_ostringstream.str());
-        set_ptp_config(
-          static_cast<int>(sensor_configuration->ptp_profile), sensor_configuration->ptp_domain,
-          static_cast<int>(sensor_configuration->ptp_transport_type),
-          static_cast<int>(sensor_configuration->ptp_switch_type), g_ptp_log_announce_interval,
-          g_ptp_sync_interval, g_ptp_log_min_delay_interval);
-      }
-      logger_->debug("Setting properties done");
-    });
-    logger_->debug("Waiting for thread to finish");
-
-    t.join();
-    logger_->debug("Thread finished");
-
-    switch (sensor_configuration_->sensor_model) {
-      case SensorModel::HESAI_PANDAR128_E4X:
-      case SensorModel::HESAI_PANDARQT128:
-      case SensorModel::HESAI_PANDARXT16:
-      case SensorModel::HESAI_PANDARXT32:
-      case SensorModel::HESAI_PANDARXT32M: {
-        uint8_t sensor_ptp_lock_threshold = get_ptp_lock_offset();
-        if (sensor_ptp_lock_threshold != sensor_configuration_->ptp_lock_threshold) {
-          NEBULA_LOG_STREAM(
-            logger_->info, "changing sensor PTP lock offset from "
-                             << static_cast<int>(sensor_ptp_lock_threshold) << " to "
-                             << static_cast<int>(sensor_configuration_->ptp_lock_threshold));
-          set_ptp_lock_offset(sensor_configuration_->ptp_lock_threshold);
-        }
-        break;
-      }
-      default:
-        break;
-    }
-
-    std::this_thread::sleep_for(wait_time);
-  } else {  // AT128 only supports PTP setup via HTTP
-    logger_->info("Trying to set SyncAngle via HTTP");
-    set_sync_angle_sync_http(1, sensor_configuration->sync_angle);
-    std::ostringstream tmp_ostringstream;
-    tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
-                      << ", Domain: " << sensor_configuration->ptp_domain
-                      << ", Transport: " << sensor_configuration->ptp_transport_type << " via HTTP";
-    logger_->info(tmp_ostringstream.str());
-    set_ptp_config_sync_http(
-      static_cast<int>(sensor_configuration->ptp_profile), sensor_configuration->ptp_domain,
-      static_cast<int>(sensor_configuration->ptp_transport_type), g_ptp_log_announce_interval,
-      g_ptp_sync_interval, g_ptp_log_min_delay_interval);
   }
+  if (sync_flg && set_flg) {
+    logger_->info("current lidar sync: " + std::to_string(hesai_config.sync));
+    logger_->info("current lidar sync_angle: " + std::to_string(sensor_sync_angle));
+    logger_->info("current configuration sync_angle: " + std::to_string(config_sync_angle));
+    std::thread t(
+      [this, sync_flg, config_sync_angle] { set_sync_angle(sync_flg, config_sync_angle); });
+    t.join();
+    std::this_thread::sleep_for(wait_time);
+  }
+
+  std::thread t([this, sensor_configuration] {
+    if (
+      sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR40P ||
+      sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR64 ||
+      sensor_configuration->sensor_model == SensorModel::HESAI_PANDARQT64 ||
+      sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT16 ||
+      sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32 ||
+      sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32M) {
+      logger_->info("Trying to set Clock source to PTP");
+      set_clock_source(g_hesai_lidar_ptp_clock_source);
+    }
+
+    auto current_ptp = get_ptp_config();
+    bool needs_ptp_update = !ptp_config_matches_desired(*current_ptp, *sensor_configuration);
+
+    if (needs_ptp_update) {
+      std::ostringstream tmp_ostringstream;
+      tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
+                        << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
+                        << ", Transport: " << sensor_configuration->ptp_transport_type
+                        << ", Switch Type: " << sensor_configuration->ptp_switch_type << " via TCP";
+      logger_->info(tmp_ostringstream.str());
+      set_ptp_config(
+        static_cast<int>(sensor_configuration->ptp_profile), sensor_configuration->ptp_domain,
+        static_cast<int>(sensor_configuration->ptp_transport_type),
+        static_cast<int>(sensor_configuration->ptp_switch_type), g_ptp_log_announce_interval,
+        g_ptp_sync_interval, g_ptp_log_min_delay_interval);
+    }
+    logger_->debug("Setting properties done");
+  });
+  logger_->debug("Waiting for thread to finish");
+
+  t.join();
+  logger_->debug("Thread finished");
+
+  switch (sensor_configuration_->sensor_model) {
+    case SensorModel::HESAI_PANDAR128_E4X:
+    case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_PANDARXT16:
+    case SensorModel::HESAI_PANDARXT32:
+    case SensorModel::HESAI_PANDARXT32M: {
+      uint8_t sensor_ptp_lock_threshold = get_ptp_lock_offset();
+      if (sensor_ptp_lock_threshold != sensor_configuration_->ptp_lock_threshold) {
+        NEBULA_LOG_STREAM(
+          logger_->info, "changing sensor PTP lock offset from "
+                           << static_cast<int>(sensor_ptp_lock_threshold) << " to "
+                           << static_cast<int>(sensor_configuration_->ptp_lock_threshold));
+        set_ptp_lock_offset(sensor_configuration_->ptp_lock_threshold);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  std::this_thread::sleep_for(wait_time);
 
   if (
     sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR128_E3X ||

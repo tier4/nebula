@@ -951,7 +951,6 @@ protected:
 struct HesaiPtpConfig1588v2Extended : public HesaiPtpConfig1588v2
 {
   uint8_t reserved = 0;
-  // No extra fields to show in JSON currently, but good to have the struct for potential future use
 };
 
 struct HesaiPtpConfig8021AS : public HesaiPtpConfigBase
