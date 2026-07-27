@@ -223,9 +223,7 @@ void ContinentalARS548DecoderWrapper::detection_list_callback(
   if (
     detection_list_pub_->get_subscription_count() > 0 ||
     detection_list_pub_->get_intra_process_subscription_count() > 0) {
-    auto out = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(detection_list_pub_);
-    *out = *msg;
-    detection_list_pub_->publish(std::move(out));
+    detection_list_pub_->publish(*msg);
   }
 
   std::shared_lock lock_cfg(mtx_config_ptr_);
@@ -280,9 +278,7 @@ void ContinentalARS548DecoderWrapper::object_list_callback(
   if (
     object_list_pub_->get_subscription_count() > 0 ||
     object_list_pub_->get_intra_process_subscription_count() > 0) {
-    auto out = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(object_list_pub_);
-    *out = std::move(*msg);
-    object_list_pub_->publish(std::move(out));
+    object_list_pub_->publish(*msg);
   }
   objects_rate_bound_status_.tick();
 }
@@ -453,9 +449,7 @@ void ContinentalARS548DecoderWrapper::packets_callback(
   if (
     packets_pub_ && (packets_pub_->get_subscription_count() > 0 ||
                      packets_pub_->get_intra_process_subscription_count() > 0)) {
-    auto out = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(packets_pub_);
-    *out = std::move(*msg);
-    packets_pub_->publish(std::move(out));
+    packets_pub_->publish(*msg);
   }
 }
 
