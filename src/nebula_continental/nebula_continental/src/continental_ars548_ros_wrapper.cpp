@@ -33,6 +33,7 @@ ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptio
     "continental_ars548_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED)
 {
+  // CI trigger
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
   wrapper_status_ = declare_and_get_sensor_config_params();
