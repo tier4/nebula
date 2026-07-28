@@ -42,6 +42,14 @@ public:
   [[nodiscard]] std::shared_ptr<const HesaiInventoryBase> inventory() const;
 
 private:
+  /// @brief Apply the sensor configuration via the HW interface, retrying on transient comms
+  /// faults. Retries are bounded by g_hw_config_max_attempts when retry_hw is enabled (a single
+  /// attempt otherwise).
+  /// @throws std::runtime_error if the configuration cannot be applied after all attempts. Callers
+  /// decide whether that is fatal: the constructor lets it propagate (aborting startup), while
+  /// on_config_change catches it to keep a running node alive.
+  void configure_sensor();
+
   std::shared_ptr<drivers::HesaiHwInterface> hw_interface_;
   std::shared_ptr<const HesaiInventoryBase> inventory_;
 
@@ -49,5 +57,6 @@ private:
   nebula::Status status_;
   bool setup_sensor_;
   bool use_udp_only_;
+  bool retry_hw_;
 };
 }  // namespace nebula::ros
