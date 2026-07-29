@@ -111,11 +111,13 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
         std::placeholders::_2));
     stream_start();
   } else {
+    const std::string packets_topic = "pandar_packets";
     packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
-      "pandar_packets", rclcpp::SensorDataQoS(),
+      packets_topic, rclcpp::SensorDataQoS(),
       std::bind(&HesaiRosWrapper::receive_scan_message_callback, this, std::placeholders::_1));
     RCLCPP_INFO_STREAM(
-      get_logger(), "Hardware connection disabled, listening for packets on " << "pandar_packets");
+      get_logger(), "Hardware connection disabled, listening for packets on "
+                      << get_node_topics_interface()->resolve_topic_name(packets_topic));
   }
 
   // Register parameter callback after all params have been declared. Otherwise it would be called
