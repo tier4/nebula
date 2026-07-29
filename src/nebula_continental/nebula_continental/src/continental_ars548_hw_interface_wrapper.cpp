@@ -27,7 +27,7 @@ namespace nebula::ros
 {
 
 ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
-  rclcpp::Node * const parent_node,
+  nebula::agnocast_wrapper::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     config_ptr)
 : parent_node_(parent_node),
@@ -136,7 +136,7 @@ ContinentalARS548HwInterfaceWrapper::hw_interface() const
 }
 
 void ContinentalARS548HwInterfaceWrapper::odometry_callback(
-  const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg)
+  NEBULA_MESSAGE_CONST_SHARED_PTR(geometry_msgs::msg::TwistWithCovarianceStamped) msg)
 {
   using nebula::drivers::continental_ars548::max_odometry_hz;
   using nebula::drivers::continental_ars548::min_odometry_hz;
@@ -179,7 +179,7 @@ void ContinentalARS548HwInterfaceWrapper::odometry_callback(
 }
 
 void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
-  const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr msg)
+  NEBULA_MESSAGE_CONST_SHARED_PTR(geometry_msgs::msg::AccelWithCovarianceStamped) msg)
 {
   using nebula::drivers::continental_ars548::max_odometry_hz;
   using nebula::drivers::continental_ars548::min_odometry_hz;
@@ -204,7 +204,7 @@ void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
 }
 
 void ContinentalARS548HwInterfaceWrapper::steering_angle_callback(
-  const std_msgs::msg::Float32::SharedPtr msg)
+  NEBULA_MESSAGE_CONST_SHARED_PTR(std_msgs::msg::Float32) msg)
 {
   using nebula::drivers::continental_ars548::max_odometry_hz;
   using nebula::drivers::continental_ars548::min_odometry_hz;
