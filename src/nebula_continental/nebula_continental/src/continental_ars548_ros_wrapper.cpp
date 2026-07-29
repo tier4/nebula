@@ -59,12 +59,14 @@ ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptio
         &ContinentalARS548RosWrapper::receive_packet_callback, this, std::placeholders::_1));
     stream_start();
   } else {
+    const std::string packets_topic = "nebula_packets";
     packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(
-      "nebula_packets", rclcpp::SensorDataQoS(),
+      packets_topic, rclcpp::SensorDataQoS(),
       std::bind(
         &ContinentalARS548RosWrapper::receive_packets_callback, this, std::placeholders::_1));
     RCLCPP_INFO_STREAM(
-      get_logger(), "Hardware connection disabled, listening for packets on " << "nebula_packets");
+      get_logger(), "Hardware connection disabled, listening for packets on "
+                      << get_node_topics_interface()->resolve_topic_name(packets_topic));
   }
 
   // Register parameter callback after all params have been declared. Otherwise it would be called
