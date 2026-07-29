@@ -35,6 +35,7 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
+#include <functional>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -46,11 +47,22 @@ namespace nebula::ros
 class HesaiDecoderWrapper
 {
 public:
+  using functional_safety_evaluation_cb_t = std::function<void(const FunctionalSafetyEvaluation &)>;
+
+  /// @brief Construct the Hesai decoder wrapper.
+  /// @param parent_node Parent ROS node.
+  /// @param config Active sensor configuration.
+  /// @param calibration Loaded calibration data.
+  /// @param diagnostic_updater Diagnostic updater to register tasks on.
+  /// @param publish_packets Whether raw packet scans should be republished.
+  /// @param functional_safety_evaluation_cb Optional callback invoked for completed FuSa
+  /// evaluations.
   HesaiDecoderWrapper(
     rclcpp::Node * parent_node,
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
     const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & calibration,
-    diagnostic_updater::Updater & diagnostic_updater, bool publish_packets);
+    diagnostic_updater::Updater & diagnostic_updater, bool publish_packets,
+    functional_safety_evaluation_cb_t functional_safety_evaluation_cb = nullptr);
 
   /// @brief Process a cloud packet and return metadata
   /// @param packet_msg The packet to process
@@ -162,6 +174,7 @@ private:
   custom_diagnostic_tasks::RateBoundStatus publish_diagnostic_;
   std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;
   std::optional<PacketLossDiagnosticTask> packet_loss_diagnostic_;
+  functional_safety_evaluation_cb_t functional_safety_evaluation_cb_;
 
   autoware_utils_debug::DebugPublisher debug_publisher_;
 

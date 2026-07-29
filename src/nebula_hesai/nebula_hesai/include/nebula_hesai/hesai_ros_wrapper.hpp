@@ -17,6 +17,7 @@
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_core_hw_interfaces/connections/udp.hpp"
+#include "nebula_core_ros/single_consumer_processor.hpp"
 #include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 #include "nebula_hesai/decoder_wrapper.hpp"
 #include "nebula_hesai/hw_interface_wrapper.hpp"
@@ -34,6 +35,7 @@
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -58,6 +60,13 @@ class HesaiRosWrapper final : public rclcpp::Node
   struct ReplayState
   {
     rclcpp::Time last_scan_timestamp_;
+  };
+
+  /// @brief Reset debounce state for FuSa-triggered soft-resets.
+  enum class FunctionalSafetyResetState {
+    Healthy,
+    ResetPendingOrInFlight,
+    WaitingForRecovery,
   };
 
 public:
@@ -92,6 +101,14 @@ private:
   Status declare_and_get_sensor_config_params();
 
   void initialize_sync_tooling(const drivers::HesaiSensorConfiguration & config);
+
+  /// @brief Handle an evaluated FuSa status update and trigger a soft-reset on matching errors.
+  /// @param evaluation Evaluated FuSa result from the diagnostic task.
+  void on_functional_safety_evaluation(const FunctionalSafetyEvaluation & evaluation);
+
+  /// @brief Send the queued FuSa-triggered soft-reset command on a worker thread.
+  /// @param evaluation Evaluated FuSa result that triggered the reset.
+  void send_functional_safety_reset(FunctionalSafetyEvaluation && evaluation);
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
@@ -135,6 +152,10 @@ private:
   std::optional<HesaiHwInterfaceWrapper> hw_interface_wrapper_;
   std::optional<HesaiHwMonitorWrapper> hw_monitor_wrapper_;
   std::optional<HesaiDecoderWrapper> decoder_wrapper_;
+  /// @brief Latch state used to suppress repeat soft-resets until recovery is observed.
+  std::atomic<FunctionalSafetyResetState> functional_safety_reset_state_{
+    FunctionalSafetyResetState::Healthy};
+  SingleConsumerProcessor<FunctionalSafetyEvaluation> functional_safety_reset_processor_;
 
   /// @brief Diagnostics that are not time or safety-critical
   diagnostic_updater::Updater diagnostic_updater_general_;

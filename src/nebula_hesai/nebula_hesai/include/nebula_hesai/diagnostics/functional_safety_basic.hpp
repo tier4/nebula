@@ -29,18 +29,26 @@ namespace nebula::ros
 class FunctionalSafetyBasic : public FunctionalSafetyStatusProcessor
 {
 public:
-  void populate_status(
+  FunctionalSafetyEvaluation evaluate_status(
     drivers::FunctionalSafetySeverity severity,
-    const drivers::FunctionalSafetyErrorCodes & error_codes,
-    diagnostic_msgs::msg::DiagnosticStatus & inout_status) override
+    const drivers::FunctionalSafetyErrorCodes & error_codes) override
   {
-    inout_status.level = detail::severity_to_diagnostic_status_level(severity);
-    inout_status.message = detail::status_to_string(severity, error_codes.size());
+    FunctionalSafetyEvaluation evaluation;
+    evaluation.received_error_codes = error_codes;
+    evaluation.non_exempted_error_codes = error_codes;
+    evaluation.diagnostic_status.level = detail::severity_to_diagnostic_status_level(severity);
+    evaluation.diagnostic_status.message = detail::status_to_string(severity, error_codes.size());
 
     diagnostic_msgs::msg::KeyValue kv;
     kv.key = "Diagnostic codes";
     kv.value = detail::error_codes_to_string(error_codes);
-    inout_status.values.push_back(kv);
+    evaluation.diagnostic_status.values.push_back(kv);
+
+    if (severity == drivers::FunctionalSafetySeverity::ERROR) {
+      evaluation.triggering_error_codes = error_codes;
+    }
+
+    return evaluation;
   }
 };
 

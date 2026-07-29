@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "nebula_hesai/diagnostics/functional_safety_advanced.hpp"
+#include "nebula_hesai/diagnostics/functional_safety_basic.hpp"
 #include "nebula_hesai_decoders/decoders/functional_safety.hpp"
 
 #include <boost/range/algorithm/sort.hpp>
@@ -22,6 +23,7 @@
 
 #include <filesystem>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #ifndef _TEST_RESOURCES_PATH
@@ -180,10 +182,9 @@ TEST_P(PopulateStatusTest, PopulateStatus)
   const auto & test_case = GetParam();
   nebula::ros::FunctionalSafetyAdvanced functional_safety_advanced(
     error_definitions(), test_case.exempted_error_codes);
-  diagnostic_msgs::msg::DiagnosticStatus status;
-  functional_safety_advanced.populate_status(
-    test_case.arg_severity, test_case.arg_error_codes, status);
-  EXPECT_EQ(status.level, test_case.expected_status_level);
+  const auto evaluation =
+    functional_safety_advanced.evaluate_status(test_case.arg_severity, test_case.arg_error_codes);
+  EXPECT_EQ(evaluation.diagnostic_status.level, test_case.expected_status_level);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -193,8 +194,60 @@ INSTANTIATE_TEST_SUITE_P(
 TEST(FunctionalSafetyAdvanced, PopulateStatus)
 {
   nebula::ros::FunctionalSafetyAdvanced functional_safety_advanced(error_definitions(), {});
-  diagnostic_msgs::msg::DiagnosticStatus status;
-  functional_safety_advanced.populate_status(Severity::OK, {0x1111}, status);
-  EXPECT_EQ(status.level, diagnostic_msgs::msg::DiagnosticStatus::OK);
-  EXPECT_EQ(status.message, "Operating nominally");
+  const auto evaluation = functional_safety_advanced.evaluate_status(Severity::OK, {0x1111});
+  EXPECT_EQ(evaluation.diagnostic_status.level, diagnostic_msgs::msg::DiagnosticStatus::OK);
+  EXPECT_EQ(evaluation.diagnostic_status.message, "Operating nominally");
+}
+
+TEST(FunctionalSafetyAdvanced, EvaluateStatusCollectsTriggeringErrorCodes)
+{
+  nebula::ros::FunctionalSafetyAdvanced functional_safety_advanced(error_definitions(), {});
+  const auto evaluation =
+    functional_safety_advanced.evaluate_status(Severity::ERROR, {0x1111, 0x2222, 0x3333});
+  ASSERT_EQ(evaluation.triggering_error_codes.size(), 1U);
+  EXPECT_EQ(evaluation.triggering_error_codes.front(), 0x3333);
+}
+
+TEST(FunctionalSafetyAdvanced, EvaluateStatusRespectsExemptions)
+{
+  nebula::ros::FunctionalSafetyAdvanced functional_safety_advanced(error_definitions(), {0x3333});
+  const auto evaluation =
+    functional_safety_advanced.evaluate_status(Severity::ERROR, {0x2222, 0x3333});
+  EXPECT_TRUE(evaluation.triggering_error_codes.empty());
+  ASSERT_EQ(evaluation.exempted_error_codes.size(), 1U);
+  EXPECT_EQ(evaluation.exempted_error_codes.front(), 0x3333);
+}
+
+TEST(FunctionalSafetyAdvanced, EvaluateStatusFallsBackToReportedSeverity)
+{
+  nebula::ros::FunctionalSafetyAdvanced functional_safety_advanced(error_definitions(), {});
+  const auto evaluation = functional_safety_advanced.evaluate_status(Severity::ERROR, {0x4444});
+  ASSERT_EQ(evaluation.triggering_error_codes.size(), 1U);
+  EXPECT_EQ(evaluation.triggering_error_codes.front(), 0x4444);
+}
+
+TEST(FunctionalSafetyAdvanced, EvaluateStatusDoesNotPromoteWarnings)
+{
+  nebula::ros::FunctionalSafetyAdvanced functional_safety_advanced(error_definitions(), {});
+  const auto evaluation = functional_safety_advanced.evaluate_status(Severity::WARNING, {0x4444});
+  EXPECT_TRUE(evaluation.triggering_error_codes.empty());
+}
+
+TEST(FunctionalSafetyBasic, EvaluateStatusTriggersOnReportedErrors)
+{
+  nebula::ros::FunctionalSafetyBasic functional_safety_basic;
+  const auto evaluation =
+    functional_safety_basic.evaluate_status(Severity::ERROR, {0x1111, 0x2222});
+  EXPECT_EQ(evaluation.diagnostic_status.level, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
+  EXPECT_EQ(
+    evaluation.triggering_error_codes,
+    (nebula::drivers::FunctionalSafetyErrorCodes{0x1111, 0x2222}));
+}
+
+TEST(FunctionalSafetyBasic, EvaluateStatusDoesNotTriggerOnWarnings)
+{
+  nebula::ros::FunctionalSafetyBasic functional_safety_basic;
+  const auto evaluation = functional_safety_basic.evaluate_status(Severity::WARNING, {0x1111});
+  EXPECT_EQ(evaluation.diagnostic_status.level, diagnostic_msgs::msg::DiagnosticStatus::WARN);
+  EXPECT_TRUE(evaluation.triggering_error_codes.empty());
 }
