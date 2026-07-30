@@ -2,8 +2,8 @@
 Changelog for package nebula_hesai_hw_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.0 (2026-07-30)
+------------------
 * fix(nebula_hesai): remove throwaway thread+join in check_and_set_config (`#463 <https://github.com/tier4/nebula/issues/463>`_)
   The sensor setup path wrapped each blocking PTC command in a std::thread
   that was joined immediately. This added no concurrency, but it did change

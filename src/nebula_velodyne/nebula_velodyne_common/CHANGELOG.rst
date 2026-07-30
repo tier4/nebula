@@ -2,8 +2,8 @@
 Changelog for package nebula_velodyne_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.0 (2026-07-30)
+------------------
 * chore: sync files (`#74 <https://github.com/tier4/nebula/issues/74>`_)
   * chore: sync files
   * style(pre-commit): autofix

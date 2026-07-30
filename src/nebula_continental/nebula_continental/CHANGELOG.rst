@@ -2,8 +2,8 @@
 Changelog for package nebula_continental
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.0 (2026-07-30)
+------------------
 * feat(nebula_core_ros): make SyncToolingWorker compatible with agnocast_wrapper::Node (`#469 <https://github.com/tier4/nebula/issues/469>`_)
   * feat(nebula_core_ros): make shared diagnostics/sync helpers agnocast_wrapper::Node-compatible
   * feat(continental_ars548_ros_wrapper): migrate ContinentalARS548RosWrapper to agnocast_wrapper::Node (Method 2)

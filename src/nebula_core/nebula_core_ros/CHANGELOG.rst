@@ -2,8 +2,8 @@
 Changelog for package nebula_core_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.0 (2026-07-30)
+------------------
 * chore: sync files (`#480 <https://github.com/tier4/nebula/issues/480>`_)
   * chore: sync files
   * style(pre-commit): autofix
