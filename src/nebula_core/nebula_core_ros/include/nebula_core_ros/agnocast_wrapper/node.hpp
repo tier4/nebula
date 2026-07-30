@@ -59,7 +59,7 @@ namespace nebula::agnocast_wrapper
 ///            shared_ptr without throwing.
 /// @invariant `use_agnocast() == false` iff `get_rclcpp_node()`   returns a valid
 ///            shared_ptr without throwing.
-class Node
+class Node : public std::enable_shared_from_this<Node>
 {
 public:
   using SharedPtr = std::shared_ptr<Node>;
@@ -303,7 +303,8 @@ public:
     return create_service<ServiceT>(
       service_name,
       [callback = std::forward<Func>(callback)](
-        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req, NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
+        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req,
+        NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
         auto request = std::make_shared<typename ServiceT::Request>(*req);
         auto response = std::make_shared<typename ServiceT::Response>();
         callback(request, response);
@@ -442,7 +443,7 @@ namespace nebula::agnocast_wrapper
 /// from rclcpp::Node. This keeps the public surface identical to the Agnocast-build Node, so code
 /// compiles under both ENABLE_AGNOCAST=0 and =1. Deriving from rclcpp::Node would instead leak its
 /// full API into the =0 build, allowing =0-only code that breaks under =1.
-class Node
+class Node : public std::enable_shared_from_this<Node>
 {
 public:
   using SharedPtr = std::shared_ptr<Node>;
@@ -675,7 +676,8 @@ public:
     const std::string & service_name, const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
     rclcpp::CallbackGroup::SharedPtr group = nullptr)
   {
-    return nebula::agnocast_wrapper::create_client<ServiceT>(node_.get(), service_name, qos, group);
+    return nebula::agnocast_wrapper::create_client<ServiceT>(
+      node_.get(), service_name, qos, group);
   }
 
   // ===== Service =====
@@ -711,7 +713,8 @@ public:
     return create_service<ServiceT>(
       service_name,
       [callback = std::forward<Func>(callback)](
-        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req, NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
+        NEBULA_SERVER_REQUEST_PTR(ServiceT) && req,
+        NEBULA_SERVER_RESPONSE_PTR(ServiceT) && res) {
         auto request = std::make_shared<typename ServiceT::Request>(*req);
         auto response = std::make_shared<typename ServiceT::Response>();
         callback(request, response);
