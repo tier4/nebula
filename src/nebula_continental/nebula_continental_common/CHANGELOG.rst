@@ -2,6 +2,9 @@
 Changelog for package nebula_continental_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.1.1 (2026-06-03)
 ------------------
 

@@ -2,6 +2,57 @@
 Changelog for package nebula_core_hw_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* chore: sync files (`#74 <https://github.com/tier4/nebula/issues/74>`_)
+  * chore: sync files
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: github-actions <github-actions@github.com>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* feat(nebula_core, nebula_hesai): register hesai LiDAR packet threads with cie_thread_configurator (`#460 <https://github.com/tier4/nebula/issues/460>`_)
+  * feat(nebula_core, nebula_hesai): register hesai LiDAR packet threads with cie_thread_configurator
+  * fix: address review findings
+  - add UdpSocket thread_factory unit test (TestThreadFactoryCreatesReceiverThread)
+  - assert factory-created threads are joinable in UdpSocket and SingleConsumerProcessor
+  - document the nullptr fallback behavior in the thread_factory param docs
+  * refactor: document factory re-invocation on relaunch instead of testing it
+  The subscribed-move path that re-invokes the thread factory is not
+  exercised by any production code (all vendors subscribe only after the
+  socket is emplaced), so pin it in the thread_factory_t docs rather than
+  in the unit test. The test now covers only the factory-creates-thread
+  contract.
+  * fix: validate factory-created threads at runtime instead of assert
+  Asserts are compiled out in release builds, so a factory returning a
+  non-joinable thread would leave the processor or socket silently dead.
+  SingleConsumerProcessor now throws std::invalid_argument (consistent
+  with its other constructor validations); UdpSocket rolls back running\_
+  and throws UsageError so the socket stays in a consistent
+  unsubscribed state.
+  * refactor: create all thread factories in the ROS wrapper layer
+  Address review feedback: nebula_hesai_hw_interfaces must stay
+  middleware-independent, including its build scripts. The Agnocast
+  dependency and the USE_AGNOCAST_ENABLED conditional are now confined
+  to the nebula_hesai ROS wrapper package:
+  - Add a private cie_thread_factory.hpp helper in nebula_hesai that
+  builds the Agnocast CIE thread factory (or nullptr when disabled).
+  - Inject the UDP receive thread factory into HesaiHwInterface via a
+  new optional constructor parameter instead of constructing it
+  inside the HW interface.
+  - Remove the Agnocast include, ifdef, CMake, and package.xml entries
+  from nebula_hesai_hw_interfaces.
+  * refactor: add StdThreadFactory to nebula_core_common and ban null thread factories
+  - absorb thread_factory_t into nebula_core_common/util/thread_factory.hpp
+  and default UdpSocket::subscribe() / SingleConsumerProcessor to
+  StdThreadFactory instead of branching on nullptr internally
+  - move the CIE thread factory helper from nebula_hesai to nebula_core_ros
+  and return StdThreadFactory when Agnocast support is disabled
+  - replace the fixed sleep in the UDP factory test with promise/future
+  - add a test that the stored factory persists across unsubscribe,
+  re-subscribe and move
+  ---------
+* Contributors: atsushi yano, tier4-nebula-app[bot]
+
 1.1.1 (2026-06-03)
 ------------------
 

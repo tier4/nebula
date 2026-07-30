@@ -2,6 +2,52 @@
 Changelog for package nebula_continental
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(nebula_core_ros): make SyncToolingWorker compatible with agnocast_wrapper::Node (`#469 <https://github.com/tier4/nebula/issues/469>`_)
+  * feat(nebula_core_ros): make shared diagnostics/sync helpers agnocast_wrapper::Node-compatible
+  * feat(continental_ars548_ros_wrapper): migrate ContinentalARS548RosWrapper to agnocast_wrapper::Node (Method 2)
+  * fix(continental_ars548_ros_wrapper): publish pass-through messages via publish(const &)
+  The ALLOCATE_OUTPUT + *out = std::move(*msg) pattern stole msg's buffer, which
+  was allocated on the normal heap (outside the borrow window), so the payload
+  never entered shared memory and agnocast zero-copy delivered an invalid pointer
+  to cross-process subscribers. publish(const &) borrows inside the window and
+  copies into shared memory, which is correct on both the rclcpp and agnocast
+  backends.
+  * fix(nebula_core_ros): include renamed nebula_agnocast_wrapper.hpp in sync_tooling_worker
+  * feat(nebula_hesai): migrate HesaiRosWrapper to agnocast_wrapper::Node (Method 2)
+  * ci(pre-commit): autofix
+  * fix(nebula_hesai): renamed wrapper include, const-ref packets publish, restore cie thread factory
+  - include the post-`#472 <https://github.com/tier4/nebula/issues/472>`_ nebula_agnocast_wrapper.hpp (old autoware_agnocast_wrapper.hpp
+  no longer exists)
+  - publish raw packets via publish(*msg) so the payload is materialized into shared memory
+  (a plain std::move would leave it on the normal heap, invalid for cross-process subscribers)
+  - restore make_cie_thread_factory for the packets publish thread; the migration had dropped it,
+  which would leave that non-ROS thread unmanaged by the Agnocast CIE thread configurator and
+  lose its configured priority/affinity
+  * fix(continental_ars548_ros_wrapper): log the resolved packets topic again
+  The migration replaced `packets_sub\_->get_topic_name()` with the relative
+  topic literal, which hides the actual (namespaced/remapped) topic and makes
+  troubleshooting harder. The wrapper's Subscription has no get_topic_name(),
+  so resolve the name through the node's topics interface instead; this yields
+  the same fully-qualified name as before on both backends.
+  * fix(nebula_hesai): log the resolved packets topic again
+  The migration replaced `packets_sub\_->get_topic_name()` with the relative
+  topic literal, which hides the actual (namespaced/remapped) topic and makes
+  troubleshooting harder. The wrapper's Subscription has no get_topic_name(),
+  so resolve the name through the node's topics interface instead; this yields
+  the same fully-qualified name as before on both backends.
+  ---------
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+  Co-authored-by: Max Schmeller <6088931+mojomex@users.noreply.github.com>
+* chore: sync files (`#74 <https://github.com/tier4/nebula/issues/74>`_)
+  * chore: sync files
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: github-actions <github-actions@github.com>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* Contributors: Koichi Imai, tier4-nebula-app[bot]
+
 1.1.1 (2026-06-03)
 ------------------
 

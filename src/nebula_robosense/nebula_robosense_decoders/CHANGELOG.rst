@@ -2,6 +2,9 @@
 Changelog for package nebula_robosense_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.1.1 (2026-06-03)
 ------------------
 

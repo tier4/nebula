@@ -2,6 +2,9 @@
 Changelog for package continental_srvs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.1.1 (2026-06-03)
 ------------------
 

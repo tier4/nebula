@@ -2,6 +2,143 @@
 Changelog for package nebula_hesai
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(nebula_core_ros): make SyncToolingWorker compatible with agnocast_wrapper::Node (`#469 <https://github.com/tier4/nebula/issues/469>`_)
+  * feat(nebula_core_ros): make shared diagnostics/sync helpers agnocast_wrapper::Node-compatible
+  * feat(continental_ars548_ros_wrapper): migrate ContinentalARS548RosWrapper to agnocast_wrapper::Node (Method 2)
+  * fix(continental_ars548_ros_wrapper): publish pass-through messages via publish(const &)
+  The ALLOCATE_OUTPUT + *out = std::move(*msg) pattern stole msg's buffer, which
+  was allocated on the normal heap (outside the borrow window), so the payload
+  never entered shared memory and agnocast zero-copy delivered an invalid pointer
+  to cross-process subscribers. publish(const &) borrows inside the window and
+  copies into shared memory, which is correct on both the rclcpp and agnocast
+  backends.
+  * fix(nebula_core_ros): include renamed nebula_agnocast_wrapper.hpp in sync_tooling_worker
+  * feat(nebula_hesai): migrate HesaiRosWrapper to agnocast_wrapper::Node (Method 2)
+  * ci(pre-commit): autofix
+  * fix(nebula_hesai): renamed wrapper include, const-ref packets publish, restore cie thread factory
+  - include the post-`#472 <https://github.com/tier4/nebula/issues/472>`_ nebula_agnocast_wrapper.hpp (old autoware_agnocast_wrapper.hpp
+  no longer exists)
+  - publish raw packets via publish(*msg) so the payload is materialized into shared memory
+  (a plain std::move would leave it on the normal heap, invalid for cross-process subscribers)
+  - restore make_cie_thread_factory for the packets publish thread; the migration had dropped it,
+  which would leave that non-ROS thread unmanaged by the Agnocast CIE thread configurator and
+  lose its configured priority/affinity
+  * fix(continental_ars548_ros_wrapper): log the resolved packets topic again
+  The migration replaced `packets_sub\_->get_topic_name()` with the relative
+  topic literal, which hides the actual (namespaced/remapped) topic and makes
+  troubleshooting harder. The wrapper's Subscription has no get_topic_name(),
+  so resolve the name through the node's topics interface instead; this yields
+  the same fully-qualified name as before on both backends.
+  * fix(nebula_hesai): log the resolved packets topic again
+  The migration replaced `packets_sub\_->get_topic_name()` with the relative
+  topic literal, which hides the actual (namespaced/remapped) topic and makes
+  troubleshooting harder. The wrapper's Subscription has no get_topic_name(),
+  so resolve the name through the node's topics interface instead; this yields
+  the same fully-qualified name as before on both backends.
+  ---------
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+  Co-authored-by: Max Schmeller <6088931+mojomex@users.noreply.github.com>
+* fix(nebula_hesai): guard sensor setup with try/catch and retry (`#464 <https://github.com/tier4/nebula/issues/464>`_)
+  * fix(nebula_hesai): remove throwaway thread+join in check_and_set_config
+  The sensor setup path wrapped each blocking PTC command in a std::thread
+  that was joined immediately. This added no concurrency, but it did change
+  error semantics: an exception escaping a std::thread's entry function calls
+  std::terminate() instead of propagating to the joining thread. So any
+  recoverable comms fault during setup (e.g. get_lidar_range() returning
+  "PTC Error: Timeout;" via value_or_throw) aborted the whole component
+  container rather than being catchable by the caller.
+  Inline all eight thread+join constructs so these exceptions propagate
+  normally and can be handled by the caller. std::this_thread::sleep_for
+  usage (and the <thread> include) is retained. Also drop two now-stale
+  "waiting for thread"/"thread finished" debug logs.
+  Pure refactor: no behavioral change on the success path. A follow-up will
+  add try/catch + retry around check_and_set_config() so a transient setup
+  timeout is non-fatal.
+  Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+  * fix(nebula_hesai): guard sensor setup with try/catch and retry
+  Since PR `#463 <https://github.com/tier4/nebula/issues/463>`_ removed the throwaway threads from check_and_set_config, a
+  comms fault during sensor setup now surfaces as a normal std::exception at
+  the call site instead of calling std::terminate. But the call site did not
+  handle it, so a transient timeout during startup would still propagate out
+  of node construction (and out of the on_config_change parameter callback).
+  Wrap the check_and_set_config() calls in a new configure_sensor() helper
+  that catches std::exception and, when retry_hw is set, retries with the
+  same 8s backoff already used for the TCP connect step. After a bounded
+  number of failed attempts it logs and continues without applying the
+  configuration rather than aborting, consistent with how the wrapper
+  already tolerates get_inventory() failures and retry_hw=false connect
+  failures.
+  retry_hw is now stored as a member so both the constructor and
+  on_config_change share the retry behaviour.
+  Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+  * chore: reword partial reconfig error
+  ---------
+  Co-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+* chore: sync files (`#473 <https://github.com/tier4/nebula/issues/473>`_)
+  * chore: sync files
+  * style(pre-commit): autofix
+  * feat(agnocast_wrapper): adopt synced agnocast_wrapper core, retire hand-written wrapper (Stage 2) (`#467 <https://github.com/tier4/nebula/issues/467>`_)
+  * feat(agnocast_wrapper): adopt synced agnocast_wrapper core, retire hand-written wrapper (Stage 2)
+  Removes the hand-written nebula_agnocast_wrapper.hpp (Method-1) and switches the nebula_hesai decoder_wrapper to the synced umbrella's explicit-node API (NEBULA_CREATE_PUBLISHER2 -> NEBULA_CREATE_PUBLISHER2_ON_NODE, NEBULA_HAS_ANY_SUBSCRIPTIONS -> get_subscription_count() > 0). Nodes stay rclcpp::Node. The synced headers arrive via Stage 1 (`#466 <https://github.com/tier4/nebula/issues/466>`_) sync-files, so they are not in this diff.
+  * refactor(nebula_hesai): use nebula_agnocast_wrapper.hpp include after `#472 <https://github.com/tier4/nebula/issues/472>`_ rename
+  ---------
+  Co-authored-by: Max Schmeller <6088931+mojomex@users.noreply.github.com>
+  ---------
+  Co-authored-by: github-actions <github-actions@github.com>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+  Co-authored-by: Koichi Imai <45482193+Koichi98@users.noreply.github.com>
+  Co-authored-by: Max Schmeller <6088931+mojomex@users.noreply.github.com>
+* chore: sync files (`#74 <https://github.com/tier4/nebula/issues/74>`_)
+  * chore: sync files
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: github-actions <github-actions@github.com>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* feat(nebula_core, nebula_hesai): register hesai LiDAR packet threads with cie_thread_configurator (`#460 <https://github.com/tier4/nebula/issues/460>`_)
+  * feat(nebula_core, nebula_hesai): register hesai LiDAR packet threads with cie_thread_configurator
+  * fix: address review findings
+  - add UdpSocket thread_factory unit test (TestThreadFactoryCreatesReceiverThread)
+  - assert factory-created threads are joinable in UdpSocket and SingleConsumerProcessor
+  - document the nullptr fallback behavior in the thread_factory param docs
+  * refactor: document factory re-invocation on relaunch instead of testing it
+  The subscribed-move path that re-invokes the thread factory is not
+  exercised by any production code (all vendors subscribe only after the
+  socket is emplaced), so pin it in the thread_factory_t docs rather than
+  in the unit test. The test now covers only the factory-creates-thread
+  contract.
+  * fix: validate factory-created threads at runtime instead of assert
+  Asserts are compiled out in release builds, so a factory returning a
+  non-joinable thread would leave the processor or socket silently dead.
+  SingleConsumerProcessor now throws std::invalid_argument (consistent
+  with its other constructor validations); UdpSocket rolls back running\_
+  and throws UsageError so the socket stays in a consistent
+  unsubscribed state.
+  * refactor: create all thread factories in the ROS wrapper layer
+  Address review feedback: nebula_hesai_hw_interfaces must stay
+  middleware-independent, including its build scripts. The Agnocast
+  dependency and the USE_AGNOCAST_ENABLED conditional are now confined
+  to the nebula_hesai ROS wrapper package:
+  - Add a private cie_thread_factory.hpp helper in nebula_hesai that
+  builds the Agnocast CIE thread factory (or nullptr when disabled).
+  - Inject the UDP receive thread factory into HesaiHwInterface via a
+  new optional constructor parameter instead of constructing it
+  inside the HW interface.
+  - Remove the Agnocast include, ifdef, CMake, and package.xml entries
+  from nebula_hesai_hw_interfaces.
+  * refactor: add StdThreadFactory to nebula_core_common and ban null thread factories
+  - absorb thread_factory_t into nebula_core_common/util/thread_factory.hpp
+  and default UdpSocket::subscribe() / SingleConsumerProcessor to
+  StdThreadFactory instead of branching on nullptr internally
+  - move the CIE thread factory helper from nebula_hesai to nebula_core_ros
+  and return StdThreadFactory when Agnocast support is disabled
+  - replace the fixed sleep in the UDP factory test with promise/future
+  - add a test that the stored factory persists across unsubscribe,
+  re-subscribe and move
+  ---------
+* Contributors: Koichi Imai, Max Schmeller, atsushi yano, tier4-nebula-app[bot]
+
 1.1.1 (2026-06-03)
 ------------------
 

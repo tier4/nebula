@@ -2,6 +2,11 @@
 Changelog for package nebula
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* build: add ros_testing as buildtool/test_depend (`#446 <https://github.com/tier4/nebula/issues/446>`_)
+* Contributors: Max Schmeller
+
 1.1.1 (2026-06-03)
 ------------------
 

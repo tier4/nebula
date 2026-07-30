@@ -2,6 +2,9 @@
 Changelog for package nebula_robosense_hw_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.1.1 (2026-06-03)
 ------------------
 
