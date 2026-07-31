@@ -55,6 +55,7 @@ nav = [
     { "Contributing to Nebula" = "contributing/index.md" },
     { "Integration Guide" = "integration_guide.md" },
     { "Benchmarking" = "contributing/benchmarking.md" },
+    { "Cutting Releases" = "contributing/cutting_releases.md" },
   ] },
   { "API Reference" = [
     { "API Reference" = "api_reference.md" },
