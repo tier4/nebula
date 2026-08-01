@@ -277,7 +277,7 @@ jobs:
       # If the comment-id is empty, this creates a new comment
       - name: Post or update PR comment
         if: ${{ steps.generate-infer-summary.outcome == 'success' }}
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v5
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
