@@ -36,10 +36,12 @@
 #include <cstdlib>
 
 #define NEBULA_MESSAGE_UNIQUE_PTR(MessageT) \
-  nebula::agnocast_wrapper::message_ptr<MessageT, nebula::agnocast_wrapper::OwnershipType::Unique>
+  nebula::agnocast_wrapper::message_ptr<    \
+    MessageT, nebula::agnocast_wrapper::OwnershipType::Unique>
 // For publisher (mutable message)
 #define NEBULA_MESSAGE_SHARED_PTR(MessageT) \
-  nebula::agnocast_wrapper::message_ptr<MessageT, nebula::agnocast_wrapper::OwnershipType::Shared>
+  nebula::agnocast_wrapper::message_ptr<    \
+    MessageT, nebula::agnocast_wrapper::OwnershipType::Shared>
 // For subscription (read-only message)
 #define NEBULA_MESSAGE_CONST_SHARED_PTR(MessageT) \
   nebula::agnocast_wrapper::message_ptr<          \
@@ -60,9 +62,12 @@
   typename nebula::agnocast_wrapper::Subscription<MessageT>::SharedPtr
 #define NEBULA_PUBLISHER_PTR(MessageT) \
   typename nebula::agnocast_wrapper::Publisher<MessageT>::SharedPtr
-#define NEBULA_CLIENT_PTR(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::SharedPtr
-#define NEBULA_SERVICE_PTR(ServiceT) typename nebula::agnocast_wrapper::Service<ServiceT>::SharedPtr
-#define NEBULA_CLIENT_FUTURE(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::Future
+#define NEBULA_CLIENT_PTR(ServiceT) \
+  typename nebula::agnocast_wrapper::Client<ServiceT>::SharedPtr
+#define NEBULA_SERVICE_PTR(ServiceT) \
+  typename nebula::agnocast_wrapper::Service<ServiceT>::SharedPtr
+#define NEBULA_CLIENT_FUTURE(ServiceT) \
+  typename nebula::agnocast_wrapper::Client<ServiceT>::Future
 #define NEBULA_CLIENT_SHARED_FUTURE(ServiceT) \
   typename nebula::agnocast_wrapper::Client<ServiceT>::SharedFuture
 #define NEBULA_CLIENT_FUTURE_AND_REQUEST_ID(ServiceT) \
@@ -571,11 +576,13 @@ public:
   virtual void publish(NEBULA_MESSAGE_UNIQUE_PTR(MessageT) && message) = 0;
   virtual void publish(NEBULA_MESSAGE_SHARED_PTR(MessageT) && message) = 0;
 
-  /// Publish by const reference (internally copies into allocated message).
-  /// This method is discouraged because it performs an implicit copy.
-  /// Prefer ALLOCATE_OUTPUT_MESSAGE_{UNIQUE,SHARED}(publisher) + the corresponding publish()
-  /// overload. May be marked [[deprecated]] in the future once autoware_cmake supports
-  /// suppressing deprecation warnings for test targets.
+  /// Publish by const reference: copies @p data into a freshly allocated message (allocated in
+  /// shared memory on the Agnocast path), then publishes it.
+  ///
+  /// Use this when the caller already holds a message it does not own or must retain — e.g.
+  /// re-publishing a received message, or publishing a member kept as node state. When the outgoing
+  /// message is being constructed anyway, prefer ALLOCATE_OUTPUT_MESSAGE_{UNIQUE,SHARED}(publisher)
+  /// and the corresponding publish() overload instead, which builds in place and copies no payload.
   virtual void publish(const MessageT & data) = 0;
 
   virtual uint32_t get_subscription_count() const = 0;
@@ -771,9 +778,11 @@ public:
     return wait_for_service_impl(std::chrono::duration_cast<std::chrono::nanoseconds>(timeout));
   }
 
-  virtual FutureAndRequestId async_send_request(NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request) = 0;
+  virtual FutureAndRequestId async_send_request(
+    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request) = 0;
   virtual SharedFutureAndRequestId async_send_request(
-    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request, std::function<void(SharedFuture)> callback) = 0;
+    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request,
+    std::function<void(SharedFuture)> callback) = 0;
 };
 
 template <typename ServiceT>
@@ -1198,9 +1207,12 @@ inline void set_period(const Timer::SharedPtr & timer, std::chrono::nanoseconds 
 #define NEBULA_CLIENT_RESPONSE_PTR(ServiceT) std::shared_ptr<const typename ServiceT::Response>
 #define NEBULA_SUBSCRIPTION_PTR(MessageT) typename rclcpp::Subscription<MessageT>::SharedPtr
 #define NEBULA_PUBLISHER_PTR(MessageT) typename rclcpp::Publisher<MessageT>::SharedPtr
-#define NEBULA_CLIENT_PTR(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::SharedPtr
-#define NEBULA_SERVICE_PTR(ServiceT) typename nebula::agnocast_wrapper::Service<ServiceT>::SharedPtr
-#define NEBULA_CLIENT_FUTURE(ServiceT) typename nebula::agnocast_wrapper::Client<ServiceT>::Future
+#define NEBULA_CLIENT_PTR(ServiceT) \
+  typename nebula::agnocast_wrapper::Client<ServiceT>::SharedPtr
+#define NEBULA_SERVICE_PTR(ServiceT) \
+  typename nebula::agnocast_wrapper::Service<ServiceT>::SharedPtr
+#define NEBULA_CLIENT_FUTURE(ServiceT) \
+  typename nebula::agnocast_wrapper::Client<ServiceT>::Future
 #define NEBULA_CLIENT_SHARED_FUTURE(ServiceT) \
   typename nebula::agnocast_wrapper::Client<ServiceT>::SharedFuture
 #define NEBULA_CLIENT_FUTURE_AND_REQUEST_ID(ServiceT) \
@@ -1306,9 +1318,11 @@ public:
     return wait_for_service_impl(std::chrono::duration_cast<std::chrono::nanoseconds>(timeout));
   }
 
-  virtual FutureAndRequestId async_send_request(NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request) = 0;
+  virtual FutureAndRequestId async_send_request(
+    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request) = 0;
   virtual SharedFutureAndRequestId async_send_request(
-    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request, std::function<void(SharedFuture)> callback) = 0;
+    NEBULA_CLIENT_REQUEST_PTR(ServiceT) && request,
+    std::function<void(SharedFuture)> callback) = 0;
 };
 
 template <typename ServiceT>
