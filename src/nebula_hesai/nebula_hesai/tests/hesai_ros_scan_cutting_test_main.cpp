@@ -265,6 +265,25 @@ TEST_P(ScanCuttingTest, TimestampsSemiMonotonic)
   EXPECT_GT(check_cnt, 0);
 }
 
+// A scan whose start could not be determined must never be published. `scan_timestamp_ns` stays 0
+// when the decoder initialises outside the FoV, and that buffer is still emitted at the first cut.
+// Note this deliberately inspects every scan, including the first ones the other tests skip.
+TEST_P(ScanCuttingTest, NoScanWithUnsetTimestamp)
+{
+  int scan_cnt = 0;
+
+  auto scan_callback = [&](
+                         uint64_t, uint64_t scan_timestamp_ns,
+                         nebula::drivers::NebulaPointCloudPtr pointcloud) {
+    if (!pointcloud) return;
+    EXPECT_NE(scan_timestamp_ns, 0U) << "scan published with an unset timestamp";
+    scan_cnt++;
+  };
+
+  hesai_driver_->read_bag(scan_callback);
+  EXPECT_GT(scan_cnt, 0);
+}
+
 void ScanCuttingTest::SetUp()
 {
   auto decoder_params = GetParam();
