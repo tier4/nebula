@@ -167,6 +167,16 @@ public:
     mask.reset();
   }
 
+  /**
+   * @brief Reset the mask without invoking the callback
+   *
+   * For a scan that is discarded rather than published, so that its bins do not carry over
+   * into the next one.
+   *
+   * @param mask The mask to reset
+   */
+  void reset(BlockageMask & mask) { mask.reset(); }
+
   [[nodiscard]] uint32_t get_bin_width_mdeg() const { return bin_width_mdeg_; }
 
 private:
