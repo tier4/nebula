@@ -281,6 +281,17 @@ private:
     did_scan_complete_ = true;
 
     auto & completed_frame = frame_buffers_[buffer_index];
+
+    // A scan initialised outside the FoV never gets its timestamp set, yet is still emitted at
+    // the next cut. Drop it: the stamp is known to be wrong and downstream nodes copy it verbatim.
+    if (completed_frame.scan_timestamp_ns == 0) {
+      completed_frame.pointcloud->clear();
+      if (blockage_mask_plugin_ && completed_frame.blockage_mask) {
+        blockage_mask_plugin_->reset(completed_frame.blockage_mask.value());
+      }
+      return;
+    }
+
     constexpr uint64_t nanoseconds_per_second = 1'000'000'000ULL;
     double scan_timestamp_s =
       static_cast<double>(completed_frame.scan_timestamp_ns / nanoseconds_per_second) +
