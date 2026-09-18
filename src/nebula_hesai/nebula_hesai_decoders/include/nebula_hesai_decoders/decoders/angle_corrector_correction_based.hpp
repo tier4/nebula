@@ -25,8 +25,10 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace nebula::drivers
 {

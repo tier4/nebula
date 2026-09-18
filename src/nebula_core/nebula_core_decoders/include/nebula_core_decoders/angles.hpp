@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <nebula_core_common/cuda_compat.hpp>
+
 #include <cmath>
 #include <cstdint>
 
@@ -93,7 +95,7 @@ struct FieldOfView
  * ```
  */
 template <typename T>
-inline bool angle_is_between(
+NEBULA_HOST_DEVICE inline bool angle_is_between(
   T start_angle, T end_angle, T angle, bool start_inclusive = true, bool end_inclusive = true)
 {
   // Note: comments in this function refer to 360 degrees as the max_angle for simplicity, but the
@@ -123,7 +125,7 @@ inline bool angle_is_between(
  * Mathematically, the normalization is a modulo operation, yielding an angle with winding number 0.
  */
 template <typename T, typename U = T>
-inline T normalize_angle(T angle, U max_angle)
+NEBULA_HOST_DEVICE inline T normalize_angle(T angle, U max_angle)
 {
   // Note: double can represent the full int32_t range, so this is not less accurate than using
   // integer math. Reconciling T and U as double, in case they differ in size and signedness.

@@ -130,6 +130,18 @@ if(BUILD_TESTING)
     nebula_hesai_common::nebula_hesai_common
     nebula_hesai_decoders::nebula_hesai_decoders
     diagnostic_updater::diagnostic_updater)
+
+  # CUDA decoder equivalence test (only when CUDA support is available)
+  ament_add_gtest(hesai_cuda_decoder_test_main
+                  tests/hesai_cuda_decoder_test.cpp)
+  target_include_directories(hesai_cuda_decoder_test_main PRIVATE tests)
+  target_link_libraries(
+    hesai_cuda_decoder_test_main
+    hesai_ros_decoder_test
+    nebula_core_common::nebula_core_common
+    nebula_hesai_common::nebula_hesai_common
+    nebula_hesai_decoders::nebula_hesai_decoders
+    diagnostic_updater::diagnostic_updater)
 endif()
 
 if(BUILD_EXAMPLES)
