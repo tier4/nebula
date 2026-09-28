@@ -71,3 +71,10 @@
         sd 'AUTOWARE_' 'NEBULA_' {source}
         sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
         sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/src/node.cpp
+      dest: src/nebula_core/nebula_core_ros/src/agnocast_wrapper/node.cpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
