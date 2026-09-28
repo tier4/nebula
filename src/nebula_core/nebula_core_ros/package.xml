@@ -13,7 +13,8 @@
   <buildtool_depend>autoware_cmake</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
   <buildtool_depend>ros_testing</buildtool_depend>
-  <depend condition="$ENABLE_AGNOCAST == 1">agnocastlib</depend>
+  <depend condition="$ENABLE_AGNOCAST == 1" version_gte="2.4.0">agnocastlib</depend>
+  <depend condition="$ENABLE_AGNOCAST == 1">libgoogle-glog-dev</depend>
   <depend>boost</depend>
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>

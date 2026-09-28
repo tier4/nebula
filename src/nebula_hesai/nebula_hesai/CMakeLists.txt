@@ -59,15 +59,10 @@ if("$ENV{ENABLE_AGNOCAST}")
     PRIVATE agnocast_cie_thread_configurator::agnocast_thread_configurator)
 endif()
 
-if("$ENV{ENABLE_AGNOCAST}")
-  agnocast_components_register_node(
-    hesai_ros_wrapper PLUGIN "HesaiRosWrapper"
-    EXECUTABLE hesai_ros_wrapper_node
-    EXECUTOR AgnocastOnlyCallbackIsolatedExecutor)
-else()
-  rclcpp_components_register_node(hesai_ros_wrapper PLUGIN "HesaiRosWrapper"
-                                  EXECUTABLE hesai_ros_wrapper_node)
-endif()
+nebula_agnocast_wrapper_register_node(
+  hesai_ros_wrapper PLUGIN "HesaiRosWrapper"
+  EXECUTABLE hesai_ros_wrapper_node
+  AGNOCAST_EXECUTOR AgnocastOnlyCallbackIsolatedExecutor)
 
 install(
   TARGETS hesai_ros_wrapper

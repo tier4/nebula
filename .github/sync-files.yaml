@@ -30,10 +30,13 @@
     - source: CPPLINT.cfg
     - source: setup.cfg
 
-# Mirror the autoware::agnocast_wrapper CORE headers (Method-2 Node + pub/sub/tf2/message_filters/
-# diagnostic_updater) from autoware.core into nebula, renamed into the nebula::agnocast_wrapper /
-# NEBULA_ namespace. The polling bridge (polling_subscriber.hpp) is intentionally NOT synced so that
-# nebula never pulls autoware_utils_rclcpp (that file is the wrapper's only autoware_utils dependency).
+# Mirror the autoware::agnocast_wrapper package from autoware.core into nebula, renamed into the
+# nebula::agnocast_wrapper / NEBULA_ namespace. Sources are synced alongside the headers: node.cpp
+# and runtime.cpp hold the out-of-line definitions for node.hpp and runtime.hpp, and leaving them
+# out leaves every ENABLE_AGNOCAST=1 consumer linking against undefined symbols. The one file left
+# out is polling_subscriber.hpp, the autoware_utils_rclcpp bridge, so that nebula never pulls
+# autoware_utils_rclcpp - that file is the wrapper's only autoware_utils dependency, and nothing
+# else in the package includes it.
 - repository: autowarefoundation/autoware.core
   files:
     - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/autoware_agnocast_wrapper.hpp
@@ -43,22 +46,8 @@
         sd 'AUTOWARE_' 'NEBULA_' {source}
         sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
         sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
-    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/node.hpp
-      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/node.hpp
-      pre-commands: |
-        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
-        sd 'AUTOWARE_' 'NEBULA_' {source}
-        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
-        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
-    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/message_filters.hpp
-      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/message_filters.hpp
-      pre-commands: |
-        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
-        sd 'AUTOWARE_' 'NEBULA_' {source}
-        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
-        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
-    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/tf2.hpp
-      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/tf2.hpp
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/client.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/client.hpp
       pre-commands: |
         sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
         sd 'AUTOWARE_' 'NEBULA_' {source}
@@ -71,9 +60,144 @@
         sd 'AUTOWARE_' 'NEBULA_' {source}
         sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
         sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/generic_publisher.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/generic_publisher.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/generic_subscription.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/generic_subscription.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/introspection.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/introspection.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/macros.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/macros.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/message_filters.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/message_filters.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/message_ptr.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/message_ptr.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/node.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/node.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/parameter_client.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/parameter_client.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/publisher.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/publisher.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/runtime.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/runtime.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/service.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/service.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/subscription.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/subscription.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/tf2.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/tf2.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/include/autoware/agnocast_wrapper/timer.hpp
+      dest: src/nebula_core/nebula_core_ros/include/nebula_core_ros/agnocast_wrapper/timer.hpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
     - source: common/autoware_agnocast_wrapper/src/node.cpp
       dest: src/nebula_core/nebula_core_ros/src/agnocast_wrapper/node.cpp
       pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/src/runtime.cpp
+      dest: src/nebula_core/nebula_core_ros/src/agnocast_wrapper/runtime.cpp
+      pre-commands: |
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/cmake/autoware_agnocast_wrapper_register_node.cmake
+      dest: src/nebula_core/nebula_core_ros/cmake/nebula_agnocast_wrapper_register_node.cmake
+      pre-commands: |
+        sd 'autoware_agnocast_wrapper_DIR' 'nebula_core_ros_DIR' {source}
+        sd '      autoware_agnocast_wrapper\)' '      nebula_core_ros)' {source}
+        sd 'autoware_agnocast_wrapper' 'nebula_agnocast_wrapper' {source}
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/cmake/agnocast_wrapper_config_extras.cmake
+      dest: src/nebula_core/nebula_core_ros/cmake/agnocast_wrapper_config_extras.cmake
+      pre-commands: |
+        sd 'autoware_agnocast_wrapper_DIR' 'nebula_core_ros_DIR' {source}
+        sd '      autoware_agnocast_wrapper\)' '      nebula_core_ros)' {source}
+        sd 'autoware_agnocast_wrapper' 'nebula_agnocast_wrapper' {source}
+        sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
+        sd 'AUTOWARE_' 'NEBULA_' {source}
+        sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}
+        sd 'autoware_agnocast_wrapper.hpp' 'nebula_agnocast_wrapper.hpp' {source}
+    - source: common/autoware_agnocast_wrapper/templates/node_main_switchable.cpp.in
+      dest: src/nebula_core/nebula_core_ros/templates/node_main_switchable.cpp.in
+      pre-commands: |
+        sd 'autoware_agnocast_wrapper_DIR' 'nebula_core_ros_DIR' {source}
+        sd '      autoware_agnocast_wrapper\)' '      nebula_core_ros)' {source}
+        sd 'autoware_agnocast_wrapper' 'nebula_agnocast_wrapper' {source}
         sd 'autoware::agnocast_wrapper' 'nebula::agnocast_wrapper' {source}
         sd 'AUTOWARE_' 'NEBULA_' {source}
         sd 'autoware/agnocast_wrapper/' 'nebula_core_ros/agnocast_wrapper/' {source}

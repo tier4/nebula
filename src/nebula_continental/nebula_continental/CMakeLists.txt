@@ -46,16 +46,10 @@ ament_target_dependencies(
   rclcpp_components
   tf2_ros)
 
-if("$ENV{ENABLE_AGNOCAST}")
-  agnocast_components_register_node(
-    continental_ars548_ros_wrapper PLUGIN "ContinentalARS548RosWrapper"
-    EXECUTABLE continental_ars548_ros_wrapper_node
-    EXECUTOR AgnocastOnlyCallbackIsolatedExecutor)
-else()
-  rclcpp_components_register_node(
-    continental_ars548_ros_wrapper PLUGIN "ContinentalARS548RosWrapper"
-    EXECUTABLE continental_ars548_ros_wrapper_node)
-endif()
+nebula_agnocast_wrapper_register_node(
+  continental_ars548_ros_wrapper PLUGIN "ContinentalARS548RosWrapper"
+  EXECUTABLE continental_ars548_ros_wrapper_node
+  AGNOCAST_EXECUTOR AgnocastOnlyCallbackIsolatedExecutor)
 
 # SRR520
 add_library(
@@ -90,15 +84,9 @@ ament_target_dependencies(
   message_filters
   tf2_ros)
 
-if("$ENV{ENABLE_AGNOCAST}")
-  agnocast_components_register_node(
-    continental_srr520_ros_wrapper PLUGIN "ContinentalSRR520RosWrapper"
-    EXECUTABLE continental_srr520_ros_wrapper_node)
-else()
-  rclcpp_components_register_node(
-    continental_srr520_ros_wrapper PLUGIN "ContinentalSRR520RosWrapper"
-    EXECUTABLE continental_srr520_ros_wrapper_node)
-endif()
+nebula_agnocast_wrapper_register_node(
+  continental_srr520_ros_wrapper PLUGIN "ContinentalSRR520RosWrapper"
+  EXECUTABLE continental_srr520_ros_wrapper_node)
 
 install(
   TARGETS continental_ars548_ros_wrapper
