@@ -13,6 +13,15 @@ target_include_directories(
 target_link_libraries(nebula_robosense_common
                       INTERFACE nebula_core_common::nebula_core_common)
 
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+
+  ament_add_gtest(test_robosense_common test/test_robosense_common.cpp)
+  target_link_libraries(test_robosense_common nebula_robosense_common)
+endif()
+
 install(TARGETS nebula_robosense_common EXPORT export_nebula_robosense_common)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
