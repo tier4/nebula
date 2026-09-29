@@ -2,8 +2,8 @@
 Changelog for package nebula_hesai_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.0 (2026-09-29)
+------------------
 * fix(nebula_hesai_decoders): drop scans whose timestamp was never set (`#493 <https://github.com/tier4/nebula/issues/493>`_)
   A decoder that initialised, or was rebuilt by reset_decoder() during replay, while the sensor
   azimuth lay outside the configured FoV never received a scan timestamp when the cut angle lay

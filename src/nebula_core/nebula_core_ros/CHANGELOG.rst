@@ -2,8 +2,8 @@
 Changelog for package nebula_core_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.0 (2026-09-29)
+------------------
 * chore(nebula_core_ros): sync agnocast_wrapper from autoware_core (`#496 <https://github.com/tier4/nebula/issues/496>`_)
   Picks up the mirrored files the scheduled sync-files workflow had not pulled since 2026-08-02:
   register the autoware_node_plugins resource so the <autoware_node> launch action can resolve

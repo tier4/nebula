@@ -2,8 +2,8 @@
 Changelog for package nebula_hesai
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.0 (2026-09-29)
+------------------
 * chore(nebula_core_ros): follow upstream's agnocast_wrapper layout (`#495 <https://github.com/tier4/nebula/issues/495>`_)
   The Hesai wrapper now registers through nebula_agnocast_wrapper_register_node(), which selects
   the ROS or Agnocast context at runtime instead of assuming an Agnocast-only executor.

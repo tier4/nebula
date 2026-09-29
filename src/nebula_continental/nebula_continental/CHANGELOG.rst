@@ -2,8 +2,8 @@
 Changelog for package nebula_continental
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.0 (2026-09-29)
+------------------
 * chore(nebula_core_ros): follow upstream's agnocast_wrapper layout (`#495 <https://github.com/tier4/nebula/issues/495>`_)
   The Continental wrapper now registers through nebula_agnocast_wrapper_register_node() and builds
   the same Node class as nebula_core_ros, rather than emitting weak definitions of the same symbols
