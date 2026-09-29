@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace nebula::drivers
@@ -50,11 +51,18 @@ struct IsPointType<T, std::void_t<decltype(std::declval<T>().fields())>> : std::
 {
 };
 
+/// Replacement for the deprecated `std::is_pod_v`: true if `T` has standard layout, is trivially
+/// copyable and is trivially default-constructible, i.e. it can be (de)serialized via memcpy.
+template <typename T>
+inline constexpr bool is_pod_like_v =
+  std::is_standard_layout_v<T> && std::is_trivially_copyable_v<T> &&
+  std::is_trivially_default_constructible_v<T>;
+
 template <typename T>
 class PointCloud : public std::vector<T>
 {
   static_assert(IsPointType<T>::value, "T must be a valid point type");
-  static_assert(std::is_pod_v<T>, "T must be a plain old data (POD) type");
+  static_assert(is_pod_like_v<T>, "T must be a plain old data (POD) type");
 };
 
 }  // namespace nebula::drivers
