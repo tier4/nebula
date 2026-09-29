@@ -2,6 +2,9 @@
 Changelog for package nebula_hesai_hw_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2026-09-29)
+------------------
+
 1.2.0 (2026-07-30)
 ------------------
 * fix(nebula_hesai): remove throwaway thread+join in check_and_set_config (`#463 <https://github.com/tier4/nebula/issues/463>`_)

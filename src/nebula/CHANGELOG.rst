@@ -2,6 +2,9 @@
 Changelog for package nebula
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2026-09-29)
+------------------
+
 1.2.0 (2026-07-30)
 ------------------
 * build: add ros_testing as buildtool/test_depend (`#446 <https://github.com/tier4/nebula/issues/446>`_)

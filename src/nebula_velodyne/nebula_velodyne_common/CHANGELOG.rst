@@ -2,6 +2,9 @@
 Changelog for package nebula_velodyne_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2026-09-29)
+------------------
+
 1.2.0 (2026-07-30)
 ------------------
 * chore: sync files (`#74 <https://github.com/tier4/nebula/issues/74>`_)
