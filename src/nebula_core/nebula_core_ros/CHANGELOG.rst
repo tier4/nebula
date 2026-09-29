@@ -2,6 +2,29 @@
 Changelog for package nebula_core_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* chore(nebula_core_ros): sync agnocast_wrapper from autoware_core (`#496 <https://github.com/tier4/nebula/issues/496>`_)
+  Picks up the mirrored files the scheduled sync-files workflow had not pulled since 2026-08-02:
+  register the autoware_node_plugins resource so the <autoware_node> launch action can resolve
+  Nebula's executables (`autoware_core#1457 <https://github.com/autowarefoundation/autoware_core/issues/1457>`_), require agnocastlib 2.4.0 (`autoware_core#1395 <https://github.com/autowarefoundation/autoware_core/issues/1395>`_), and use the
+  mode-agnostic init()/shutdown() in the generated node main (`autoware_core#1415 <https://github.com/autowarefoundation/autoware_core/issues/1415>`_).
+* chore(nebula_core_ros): follow upstream's agnocast_wrapper layout (`#495 <https://github.com/tier4/nebula/issues/495>`_)
+  Syncs the whole autoware::agnocast_wrapper package rather than five headers of a layout upstream
+  has left behind, adding the register_node macro and exporting it to consumers through
+  CONFIG_EXTRAS. Nodes now register via nebula_agnocast_wrapper_register_node(), which selects the
+  ROS or Agnocast context at runtime; the previous macro generated a main that brought up no rclcpp
+  context, so an ENABLE_AGNOCAST=1 build aborted when run with ENABLE_AGNOCAST=0. Raises the
+  agnocast requirement to 2.4.0.
+* fix(nebula_core_ros): build the synced agnocast_wrapper Node implementation (`#494 <https://github.com/tier4/nebula/issues/494>`_)
+  The wrapper's headers were mirrored without their sources, leaving Node's non-template members
+  declared but never defined. An ENABLE_AGNOCAST=1 build linked without complaint and failed only
+  at component load, with an undefined symbol for Node::get_node_base_interface(). Compiles
+  node.cpp into the package and gates the agnocast build on ENABLE_AGNOCAST == 1, matching the
+  condition package.xml already declared.
+* chore: sync files (`#483 <https://github.com/tier4/nebula/issues/483>`_)
+* Contributors: Koichi Imai, tier4-nebula-app[bot]
+
 1.2.0 (2026-07-30)
 ------------------
 * chore: sync files (`#480 <https://github.com/tier4/nebula/issues/480>`_)

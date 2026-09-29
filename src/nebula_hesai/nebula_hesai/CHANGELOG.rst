@@ -2,6 +2,17 @@
 Changelog for package nebula_hesai
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* chore(nebula_core_ros): follow upstream's agnocast_wrapper layout (`#495 <https://github.com/tier4/nebula/issues/495>`_)
+  The Hesai wrapper now registers through nebula_agnocast_wrapper_register_node(), which selects
+  the ROS or Agnocast context at runtime instead of assuming an Agnocast-only executor.
+* fix(nebula_core_ros): build the synced agnocast_wrapper Node implementation (`#494 <https://github.com/tier4/nebula/issues/494>`_)
+  Drops the redundant USE_AGNOCAST_ENABLED definition, now exported PUBLIC by nebula_core_ros.
+* fix(nebula_hesai_decoders): drop scans whose timestamp was never set (`#493 <https://github.com/tier4/nebula/issues/493>`_)
+  Stops such scans from reaching the pointcloud publisher.
+* Contributors: Koichi Imai, lei.gu
+
 1.2.0 (2026-07-30)
 ------------------
 * feat(nebula_core_ros): make SyncToolingWorker compatible with agnocast_wrapper::Node (`#469 <https://github.com/tier4/nebula/issues/469>`_)

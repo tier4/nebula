@@ -2,6 +2,9 @@
 Changelog for package nebula_robosense_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.2.0 (2026-07-30)
 ------------------
 

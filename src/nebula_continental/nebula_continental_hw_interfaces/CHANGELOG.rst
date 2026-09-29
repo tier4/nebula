@@ -2,6 +2,9 @@
 Changelog for package nebula_continental_hw_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.2.0 (2026-07-30)
 ------------------
 * chore: sync files (`#74 <https://github.com/tier4/nebula/issues/74>`_)

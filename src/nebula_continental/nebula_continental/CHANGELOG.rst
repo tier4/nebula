@@ -2,6 +2,14 @@
 Changelog for package nebula_continental
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* chore(nebula_core_ros): follow upstream's agnocast_wrapper layout (`#495 <https://github.com/tier4/nebula/issues/495>`_)
+  The Continental wrapper now registers through nebula_agnocast_wrapper_register_node() and builds
+  the same Node class as nebula_core_ros, rather than emitting weak definitions of the same symbols
+  and starting an rclcpp::Node under an executable that brings up only the Agnocast context.
+* Contributors: Koichi Imai
+
 1.2.0 (2026-07-30)
 ------------------
 * feat(nebula_core_ros): make SyncToolingWorker compatible with agnocast_wrapper::Node (`#469 <https://github.com/tier4/nebula/issues/469>`_)
