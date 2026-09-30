@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="launch_hw" default="true" />
+    <arg name="config_file" default="$(find-pkg-share nebula_ouster)/config/ouster_sensor.param.yaml"/>
+    <node_container pkg="rclcpp_components" exec="component_container" name="nebula_ouster_container" namespace="">
+        <composable_node pkg="nebula_ouster" plugin="nebula::ros::OusterRosWrapper" name="nebula_ouster_ros_wrapper">
+            <param from="$(var config_file)" allow_substs="true"/>
+            <param name="launch_hw" value="$(var launch_hw)"/>
+        </composable_node>
+    </node_container>
+</launch>
