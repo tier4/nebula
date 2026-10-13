@@ -149,7 +149,7 @@ std::vector<std::string> files_in_directory(const std::string & directory)
 }
 #endif  // _WIN32
 
-// TODO[tws] consider using tellg
+// TODO(tws) consider using tellg
 size_t get_file_size(const std::string & path)
 {
   std::ifstream file(path, std::ios::in | std::ios::binary);
