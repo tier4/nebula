@@ -11,10 +11,6 @@ Files: include/optional-lite/*
 Copyright: 2014-2021 Martin Moene
 License: BSL-1.0
 
-Files: thirdparty/include/jsoncons*
-Copyright: Daniel Parker 2013 - 2020
-License: BSL-1.0
-
 Files: thirdparty/spdlog/*
 Copyright: 2016 Gabi Melman.
 License: MIT
