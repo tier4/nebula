@@ -2,8 +2,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <jsoncons/json.hpp>
-#include <jsoncons/json_type.hpp>
+#include <ouster_json.hpp>
 #include <string>
 #include <utility>
 #include <vector>

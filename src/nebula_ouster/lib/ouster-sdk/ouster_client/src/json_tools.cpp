@@ -8,9 +8,7 @@
 
 #include "ouster/json_tools.h"
 
-#include <jsoncons/json.hpp>
-#include <jsoncons/json_type.hpp>
-#include <jsoncons_ext/jsonpath/json_query.hpp>
+#include <ouster_json.hpp>
 #include <ostream>
 #include <sstream>
 #include <string>
