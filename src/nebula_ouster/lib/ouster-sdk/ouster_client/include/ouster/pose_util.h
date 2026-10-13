@@ -15,11 +15,13 @@
 #include <Eigen/Dense>
 #include <nonstd/optional.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace ouster
