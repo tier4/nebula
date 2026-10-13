@@ -272,13 +272,12 @@ TEST_P(ScanCuttingTest, NoScanWithUnsetTimestamp)
 {
   int scan_cnt = 0;
 
-  auto scan_callback = [&](
-                         uint64_t, uint64_t scan_timestamp_ns,
-                         nebula::drivers::NebulaPointCloudPtr pointcloud) {
-    if (!pointcloud) return;
-    EXPECT_NE(scan_timestamp_ns, 0U) << "scan published with an unset timestamp";
-    scan_cnt++;
-  };
+  auto scan_callback =
+    [&](uint64_t, uint64_t scan_timestamp_ns, nebula::drivers::NebulaPointCloudPtr pointcloud) {
+      if (!pointcloud) return;
+      EXPECT_NE(scan_timestamp_ns, 0U) << "scan published with an unset timestamp";
+      scan_cnt++;
+    };
 
   hesai_driver_->read_bag(scan_callback);
   EXPECT_GT(scan_cnt, 0);
