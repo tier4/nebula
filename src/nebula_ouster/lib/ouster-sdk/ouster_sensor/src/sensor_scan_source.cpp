@@ -18,15 +18,15 @@
 #include <utility>
 #include <vector>
 
-using ouster::sdk::core::LidarScan;
-using ouster::sdk::core::LidarScanSet;
-using ouster::sdk::core::ScanBatcher;
 using ouster::sdk::core::Collator;
-using ouster::sdk::core::Singler;
+using ouster::sdk::core::LidarScan;
+using ouster::sdk::core::LidarScanFieldTypes;
+using ouster::sdk::core::LidarScanSet;
+using ouster::sdk::core::PacketValidationFailure;
+using ouster::sdk::core::ScanBatcher;
 using ouster::sdk::core::ScanSource;
 using ouster::sdk::core::SensorInfo;
-using ouster::sdk::core::LidarScanFieldTypes;
-using ouster::sdk::core::PacketValidationFailure;
+using ouster::sdk::core::Singler;
 
 namespace ouster
 {
