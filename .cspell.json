@@ -38,6 +38,7 @@
     "horiz",
     "Idat",
     "ipaddr",
+    "jsoncons",
     "katex",
     "lucide",
     "lxml",
@@ -89,6 +90,7 @@
     "XTM",
     "yukkysaito",
     "Zensical",
-    "zensical"
+    "zensical",
+    "zpng"
   ]
 }
