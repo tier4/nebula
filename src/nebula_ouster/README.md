@@ -56,7 +56,7 @@ folder, then go to the folder `nebula_ouster/vendor` in **nebula** and delete th
 
 The reason we maintain the current `thirdparty` under `vendor/ouster-sdk/thirdparty` because it removes the
 the majority of the non-essential dependencies such as jsoncons, zpng, spdlog, etc. It replaces ouster-sdk's
-json parser based of jsoncons with an implementation based nebula's integrated `nlomann/json` library through
+json parser based of jsoncons with an implementation based nebula's integrated `nlohmann/json` library through
 the `ouster_json.hpp` header. Another thing to watch for is the current implementation drops the spdlog from
 the dependencies by manually editing the `./vendor/ouster-sdk/ouster_client/src/logging.cpp` to disable spdlog.
 
