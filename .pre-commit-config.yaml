@@ -126,4 +126,3 @@ repos:
         exclude: .svg$
 
 exclude: vendor/
-
