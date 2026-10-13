@@ -32,8 +32,8 @@
 namespace nebula::drivers
 {
 
-using ouster::sdk::core::SensorInfo;
 using ouster::sdk::core::PacketFormat;
+using ouster::sdk::core::SensorInfo;
 
 struct OusterDecoder::Impl
 {
