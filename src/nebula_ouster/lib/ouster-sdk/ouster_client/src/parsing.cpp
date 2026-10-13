@@ -111,7 +111,7 @@ struct FieldInfo {
  * @return FieldInfo
  */
 FieldInfo field_info(size_t bit_start, size_t bit_size, size_t upshift = 0,
-                     size_t max_length = 0, size_t num_elements = 1) {
+                     size_t num_elements = 1) {
     FieldInfo info{};
 
     size_t needs_bits = bit_size + upshift;

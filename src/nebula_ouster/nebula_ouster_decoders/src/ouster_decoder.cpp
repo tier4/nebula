@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "nebula_ouster_decoders/ouster_decoder.hpp"
+
 #include "nebula_ouster_decoders/ouster_lidar_scan_conversions.hpp"
 
 #include <ouster/lidar_scan.h>
@@ -26,6 +27,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace nebula::drivers
 {
@@ -71,9 +73,7 @@ const char * to_cstr(const DecodeError error)
 OusterDecoder::OusterDecoder(
   FieldOfView<float, Degrees> fov, std::shared_ptr<ouster::sdk::core::SensorInfo> & sensor_info,
   bool apply_sensor_extrinsics, pointcloud_callback_t pointcloud_cb)
-: impl_(std::make_unique<Impl>(
-    fov, sensor_info, apply_sensor_extrinsics,
-    std::move(pointcloud_cb)))
+: impl_(std::make_unique<Impl>(fov, sensor_info, apply_sensor_extrinsics, std::move(pointcloud_cb)))
 {
 }
 
@@ -91,8 +91,8 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
     result.metadata_or_error = DecodeError::CALLBACK_NOT_SET;
     result.performance_counters.decode_time_ns =
       static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                               std::chrono::steady_clock::now() - decode_begin)
-                               .count());
+                              std::chrono::steady_clock::now() - decode_begin)
+                              .count());
     return result;
   }
 
@@ -100,8 +100,8 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
     result.metadata_or_error = DecodeError::EMPTY_PACKET;
     result.performance_counters.decode_time_ns =
       static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                               std::chrono::steady_clock::now() - decode_begin)
-                               .count());
+                              std::chrono::steady_clock::now() - decode_begin)
+                              .count());
     return result;
   }
 
@@ -112,13 +112,13 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
     result.metadata_or_error = DecodeError::PACKET_FORMAT_INVALID;
     result.performance_counters.decode_time_ns =
       static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                               std::chrono::steady_clock::now() - decode_begin)
-                               .count());
+                              std::chrono::steady_clock::now() - decode_begin)
+                              .count());
     return result;
   }
 
   bool complete = false;
-  // TODO[unaal]: refactor the code so we don't have to copy packet data.
+  // TODO(unaal) refactor the code so we don't have to copy packet data.
   if (packet.size() == pf.lidar_packet_size) {
     ouster::sdk::core::LidarPacket lidar_pkt(static_cast<int>(packet.size()));
     std::memcpy(lidar_pkt.buf.data(), packet.data(), packet.size());
@@ -139,8 +139,8 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
   PacketMetadata metadata{};
   metadata.packet_timestamp_ns =
     static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                          std::chrono::system_clock::now().time_since_epoch())
-                          .count());
+                            std::chrono::system_clock::now().time_since_epoch())
+                            .count());
   metadata.did_scan_complete = complete;
 
   if (complete) {
@@ -148,20 +148,19 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
     NebulaPointCloudPtr cloud =
       nebula_point_cloud_from_lidar_scan(impl_->lidar_scan, impl_->xyz_lut, impl_->fov);
     const uint64_t scan_ts = impl_->lidar_scan.get_first_valid_column_timestamp();
-    const double timestamp_s =
-      scan_ts != 0U ? static_cast<double>(scan_ts) * 1e-9 : 0.0;
+    const double timestamp_s = scan_ts != 0U ? static_cast<double>(scan_ts) * 1e-9 : 0.0;
     impl_->pointcloud_callback(cloud, timestamp_s);
     result.performance_counters.callback_time_ns =
       static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                               std::chrono::steady_clock::now() - callback_begin)
-                               .count());
+                              std::chrono::steady_clock::now() - callback_begin)
+                              .count());
   }
 
   result.metadata_or_error = metadata;
   result.performance_counters.decode_time_ns =
     static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                             std::chrono::steady_clock::now() - decode_begin)
-                             .count());
+                            std::chrono::steady_clock::now() - decode_begin)
+                            .count());
   return result;
 }
 

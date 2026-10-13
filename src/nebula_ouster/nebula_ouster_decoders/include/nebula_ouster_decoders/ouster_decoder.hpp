@@ -19,12 +19,12 @@
 #include <nebula_core_common/util/expected.hpp>
 #include <nebula_core_decoders/angles.hpp>
 
+#include <ouster/types.h>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <vector>
-
-#include <ouster/types.h>
 
 namespace nebula::drivers
 {
@@ -62,10 +62,7 @@ struct PacketDecodeResult
   /// Successful metadata or a decode error.
   util::expected<PacketMetadata, DecodeError> metadata_or_error;
 
-  PacketDecodeResult()
-  : performance_counters{}, metadata_or_error(DecodeError::CALLBACK_NOT_SET)
-  {
-  }
+  PacketDecodeResult() : performance_counters{}, metadata_or_error(DecodeError::CALLBACK_NOT_SET) {}
 };
 
 /// @brief Decoder that batches Ouster UDP packets via ouster-sdk (@c ScanBatcher) and publishes
