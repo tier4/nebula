@@ -59,6 +59,7 @@ if(BUILD_TESTING)
     test_ouster_calibration_data
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
             ${_nebula_ouster_sdk}/ouster_client/include
+            ${_nebula_ouster_sdk}/ouster_client/include/optional-lite
             ${_ouster_gen_includes}
   )
 endif()
