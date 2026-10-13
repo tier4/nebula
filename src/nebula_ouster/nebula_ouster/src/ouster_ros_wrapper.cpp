@@ -362,8 +362,9 @@ void OusterRosWrapper::receive_cloud_packet_callback(
     return;
   }
 
-  auto* online_mode = std::get_if<OnlineMode>(&runtime_mode_);
-  assert(online_mode != nullptr && "receive_cloud_packet_callback should only be called in online mode");
+  auto * online_mode = std::get_if<OnlineMode>(&runtime_mode_);
+  assert(
+    online_mode != nullptr && "receive_cloud_packet_callback should only be called in online mode");
   if (online_mode->packets_pub) {
     if (!online_mode->current_scan_packets_msg) {
       online_mode->current_scan_packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
