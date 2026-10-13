@@ -33,25 +33,28 @@ namespace nebula::drivers
 {
 
 using ouster::sdk::core::SensorInfo;
+using ouster::sdk::core::PacketFormat;
 
 struct OusterDecoder::Impl
 {
   FieldOfView<float, Degrees> fov;
   pointcloud_callback_t pointcloud_callback;
+  std::shared_ptr<SensorInfo> sensor_info;
+  std::shared_ptr<PacketFormat> packet_format;
   ouster::sdk::core::ScanBatcher batcher;
   ouster::sdk::core::LidarScan lidar_scan;
   ouster::sdk::core::XYZLut xyz_lut;
-  std::shared_ptr<ouster::sdk::core::PacketFormat> packet_format;
 
   Impl(
-    FieldOfView<float, Degrees> fov_in, std::shared_ptr<SensorInfo> & info,
+    FieldOfView<float, Degrees> fov_in, const OusterCalibrationData & calibration,
     pointcloud_callback_t cb)
   : fov(fov_in),
     pointcloud_callback(std::move(cb)),
-    batcher(info),
-    lidar_scan(info),
-    xyz_lut(ouster::sdk::core::make_xyz_lut(*info, false)),
-    packet_format(std::make_shared<ouster::sdk::core::PacketFormat>(*info))
+    sensor_info(calibration.sensor_info),
+    packet_format(calibration.packet_format),
+    batcher(sensor_info),
+    lidar_scan(sensor_info),
+    xyz_lut(ouster::sdk::core::make_xyz_lut(*sensor_info, false))
   {
   }
 };
@@ -71,9 +74,9 @@ const char * to_cstr(const DecodeError error)
 }
 
 OusterDecoder::OusterDecoder(
-  FieldOfView<float, Degrees> fov, std::shared_ptr<ouster::sdk::core::SensorInfo> & sensor_info,
+  FieldOfView<float, Degrees> fov, const OusterCalibrationData & calibration,
   pointcloud_callback_t pointcloud_cb)
-: impl_(std::make_unique<Impl>(fov, sensor_info, std::move(pointcloud_cb)))
+: impl_(std::make_unique<Impl>(fov, calibration, std::move(pointcloud_cb)))
 {
 }
 
@@ -167,6 +170,11 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
 void OusterDecoder::set_pointcloud_callback(pointcloud_callback_t pointcloud_cb)
 {
   impl_->pointcloud_callback = std::move(pointcloud_cb);
+}
+
+size_t OusterDecoder::lidar_packet_size() const
+{
+  return impl_->packet_format->lidar_packet_size;
 }
 
 }  // namespace nebula::drivers
