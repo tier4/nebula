@@ -233,8 +233,7 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
     });
 
   if (launch_hw) {
-    runtime_mode_.emplace<OnlineMode>(config_.connection);
-    auto & online_mode = std::get<OnlineMode>(runtime_mode_);
+    auto & online_mode = runtime_mode_.emplace<OnlineMode>(config_.connection);
     online_mode.packets_pub =
       create_publisher<nebula_msgs::msg::NebulaPackets>("packets", rclcpp::SensorDataQoS());
     const auto callback_result = online_mode.hw_interface.register_scan_callback(
@@ -255,8 +254,7 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
       throw std::runtime_error("Failed to start ouster sensor stream: " + error.message);
     }
   } else {
-    runtime_mode_.emplace<OfflineMode>();
-    auto & offline_mode = std::get<OfflineMode>(runtime_mode_);
+    auto & offline_mode = runtime_mode_.emplace<OfflineMode>();
     offline_mode.packets_sub = create_subscription<nebula_msgs::msg::NebulaPackets>(
       "packets", rclcpp::SensorDataQoS(),
       [this](std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg) {
