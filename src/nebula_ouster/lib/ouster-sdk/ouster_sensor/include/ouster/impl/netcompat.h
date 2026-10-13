@@ -51,10 +51,14 @@
 #define SOCKET_ERROR (-1)
 #endif  // --------- End Platform Differentiation Block ---------
 
-namespace ouster {
-namespace sdk {
-namespace sensor {
-namespace impl {
+namespace ouster
+{
+namespace sdk
+{
+namespace sensor
+{
+namespace impl
+{
 
 /**
  * Close a specified socket

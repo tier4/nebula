@@ -5,12 +5,12 @@
 
 #pragma once
 
+#include "nonstd/optional.hpp"
+
 #include <condition_variable>
 #include <cstddef>
 #include <mutex>
 #include <queue>
-
-#include "nonstd/optional.hpp"
 
 /**
  * @brief a threadsafe queue.
@@ -23,82 +23,86 @@
  * This queue also requires that items be movable.
  */
 template <typename T>
-class ThreadsafeQueue {
-    std::queue<T> queue_{};
-    std::mutex mutex_{};
-    std::condition_variable empty_condition_{};
-    std::condition_variable full_condition_{};
-    bool shutdown_{false};
-    size_t capacity_{};
+class ThreadsafeQueue
+{
+  std::queue<T> queue_{};
+  std::mutex mutex_{};
+  std::condition_variable empty_condition_{};
+  std::condition_variable full_condition_{};
+  bool shutdown_{false};
+  size_t capacity_{};
 
-   public:
-    /**
-     * Instantiates a ThreadsafeQueue with the given capacity.
-     */
-    ThreadsafeQueue(size_t capacity) : capacity_(capacity) {}
+public:
+  /**
+   * Instantiates a ThreadsafeQueue with the given capacity.
+   */
+  ThreadsafeQueue(size_t capacity) : capacity_(capacity) {}
 
-    /**
-     * Adds an item to the queue, blocking until there is room for the item.
-     *
-     * @throws std::logic_error if the queue has been shut down.
-     */
-    void push(T&& t) {
-        std::unique_lock<std::mutex> lock(mutex_);
+  /**
+   * Adds an item to the queue, blocking until there is room for the item.
+   *
+   * @throws std::logic_error if the queue has been shut down.
+   */
+  void push(T && t)
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
 
-        if (shutdown_) {
-            throw std::logic_error("queue is shutdown");
-        }
-
-        // Block until there is room for the item.
-        while (queue_.size() >= capacity_) {
-            full_condition_.wait(lock);
-        }
-        queue_.push(std::move(t));
-
-        // Wake up a thread waiting to pop.
-        empty_condition_.notify_one();
+    if (shutdown_) {
+      throw std::logic_error("queue is shutdown");
     }
 
-    /**
-     * Returns the oldest item in the queue,
-     * or std::nullopt if there are no more items and the queue is shut down.
-     *
-     * This method blocks the calling thread indefinitely,
-     * until either an item is available or shutdown() is called from another
-     * thread, after which std::nullopt is returned.
-     *
-     * @throws std::logic_error if it would return a nonstd::nullopt
-     * but the queue is not shut down (a contradiction.)
-     */
-    nonstd::optional<T> pop() {
-        std::unique_lock<std::mutex> lock(mutex_);
+    // Block until there is room for the item.
+    while (queue_.size() >= capacity_) {
+      full_condition_.wait(lock);
+    }
+    queue_.push(std::move(t));
 
-        // Wait for the queue to have an item in it, or to be shutdown.
-        while (queue_.empty() && !shutdown_) {
-            empty_condition_.wait(lock);
-        }
+    // Wake up a thread waiting to pop.
+    empty_condition_.notify_one();
+  }
 
-        if (queue_.empty()) {
-            if (!shutdown_) {
-                throw std::logic_error("queue is empty but not shut down");
-            }
-            return nonstd::nullopt;
-        }
+  /**
+   * Returns the oldest item in the queue,
+   * or std::nullopt if there are no more items and the queue is shut down.
+   *
+   * This method blocks the calling thread indefinitely,
+   * until either an item is available or shutdown() is called from another
+   * thread, after which std::nullopt is returned.
+   *
+   * @throws std::logic_error if it would return a nonstd::nullopt
+   * but the queue is not shut down (a contradiction.)
+   */
+  nonstd::optional<T> pop()
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
 
-        auto front = std::move(queue_.front());
-        queue_.pop();
-
-        // Wake up a thread waiting to push.
-        full_condition_.notify_one();
-        return front;
+    // Wait for the queue to have an item in it, or to be shutdown.
+    while (queue_.empty() && !shutdown_) {
+      empty_condition_.wait(lock);
     }
 
-    /**
-     * Shuts down the queue, waking up any threads that have called "pop".
-     */
-    void shutdown() {
-        std::unique_lock<std::mutex> lock(mutex_);
-        shutdown_ = true;
-        empty_condition_.notify_all();
+    if (queue_.empty()) {
+      if (!shutdown_) {
+        throw std::logic_error("queue is empty but not shut down");
+      }
+      return nonstd::nullopt;
     }
+
+    auto front = std::move(queue_.front());
+    queue_.pop();
+
+    // Wake up a thread waiting to push.
+    full_condition_.notify_one();
+    return front;
+  }
+
+  /**
+   * Shuts down the queue, waking up any threads that have called "pop".
+   */
+  void shutdown()
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
+    shutdown_ = true;
+    empty_condition_.notify_all();
+  }
 };
