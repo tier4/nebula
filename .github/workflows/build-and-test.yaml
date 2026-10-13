@@ -104,6 +104,10 @@ jobs:
           ENABLE_AGNOCAST: 0
         with:
           rosdistro: ${{ matrix.rosdistro }}
+          # With ENABLE_AGNOCAST=0, colcon no longer resolves the conditional agnocastlib
+          # dependency, so its env hooks would not be sourced for the tests. Source the
+          # built workspace instead so that libagnocast.so is found at runtime.
+          underlay-workspace: install
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
           build-depends-repos: build_depends-${{ matrix.rosdistro }}.repos
 
