@@ -32,11 +32,8 @@ endif()
 find_package(Eigen3 REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
-# Use ouster-sdk's Findlibzip.cmake (pkg-config based) to avoid the broken
-# libzip-targets.cmake shipped with libzip-dev on Ubuntu 22.04, which
-# references /usr/bin/zipcmp from the separate libzip-tools package.
-list(APPEND CMAKE_MODULE_PATH "${_nebula_ouster_sdk}/cmake")
-find_package(libzip REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBZIP REQUIRED IMPORTED_TARGET libzip)
 
 # vcpkg / distro CMake config names differ; normalize to IMPORTED target @c libzip::zip .
 if(NOT TARGET libzip::zip)
@@ -44,6 +41,8 @@ if(NOT TARGET libzip::zip)
     add_library(libzip::zip ALIAS libzip::libzip)
   elseif(TARGET LibZip::libzip)
     add_library(libzip::zip ALIAS LibZip::libzip)
+  elseif(TARGET PkgConfig::LIBZIP)
+    add_library(libzip::zip ALIAS PkgConfig::LIBZIP)
   endif()
 endif()
 if(NOT TARGET libzip::zip)
