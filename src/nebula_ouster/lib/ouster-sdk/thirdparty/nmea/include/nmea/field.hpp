@@ -1,3 +1,5 @@
+// cpplint: filter=-
+
 /// \file nmea/field.hpp
 /// \brief Defines the nmea::field class.
 #ifndef NMEA___FIELD_H
