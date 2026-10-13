@@ -14,12 +14,11 @@
 
 #include "nebula_continental/continental_ars548_hw_interface_wrapper.hpp"
 
+#include "nebula_core_ros/agnocast_wrapper/tf2.hpp"
 #include "nebula_core_ros/rclcpp_logger.hpp"
 
 #include <nebula_continental_common/continental_ars548.hpp>
 #include <nebula_core_common/util/string_conversions.hpp>
-#include <tf2_ros/buffer.hpp>
-#include <tf2_ros/transform_listener.hpp>
 
 #include <memory>
 
@@ -246,8 +245,9 @@ void ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback(
   const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetSensorMounting::Response>
     response)
 {
-  auto tf_buffer = std::make_unique<tf2_ros::Buffer>(parent_node_->get_clock());
-  auto tf_listener = std::make_unique<tf2_ros::TransformListener>(*tf_buffer);
+  auto tf_buffer = std::make_unique<nebula::agnocast_wrapper::Buffer>(parent_node_->get_clock());
+  auto tf_listener =
+    std::make_unique<nebula::agnocast_wrapper::TransformListener>(*tf_buffer, *parent_node_);
 
   float longitudinal = request->longitudinal;
   float lateral = request->lateral;
