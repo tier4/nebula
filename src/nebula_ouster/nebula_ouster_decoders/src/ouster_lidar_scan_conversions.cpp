@@ -14,8 +14,8 @@
 
 #include "nebula_ouster_decoders/ouster_lidar_scan_conversions.hpp"
 
-#include <nebula_core_decoders/angles.hpp>
 #include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_decoders/angles.hpp>
 
 #include <ouster/chanfield.h>
 
@@ -59,7 +59,7 @@ NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
   Eigen::ArrayX<uint32_t> status = scan.status();
 
   auto fov_azimuth_start_rad = deg2rad(fov.azimuth.start);
-  auto fov_azimuth_end_rad = deg2rad(fov.azimuth.end); 
+  auto fov_azimuth_end_rad = deg2rad(fov.azimuth.end);
 
   for (Eigen::Index row = 0; row < h; ++row) {
     for (Eigen::Index col = 0; col < w; ++col) {
@@ -83,8 +83,8 @@ NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
         continue;
       }
 
-      const float azimuth_rad = static_cast<float>(
-        normalize_angle(std::atan2(pt.y(), pt.x()), 2 * M_PI));
+      const float azimuth_rad =
+        static_cast<float>(normalize_angle(std::atan2(pt.y(), pt.x()), 2 * M_PI));
       if (azimuth_rad < fov_azimuth_start_rad || azimuth_rad > fov_azimuth_end_rad) {
         continue;
       }
