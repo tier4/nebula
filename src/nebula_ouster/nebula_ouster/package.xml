@@ -14,8 +14,11 @@
 
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
+  <depend>curl</depend>
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
+  <depend>libssl-dev</depend>
+  <depend>libzip-dev</depend>
   <depend>nebula_core_common</depend>
   <depend>nebula_core_ros</depend>
   <depend>nebula_msgs</depend>
@@ -27,9 +30,6 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
 
-  <depend>curl</depend>
-  <depend>libssl-dev</depend>
-  <depend>libzip-dev</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
