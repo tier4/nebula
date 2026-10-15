@@ -2,6 +2,12 @@
 Changelog for package nebula_core_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.1 (2026-10-15)
+------------------
+* ci(pre-commit): autofix (`#500 <https://github.com/tier4/nebula/issues/500>`_)
+  Applies the sort-package-xml fix that failed on main.
+* Contributors: Max Schmeller
+
 1.3.0 (2026-09-29)
 ------------------
 * chore(nebula_core_ros): sync agnocast_wrapper from autoware_core (`#496 <https://github.com/tier4/nebula/issues/496>`_)
