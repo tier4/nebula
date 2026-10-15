@@ -2,6 +2,15 @@
 Changelog for package nebula_hesai
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.1 (2026-10-15)
+------------------
+* fix(nebula_hesai): register the UDP receiver thread with the CIE thread configurator again (`#498 <https://github.com/tier4/nebula/issues/498>`_)
+  `#469 <https://github.com/tier4/nebula/issues/469>`_ dropped the thread factory that `#460 <https://github.com/tier4/nebula/issues/460>`_ had passed to HesaiHwInterface, leaving the UDP receive
+  thread a plain std::thread whose scheduling policy, priority, and affinity the Agnocast CIE thread
+  configurator could not set. The prerun template lists nebula_hesai_udp_receiver@<frame_id> again.
+* ci(pre-commit): autofix (`#500 <https://github.com/tier4/nebula/issues/500>`_)
+* Contributors: Max Schmeller, atsushi yano
+
 1.3.0 (2026-09-29)
 ------------------
 * chore(nebula_core_ros): follow upstream's agnocast_wrapper layout (`#495 <https://github.com/tier4/nebula/issues/495>`_)
