@@ -35,10 +35,12 @@ ros2 launch nebula_ouster nebula_ouster.launch.xml launch_hw:=false
 ```
 
 ## Maintenance
-To update ouster-sdk to the latest release, monitor the repo http://github.com/ouster-lidar/ouster-sdk
+
+To update ouster-sdk to the latest release, monitor the repo <http://github.com/ouster-lidar/ouster-sdk>
 for any new releases. When a new release is published, download the new sdk into a separate external
 folder, then go to the folder `nebula_ouster/vendor` in **nebula** and delete the entire contents of
 `ouster-sdk/*` except the `thirdparty` folder, then selectively copy the following list of files and folders:
+
 - ouster-sdk/ouster_client/
 - ouster-sdk/ouster_sensor/
 - ouster-sdk/cmake/
