@@ -25,9 +25,14 @@
 
 #include <std_msgs/msg/float64.hpp>
 
+#include <ouster/sensor_http.h>
+
 #include <algorithm>
 #include <chrono>
+#include <cinttypes>
 #include <cstdint>
+#include <fstream>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -40,6 +45,14 @@ namespace nebula::ros
 namespace
 {
 constexpr double k_ns_to_ms = 1e-6;
+
+/// Fetch Ouster `SensorInfo` JSON from a sensor or replay HTTP API. Respects `http_proxy` / `https_proxy`.
+std::string fetch_ouster_metadata_via_http(const std::string & sensor_url)
+{
+  auto sensor_http = ouster::sdk::sensor::SensorHttp::create(sensor_url);
+  std::string meta = sensor_http->metadata();
+  return meta;
+}
 
 uint64_t current_system_time_ns()
 {
@@ -138,6 +151,9 @@ util::expected<drivers::OusterSensorConfiguration, ConfigError> load_config_from
   }
   config.connection.data_port = static_cast<uint16_t>(data_port.value());
 
+  config.connection.filter_sender_ip =
+    node.declare_parameter<bool>("connection.filter_sender_ip", true, param_read_only());
+
   const auto azimuth_min =
     declare_required_parameter<double>(node, "fov.azimuth.min_deg", param_read_write());
   if (!azimuth_min.has_value()) {
@@ -199,8 +215,28 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
 
   initialize_diagnostics();
 
+  const auto sensor_ip = config_.connection.sensor_ip;
+  const auto sensor_metadata_json = fetch_ouster_metadata_via_http(sensor_ip);
+  RCLCPP_INFO(
+    get_logger(), "Loaded Ouster metadata via HTTP (%zu bytes)", sensor_metadata_json.size());
+
+  const bool use_sensor_extrinsics =
+    declare_parameter<bool>("use_sensor_extrinsics", false, param_read_only());
+
+  auto sensor_info = std::make_shared<ouster::sdk::core::SensorInfo>(sensor_metadata_json);
+  auto packet_format = std::make_shared<ouster::sdk::core::PacketFormat>(*sensor_info);
+  config_.connection.receiver_mtu_bytes = packet_format->lidar_packet_size;
+
+  RCLCPP_INFO(
+    get_logger(),
+    "Ouster UDP: listening on %s:%u filter_sender_ip=%s (sensor_ip=%s) receiver_mtu=%u",
+    config_.connection.host_ip.c_str(), config_.connection.data_port,
+    config_.connection.filter_sender_ip ? "true" : "false", config_.connection.sensor_ip.c_str(),
+    config_.connection.receiver_mtu_bytes);
+
   decoder_.emplace(
-    config_.fov, [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
+    config_.fov, sensor_info, use_sensor_extrinsics,
+    [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
       publish_pointcloud_callback(pointcloud, timestamp_s);
     });
 
@@ -308,13 +344,13 @@ void OusterRosWrapper::publish_pointcloud_callback(
     return;
   }
 
-  if (publishers_.points->get_subscription_count() > 0) {
-    auto ros_pc_msg_ptr =
-      std::make_unique<sensor_msgs::msg::PointCloud2>(nebula::ros::to_ros_msg(*pointcloud));
-    ros_pc_msg_ptr->header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp_s * 1e9));
-    ros_pc_msg_ptr->header.frame_id = frame_id_;
-    publishers_.points->publish(std::move(ros_pc_msg_ptr));
-  }
+  // Always publish: subscription_count can be 0 briefly after startup or in some executor
+  // setups, which makes `ros2 topic echo /points` miss data unexpectedly.
+  auto ros_pc_msg_ptr =
+    std::make_unique<sensor_msgs::msg::PointCloud2>(nebula::ros::to_ros_msg(*pointcloud));
+  ros_pc_msg_ptr->header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp_s * 1e9));
+  ros_pc_msg_ptr->header.frame_id = frame_id_;
+  publishers_.points->publish(std::move(ros_pc_msg_ptr));
 
   diagnostics_.publish_rate->tick();
 }
@@ -323,6 +359,17 @@ void OusterRosWrapper::receive_cloud_packet_callback(
   std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata)
 {
   diagnostics_.packet_liveness->tick();
+
+  if (metadata.truncated) {
+    RCLCPP_ERROR_THROTTLE(
+      get_logger(), *get_clock(), 2000,
+      "Ouster UDP payload was truncated at %zu bytes (kernel/datagram is larger than "
+      "connection.receiver_mtu). Increase 'connection.receiver_mtu' (e.g. 65527). Decoding is "
+      "skipped for this datagram.",
+      packet.size());
+    return;
+  }
+
   auto * online_mode = std::get_if<OnlineMode>(&runtime_mode_);
   if (online_mode && online_mode->packets_pub) {
     if (!online_mode->current_scan_packets_msg) {
@@ -378,8 +425,8 @@ void OusterRosWrapper::process_packet(
 
   if (!decode_result.metadata_or_error.has_value()) {
     RCLCPP_DEBUG_THROTTLE(
-      get_logger(), *get_clock(), 1000, "Packet decode failed: %s.",
-      drivers::to_cstr(decode_result.metadata_or_error.error()));
+        get_logger(), *get_clock(), 1000, "Packet decode failed: %s.",
+        drivers::to_cstr(decode_result.metadata_or_error.error()));
     return;
   }
 
