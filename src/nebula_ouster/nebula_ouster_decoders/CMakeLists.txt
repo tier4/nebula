@@ -18,13 +18,11 @@ set(BUILD_PYTHON_MODULE OFF CACHE BOOL "Ouster SDK: python" FORCE)
 add_subdirectory("${_nebula_ouster_sdk}" "${CMAKE_CURRENT_BINARY_DIR}/ouster-sdk-build")
 
 if(TARGET ouster_client)
+  # ouster-sdk has few C++ warnings which are treated as errors by the CI. Disable them for now. 
   target_compile_options(ouster_client PRIVATE -Wno-pedantic)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(ouster_client PRIVATE -Wno-error=stringop-overflow)  # cspell:ignore stringop
   endif()
-endif()
-if(TARGET nmea)
-  target_compile_options(nmea PRIVATE -Wno-pedantic)
 endif()
 
 find_package(Eigen3 REQUIRED)
