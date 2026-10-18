@@ -9,8 +9,8 @@
 #include "ouster/visibility.h"
 
 #include <cstdint>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace ouster
 {
