@@ -3,7 +3,8 @@
   "language": "en",
   "allowCompoundWords": true,
   "ignorePaths": [
-    "*.drawio"
+    "*.drawio",
+    "nebula_ouster/**"
   ],
   "words": [
     "Adctp",
@@ -13,7 +14,6 @@
     "asio",
     "AT",
     "autosar",
-    "BCIF",
     "block_id",
     "Bpearl",
     "calib",
@@ -29,6 +29,7 @@
     "elts",
     "extrinsics",
     "eigensparse",
+    "elts",
     "fout",
     "glfw",
     "gprmc",
