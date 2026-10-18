@@ -36,6 +36,7 @@
 #endif
 
 using ouster::sdk::core::impl::float3x16_t;
+namespace ChanField = ouster::sdk::core::ChanField;
 
 namespace ouster
 {
@@ -612,12 +613,11 @@ ConstArrayView1<ZoneState> LidarScan::zones() const
 }
 
 // NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ouster::sdk::core::ChanField;
 uint64_t LidarScan::get_first_valid_packet_timestamp() const
 {
   uint64_t time = get_first_valid_lidar_packet_timestamp();
-  if (has_field(IMU_PACKET_TIMESTAMP)) {
-    ConstArrayView<uint64_t, 1> data = field(IMU_PACKET_TIMESTAMP);
+  if (has_field(ChanField::IMU_PACKET_TIMESTAMP)) {
+    ConstArrayView<uint64_t, 1> data = field(ChanField::IMU_PACKET_TIMESTAMP);
     for (size_t i = 0; i < data.size(); i++) {
       if (data(i) != 0) {
         time = (time == 0) ? data(i) : std::min(data(i), time);
@@ -625,8 +625,8 @@ uint64_t LidarScan::get_first_valid_packet_timestamp() const
       }
     }
   }
-  if (has_field(ZONE_PACKET_TIMESTAMP)) {
-    ConstArrayView<uint64_t, 1> data = field(ZONE_PACKET_TIMESTAMP);
+  if (has_field(ChanField::ZONE_PACKET_TIMESTAMP)) {
+    ConstArrayView<uint64_t, 1> data = field(ChanField::ZONE_PACKET_TIMESTAMP);
     if (data(0) != 0) {
       time = (time == 0) ? data(0) : std::min(data(0), time);
     }
@@ -637,8 +637,8 @@ uint64_t LidarScan::get_first_valid_packet_timestamp() const
 uint64_t LidarScan::get_last_valid_packet_timestamp() const
 {
   uint64_t time = get_last_valid_lidar_packet_timestamp();
-  if (has_field(IMU_PACKET_TIMESTAMP)) {
-    ConstArrayView<uint64_t, 1> data = field(IMU_PACKET_TIMESTAMP);
+  if (has_field(ChanField::IMU_PACKET_TIMESTAMP)) {
+    ConstArrayView<uint64_t, 1> data = field(ChanField::IMU_PACKET_TIMESTAMP);
     for (int i = static_cast<int>(data.size()) - 1; i >= 0; i--) {
       if (data(i) != 0) {
         time = std::max(data(i), time);
@@ -646,8 +646,8 @@ uint64_t LidarScan::get_last_valid_packet_timestamp() const
       }
     }
   }
-  if (has_field(ZONE_PACKET_TIMESTAMP)) {
-    ConstArrayView<uint64_t, 1> data = field(ZONE_PACKET_TIMESTAMP);
+  if (has_field(ChanField::ZONE_PACKET_TIMESTAMP)) {
+    ConstArrayView<uint64_t, 1> data = field(ChanField::ZONE_PACKET_TIMESTAMP);
     time = std::max(data(0), time);
   }
   return time;
@@ -877,53 +877,51 @@ LidarScanFieldTypes get_field_types(const DataFormat & format, const Version & f
    * get_field_types on naked profiles without DataFormat, thus
    * eliminating the need for FieldType and just use FieldDescriptor?
    */
-  using namespace ouster::sdk::core;
-  using namespace ouster::sdk::core::ChanField;
   if (format.udp_profile_imu == UDPProfileIMU::ACCEL32_GYRO32_NMEA) {
     field_types.emplace_back(
-      IMU_ACC, ChanFieldType::FLOAT32, std::vector<size_t>{imu_measurements, 3},
+      ChanField::IMU_ACC, ChanFieldType::FLOAT32, std::vector<size_t>{imu_measurements, 3},
       FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      IMU_GYRO, ChanFieldType::FLOAT32, std::vector<size_t>{imu_measurements, 3},
+      ChanField::IMU_GYRO, ChanFieldType::FLOAT32, std::vector<size_t>{imu_measurements, 3},
       FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      IMU_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{imu_measurements},
+      ChanField::IMU_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{imu_measurements},
       FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      IMU_MEASUREMENT_ID, ChanFieldType::UINT16, std::vector<size_t>{imu_measurements},
+      ChanField::IMU_MEASUREMENT_ID, ChanFieldType::UINT16, std::vector<size_t>{imu_measurements},
       FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      IMU_STATUS, ChanFieldType::UINT16, std::vector<size_t>{imu_measurements},
+      ChanField::IMU_STATUS, ChanFieldType::UINT16, std::vector<size_t>{imu_measurements},
       FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      IMU_PACKET_TIMESTAMP, ChanFieldType::UINT64,
+      ChanField::IMU_PACKET_TIMESTAMP, ChanFieldType::UINT64,
       std::vector<size_t>{format.imu_packets_per_frame}, FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      POSITION_STRING, ChanFieldType::CHAR,
+      ChanField::POSITION_STRING, ChanFieldType::CHAR,
       std::vector<size_t>{format.imu_packets_per_frame, NMEA_SENTENCE_LENGTH},
       FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      POSITION_LAT_LONG, ChanFieldType::FLOAT64,
+      ChanField::POSITION_LAT_LONG, ChanFieldType::FLOAT64,
       std::vector<size_t>{format.imu_packets_per_frame, 2}, FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      POSITION_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{format.imu_packets_per_frame},
+      ChanField::POSITION_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{format.imu_packets_per_frame},
       FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      IMU_ALERT_FLAGS, ChanFieldType::UINT8, std::vector<size_t>{format.imu_packets_per_frame},
+      ChanField::IMU_ALERT_FLAGS, ChanFieldType::UINT8, std::vector<size_t>{format.imu_packets_per_frame},
       FieldClass::SCAN_FIELD);
   }
 
   if (format.zone_monitoring_enabled) {
     field_types.emplace_back(
-      LIVE_ZONESET_HASH, ChanFieldType::UINT8, std::vector<size_t>{32}, FieldClass::SCAN_FIELD);
+      ChanField::LIVE_ZONESET_HASH, ChanFieldType::UINT8, std::vector<size_t>{32}, FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      ZONE_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{1}, FieldClass::SCAN_FIELD);
+      ChanField::ZONE_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{1}, FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      ZONE_PACKET_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{1}, FieldClass::SCAN_FIELD);
+      ChanField::ZONE_PACKET_TIMESTAMP, ChanFieldType::UINT64, std::vector<size_t>{1}, FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      ZONE_ALERT_FLAGS, ChanFieldType::UINT8, std::vector<size_t>{1}, FieldClass::SCAN_FIELD);
+      ChanField::ZONE_ALERT_FLAGS, ChanFieldType::UINT8, std::vector<size_t>{1}, FieldClass::SCAN_FIELD);
     field_types.emplace_back(
-      ZONE_STATES, ChanFieldType::ZONE_STATE, std::vector<size_t>{16}, FieldClass::SCAN_FIELD);
+      ChanField::ZONE_STATES, ChanFieldType::ZONE_STATE, std::vector<size_t>{16}, FieldClass::SCAN_FIELD);
   }
 
   // remove WINDOW if FW is < 3.2
@@ -1411,8 +1409,6 @@ void ScanBatcher::batch_lidar_packet(const LidarPacket & packet, LidarScan & lid
 
 void ScanBatcher::batch_imu_packet(const ImuPacket & packet, LidarScan & lidar_scan)
 {
-  using namespace ouster::sdk::core::ChanField;
-
   const uint8_t * buf = packet.buf.data();
 
   // get packet_id from imu measurement id
@@ -1422,11 +1418,11 @@ void ScanBatcher::batch_imu_packet(const ImuPacket & packet, LidarScan & lidar_s
 
   // TODO(Tim T.): this pattern could be a method.
   FieldView imu_ts_fview =
-    lidar_scan.has_field(IMU_TIMESTAMP) ? lidar_scan.field(IMU_TIMESTAMP) : FieldView{};
+    lidar_scan.has_field(ChanField::IMU_TIMESTAMP) ? lidar_scan.field(ChanField::IMU_TIMESTAMP) : FieldView{};
   FieldView imu_m_id_fview =
-    lidar_scan.has_field(IMU_MEASUREMENT_ID) ? lidar_scan.field(IMU_MEASUREMENT_ID) : FieldView{};
+    lidar_scan.has_field(ChanField::IMU_MEASUREMENT_ID) ? lidar_scan.field(ChanField::IMU_MEASUREMENT_ID) : FieldView{};
   FieldView imu_status_fview =
-    lidar_scan.has_field(IMU_STATUS) ? lidar_scan.field(IMU_STATUS) : FieldView{};
+    lidar_scan.has_field(ChanField::IMU_STATUS) ? lidar_scan.field(ChanField::IMU_STATUS) : FieldView{};
 
   for (size_t i = 0; i < pf.imu_measurements_per_packet; ++i) {
     const uint8_t * col_buf = pf.imu_nth_measurement(i, buf);
@@ -1444,38 +1440,38 @@ void ScanBatcher::batch_imu_packet(const ImuPacket & packet, LidarScan & lidar_s
     }
   }
 
-  if (lidar_scan.has_field(IMU_ACC)) {
-    pf.parse_accel(col_offset, buf, lidar_scan.field(IMU_ACC));
+  if (lidar_scan.has_field(ChanField::IMU_ACC)) {
+    pf.parse_accel(col_offset, buf, lidar_scan.field(ChanField::IMU_ACC));
   }
 
-  if (lidar_scan.has_field(IMU_GYRO)) {
-    pf.parse_gyro(col_offset, buf, lidar_scan.field(IMU_GYRO));
+  if (lidar_scan.has_field(ChanField::IMU_GYRO)) {
+    pf.parse_gyro(col_offset, buf, lidar_scan.field(ChanField::IMU_GYRO));
   }
 
-  if (lidar_scan.has_field(IMU_PACKET_TIMESTAMP)) {
-    ArrayView1<uint64_t> packet_timestamp = lidar_scan.field(IMU_PACKET_TIMESTAMP);
+  if (lidar_scan.has_field(ChanField::IMU_PACKET_TIMESTAMP)) {
+    ArrayView1<uint64_t> packet_timestamp = lidar_scan.field(ChanField::IMU_PACKET_TIMESTAMP);
     packet_timestamp(packet_id) = packet.host_timestamp;
   }
 
-  if (lidar_scan.has_field(IMU_ALERT_FLAGS)) {
-    ArrayView1<uint8_t> alert_flags = lidar_scan.field(IMU_ALERT_FLAGS);
+  if (lidar_scan.has_field(ChanField::IMU_ALERT_FLAGS)) {
+    ArrayView1<uint8_t> alert_flags = lidar_scan.field(ChanField::IMU_ALERT_FLAGS);
     alert_flags(packet_id) = pf.alert_flags(buf);
   }
 
   auto sentence = pf.imu_nmea_sentence(buf);
 
-  if (lidar_scan.has_field(POSITION_STRING)) {
-    ArrayView2<char> nmea_sentences = lidar_scan.field(POSITION_STRING);
+  if (lidar_scan.has_field(ChanField::POSITION_STRING)) {
+    ArrayView2<char> nmea_sentences = lidar_scan.field(ChanField::POSITION_STRING);
     std::memcpy(nmea_sentences.subview(packet_id).data(), sentence.data(), sentence.size());
   }
 
-  if (lidar_scan.has_field(POSITION_TIMESTAMP)) {
-    ArrayView1<uint64_t> nmea_ts = lidar_scan.field(POSITION_TIMESTAMP);
+  if (lidar_scan.has_field(ChanField::POSITION_TIMESTAMP)) {
+    ArrayView1<uint64_t> nmea_ts = lidar_scan.field(ChanField::POSITION_TIMESTAMP);
     nmea_ts(packet_id) = pf.imu_nmea_ts(buf);
   }
 
-  if (lidar_scan.has_field(POSITION_LAT_LONG)) {
-    ArrayView2<double> lat_long = lidar_scan.field(POSITION_LAT_LONG);
+  if (lidar_scan.has_field(ChanField::POSITION_LAT_LONG)) {
+    ArrayView2<double> lat_long = lidar_scan.field(ChanField::POSITION_LAT_LONG);
     if (!parse_lat_long(sentence, lat_long(packet_id, 0), lat_long(packet_id, 1))) {
       lat_long(packet_id, 0) = std::numeric_limits<double>::quiet_NaN();
       lat_long(packet_id, 1) = std::numeric_limits<double>::quiet_NaN();
