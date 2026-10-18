@@ -7,19 +7,22 @@
  */
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <vector>
-
 #include "nonstd/optional.hpp"
 #include "ouster/json_tools.h"
 #include "ouster/types.h"
 #include "ouster/visibility.h"
 #include "ouster/zone_monitor.h"
 
-namespace ouster {
-namespace sdk {
-namespace core {
+#include <cstdint>
+#include <string>
+#include <vector>
+
+namespace ouster
+{
+namespace sdk
+{
+namespace core
+{
 
 /**
  * Parse and validate a metadata stream.
@@ -30,8 +33,7 @@ namespace core {
  * @return If parsing was successful(no critical issues)
  */
 OUSTER_API_FUNCTION
-bool parse_and_validate_metadata(const std::string& json_data,
-                                 ValidatorIssues& issues);
+bool parse_and_validate_metadata(const std::string & json_data, ValidatorIssues & issues);
 
 /**
  * Parse and validate a metadata stream.
@@ -43,9 +45,9 @@ bool parse_and_validate_metadata(const std::string& json_data,
  * @return If parsing was successful(no critical issues)
  */
 OUSTER_API_FUNCTION
-bool parse_and_validate_metadata(const std::string& json_data,
-                                 nonstd::optional<SensorInfo>& sensor_info,
-                                 ValidatorIssues& issues);
+bool parse_and_validate_metadata(
+  const std::string & json_data, nonstd::optional<SensorInfo> & sensor_info,
+  ValidatorIssues & issues);
 
 /**
  * Parse config text blob from the sensor into a SensorConfig struct.
@@ -61,8 +63,7 @@ bool parse_and_validate_metadata(const std::string& json_data,
  * @return If parsing was successful(no critical issues)
  */
 OUSTER_API_FUNCTION
-bool parse_and_validate_config(const std::string& config,
-                               SensorConfig& sensor_config);
+bool parse_and_validate_config(const std::string & config, SensorConfig & sensor_config);
 
 /**
  * Parse config text blob from the sensor into a SensorConfig struct.
@@ -79,9 +80,8 @@ bool parse_and_validate_config(const std::string& config,
  * @return If parsing was successful(no critical issues)
  */
 OUSTER_API_FUNCTION
-bool parse_and_validate_config(const std::string& config,
-                               SensorConfig& sensor_config,
-                               ValidatorIssues& issues);
+bool parse_and_validate_config(
+  const std::string & config, SensorConfig & sensor_config, ValidatorIssues & issues);
 }  // namespace core
 }  // namespace sdk
 }  // namespace ouster

@@ -1,16 +1,19 @@
 #pragma once
 
-#include <cstddef>
-#include <vector>
-
 #include "ouster/cartesian.h"
 #include "ouster/lidar_scan.h"
 #include "ouster/typedefs.h"
 #include "ouster/visibility.h"
 
-namespace ouster {
-namespace sdk {
-namespace core {
+#include <cstddef>
+#include <vector>
+
+namespace ouster
+{
+namespace sdk
+{
+namespace core
+{
 // Forward declaration
 class SensorInfo;
 
@@ -49,11 +52,10 @@ using XYZLut = XYZLutT<double>;
  * @return xyz direction and offset vectors for each point in the lidar scan.
  */
 OUSTER_API_FUNCTION
-XYZLut make_xyz_lut(size_t w, size_t h, double range_unit,
-                    const mat4d& beam_to_lidar_transform,
-                    const mat4d& transform,
-                    const std::vector<double>& azimuth_angles_deg,
-                    const std::vector<double>& altitude_angles_deg);
+XYZLut make_xyz_lut(
+  size_t w, size_t h, double range_unit, const mat4d & beam_to_lidar_transform,
+  const mat4d & transform, const std::vector<double> & azimuth_angles_deg,
+  const std::vector<double> & altitude_angles_deg);
 
 /**
  * Convenient overload that uses parameters from the supplied SensorInfo.
@@ -69,64 +71,67 @@ XYZLut make_xyz_lut(size_t w, size_t h, double range_unit,
  * @return xyz direction and offset vectors for each point in the lidar scan.
  */
 OUSTER_API_FUNCTION
-XYZLut make_xyz_lut(const SensorInfo& sensor, bool use_extrinsics);
+XYZLut make_xyz_lut(const SensorInfo & sensor, bool use_extrinsics);
 
 /** Lookup table of beam directions and offsets. */
 template <typename T>
-class XYZLutT {
-   public:
-    /**
-     * Unit direction vectors from the sensor for each pixel.
-     */
-    ArrayX3R<T> direction;
-    /**
-     * Offset vectors for each pixel, typically representing per-pixel
-     * translations.
-     *
-     * Combined with direction and range to compute 3D coordinates.
-     */
-    ArrayX3R<T> offset;
+class XYZLutT
+{
+public:
+  /**
+   * Unit direction vectors from the sensor for each pixel.
+   */
+  ArrayX3R<T> direction;
+  /**
+   * Offset vectors for each pixel, typically representing per-pixel
+   * translations.
+   *
+   * Combined with direction and range to compute 3D coordinates.
+   */
+  ArrayX3R<T> offset;
 
-    // Add this to make XYZLut<double> and XYZLut<float> friends to cast
-    template <typename>
-    friend class XYZLutT;
+  // Add this to make XYZLut<double> and XYZLut<float> friends to cast
+  template <typename>
+  friend class XYZLutT;
 
-    /**
-     * Construct an XYZ lookup table using the provided sensor information.
-     *
-     * @param[in] sensor Sensor metadata including intrinsics and resolution.
-     * @param[in] use_extrinsics Whether to apply extrinsic calibration.
-     */
-    XYZLutT(const SensorInfo& sensor, bool use_extrinsics) {
-        auto res = make_xyz_lut(sensor, use_extrinsics);
-        *this = res.cast<T>();
-    }
+  /**
+   * Construct an XYZ lookup table using the provided sensor information.
+   *
+   * @param[in] sensor Sensor metadata including intrinsics and resolution.
+   * @param[in] use_extrinsics Whether to apply extrinsic calibration.
+   */
+  XYZLutT(const SensorInfo & sensor, bool use_extrinsics)
+  {
+    auto res = make_xyz_lut(sensor, use_extrinsics);
+    *this = res.cast<T>();
+  }
 
-    XYZLutT() = default;
+  XYZLutT() = default;
 
-    PointCloudXYZ<T> operator()(
-        const Eigen::Ref<const img_t<uint32_t>>& range) const {
-        PointCloudXYZ<T> points(range.rows() * range.cols(), 3);
-        cartesianT<T>(points, range, direction, offset);
-        return points;
-    }
+  PointCloudXYZ<T> operator()(const Eigen::Ref<const img_t<uint32_t>> & range) const
+  {
+    PointCloudXYZ<T> points(range.rows() * range.cols(), 3);
+    cartesianT<T>(points, range, direction, offset);
+    return points;
+  }
 
-    PointCloudXYZ<T> operator()(const LidarScan& scan) const {
-        Eigen::Ref<const img_t<uint32_t>> range =
-            scan.field<uint32_t>(ChanField::RANGE);
-        PointCloudXYZ<T> points(range.rows() * range.cols(), 3);
-        cartesianT<T>(points, range, direction, offset);
-        return points;
-    }
+  PointCloudXYZ<T> operator()(const LidarScan & scan) const
+  {
+    Eigen::Ref<const img_t<uint32_t>> range = scan.field<uint32_t>(ChanField::RANGE);
+    PointCloudXYZ<T> points(range.rows() * range.cols(), 3);
+    cartesianT<T>(points, range, direction, offset);
+    return points;
+  }
 
-   private:
-    template <typename NewT>
-    XYZLutT<NewT> cast() const {
-        XYZLutT<NewT> result;
-        result.direction = direction.template cast<NewT>();
-        result.offset = offset.template cast<NewT>();
-        return result;
-    }
+private:
+  template <typename NewT>
+  XYZLutT<NewT> cast() const
+  {
+    XYZLutT<NewT> result;
+    result.direction = direction.template cast<NewT>();
+    result.offset = offset.template cast<NewT>();
+    return result;
+  }
 };
 
 /** \defgroup ouster_client_lidar_scan_cartesian Ouster Client lidar_scan.h
@@ -143,7 +148,7 @@ class XYZLutT {
  *         to ith pixel in LidarScan where i = row * w + col.
  */
 OUSTER_API_FUNCTION
-PointCloudXYZd cartesian(const LidarScan& scan, const XYZLut& lut);
+PointCloudXYZd cartesian(const LidarScan & scan, const XYZLut & lut);
 
 /**
  * Convert a staggered range image to Cartesian points.
@@ -156,8 +161,7 @@ PointCloudXYZd cartesian(const LidarScan& scan, const XYZLut& lut);
  *         to ith pixel in LidarScan where i = row * w + col.
  */
 OUSTER_API_FUNCTION
-PointCloudXYZd cartesian(const Eigen::Ref<const img_t<uint32_t>>& range,
-                         const XYZLut& lut);
+PointCloudXYZd cartesian(const Eigen::Ref<const img_t<uint32_t>> & range, const XYZLut & lut);
 /** @}*/
 
 }  // namespace core

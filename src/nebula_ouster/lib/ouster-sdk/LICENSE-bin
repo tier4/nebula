@@ -198,7 +198,7 @@ Name: spdlog
 Description: statically linked vendored header only library
 Availability: https://github.com/gabime/spdlog
 License: MIT
-    Copyright (c) 2016 Gabi Melman.                                       
+    Copyright (c) 2016 Gabi Melman.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -248,7 +248,7 @@ License: MIT derivative
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     --- Optional exception to the license ---
-    
+
     As an exception, if, as a result of your compiling your source code, portions
     of this Software are embedded into a machine-executable object form of such
     source code, you may redistribute such embedded portions in such object form
