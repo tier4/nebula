@@ -6,10 +6,6 @@
     "OusterSensor": {
       "type": "object",
       "properties": {
-        "sensor_model": {
-          "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/sensor_model",
-          "description": "Ouster sensor model (e.g. OS0-64, OS1-128, OSDome-128)."
-        },
         "launch_hw": {
           "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/launch_hw"
         },
@@ -131,7 +127,6 @@
         }
       },
       "required": [
-        "sensor_model",
         "launch_hw",
         "frame_id",
         "use_sensor_extrinsics",
