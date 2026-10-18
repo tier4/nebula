@@ -26,7 +26,7 @@ public:
    */
   PoseQ() : Eigen::Vector7d(Eigen::Vector7d::Zero()) { operator()(3) = 1; }
   template <typename OtherDerived>
-  PoseQ(const Eigen::MatrixBase<OtherDerived> & m) : Eigen::Vector7d(m)
+  explicit PoseQ(const Eigen::MatrixBase<OtherDerived> & m) : Eigen::Vector7d(m)
   {
   }
 
