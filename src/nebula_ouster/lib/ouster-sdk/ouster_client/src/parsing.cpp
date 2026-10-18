@@ -534,9 +534,8 @@ struct PacketFormat::Impl
        *
        * This is a crude way of making it read 8-byte word from the left
        * instead.
-       * TODO: if we run into this issue again, add "pad_left" parameter
-       *       to field_info(), otherwise leaving it here
-       * -- Tim T.
+       * TODO(Tim T.): if we run into this issue again, add "pad_left" parameter
+       *               to field_info(), otherwise leaving it here
        */
       col_status_info.offset -= 4;
       col_status_info.mask <<= 32;
@@ -1326,7 +1325,7 @@ optional<uint64_t> PacketFormat::crc(const uint8_t * buffer, size_t buffer_size)
 {
   if (
     udp_profile_lidar == UDPProfileLidar::LEGACY ||
-    udp_profile_lidar ==  // TODO: this should check header type now
+    udp_profile_lidar ==  // TODO(Matt): this should check header type now
       UDPProfileLidar::FUSA_RNG15_RFL8_NIR8_DUAL ||
     header_type == HeaderType::FUSA) {
     return optional<uint64_t>();
