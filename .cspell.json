@@ -3,8 +3,7 @@
   "language": "en",
   "allowCompoundWords": true,
   "ignorePaths": [
-    "*.drawio",
-    "src/nebula_ouster/**"
+    "*.drawio"
   ],
   "words": [
     "Adctp",
