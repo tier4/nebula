@@ -29,7 +29,7 @@
 #include <thread>
 #include <vector>
 
-#include "jsoncons/basic_json.hpp"
+#include "ouster_json.hpp"
 #include "ouster/defaults.h"
 #include "ouster/impl/client_poller.h"
 #include "ouster/impl/logging.h"

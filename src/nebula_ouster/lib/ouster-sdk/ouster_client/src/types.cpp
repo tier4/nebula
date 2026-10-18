@@ -13,8 +13,7 @@
 #include <cstring>
 #include <exception>
 #include <iostream>
-#include <jsoncons/json.hpp>
-#include <jsoncons/json_type.hpp>
+#include <ouster_json.hpp>
 #include <nonstd/optional.hpp>
 #include <regex>
 #include <set>
