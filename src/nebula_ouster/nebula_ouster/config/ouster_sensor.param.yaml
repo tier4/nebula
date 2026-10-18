@@ -7,12 +7,11 @@
     # ROS wrapper configuration
     launch_hw: true
     frame_id: ouster_lidar
-    use_sensor_extrinsics: false
 
     # Network configuration
     connection:
-      sensor_ip: 169.254.119.211
-      host_ip: 169.254.242.38
+      sensor_ip: 127.0.0.1
+      host_ip: 127.0.0.1
       data_port: 7502
 
     # Decoder configuration

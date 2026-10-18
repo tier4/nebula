@@ -79,11 +79,10 @@ public:
   /// @brief Constructor
   /// @param fov Field of view to crop the point cloud to
   /// @param sensor_info Ouster sensor info object.
-  /// @param apply_sensor_extrinsics If true, pass-through extrinsics when building the XYZ LUT.
   /// @param pointcloud_cb Callback invoked when a full scan is assembled
   OusterDecoder(
     FieldOfView<float, Degrees> fov, std::shared_ptr<ouster::sdk::core::SensorInfo> & sensor_info,
-    bool apply_sensor_extrinsics, pointcloud_callback_t pointcloud_cb);
+    pointcloud_callback_t pointcloud_cb);
 
   ~OusterDecoder();
 
