@@ -17,6 +17,7 @@ The ouster sensor consists of four packages:
 - **nebula_ouster_decoders** - Packet decoder and driver implementation
 - **nebula_ouster_hw_interfaces** - Hardware interface for sensor communication
 - **nebula_ouster** - ROS 2 wrapper and launch files
+- **vendor/ouster-sdk** Contains ouster-sdk with minimal dependencies
 
 ## Building
 
@@ -32,6 +33,32 @@ ros2 launch nebula_ouster nebula_ouster.launch.xml
 # Offline mode (replay from rosbag)
 ros2 launch nebula_ouster nebula_ouster.launch.xml launch_hw:=false
 ```
+
+## Maintenance
+To update ouster-sdk to the latest release, monitor the repo http://github.com/ouster-lidar/ouster-sdk
+for any new releases. When a new release is published, download the new sdk into a separate external
+folder, then go to the folder `nebula_ouster/vendor` in **nebula** and delete the entire contents of
+`ouster-sdk/*` except the `thirdparty` folder, then selectively copy the following list of files and folders:
+- ouster-sdk/ouster_client/
+- ouster-sdk/ouster_sensor/
+- ouster-sdk/cmake/
+- CMakeLists.txt
+- CMakeSettings.json
+- COPYRIGHT
+- LICENSE
+- LICENSE-bin
+- README.rst
+- Security.md
+- vcpkg.json
+- VERSION
+
+The reason we maintain the current `thirdparty` under `vendor/ouster-sdk/thirdparty` because it removes the
+the majority of the non-essential dependencies such as jsoncons, zpng, spdlog, etc. It replaces ouster-sdk's
+json parser based of jsoncons with an implementation based nebula's integrated `nlomann/json` library through
+the `ouster_json.hpp` header. Another thing to watch for is the current implementation drops the spdlog from
+the dependencies by manually editing the `./vendor/ouster-sdk/ouster_client/src/logging.cpp` to disable spdlog.
+
+As of ouster-sdk 0.16.2 only `nmea` and `ouster_json.hpp` are deemed necessary to build the **nebula_ouster** driver.
 
 ## Key components
 
