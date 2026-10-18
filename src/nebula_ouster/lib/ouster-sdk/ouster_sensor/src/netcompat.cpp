@@ -119,9 +119,9 @@ int socket_set_non_blocking(SOCKET sock)
   u_long non_blocking_mode = 1;
   return ioctlsocket(sock, FIONBIO, &non_blocking_mode);
 #else
-  // NOLINTBEGIN(cppcoreguidelines-pro-type-vararg)
+  /* NOLINTBEGIN(cppcoreguidelines-pro-type-vararg) */
   return fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK);
-  // NOLINTEND(cppcoreguidelines-pro-type-vararg)
+  /* NOLINTEND(cppcoreguidelines-pro-type-vararg) */
 #endif
 }
 

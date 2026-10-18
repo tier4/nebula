@@ -114,7 +114,7 @@ void Zrb::save(std::ostream & out) const
   std::bitset<2048> valid_cols;
   for (uint32_t col_id = 0; col_id < n_cols; col_id++) {
     for (uint32_t row_id = 0; row_id < n_rows; row_id++) {
-      // NOLINTBEGIN(cppcoreguidelines-narrowing-conversions)
+      /* NOLINTBEGIN(cppcoreguidelines-narrowing-conversions) */
       auto near_range_fp = std::round(near_range_mm(row_id, col_id) / mm_per_bin);
       auto far_range_fp = std::round(far_range_mm(row_id, col_id) / mm_per_bin);
       if (near_range_fp > UINT16_MAX || far_range_fp > UINT16_MAX) {
@@ -124,7 +124,7 @@ void Zrb::save(std::ostream & out) const
       }
       uint32_t near_bins = static_cast<uint32_t>(near_range_fp);
       uint32_t far_bins = static_cast<uint32_t>(far_range_fp);
-      // NOLINTEND(cppcoreguidelines-narrowing-conversions)
+      /* NOLINTEND(cppcoreguidelines-narrowing-conversions) */
       uint32_t near_far = (far_bins << 16) | near_bins;
       zr_buffer[(col_id * n_rows) + row_id] = near_far;
       if (far_bins > 0) {
@@ -270,10 +270,10 @@ bool Zrb::read_zone_cache(
         uint32_t near_far = col_buffer.at(row_id);
         uint32_t near_bins = near_far & 0xFFFF;
         uint32_t far_bins = near_far >> 16;
-        // NOLINTBEGIN(cppcoreguidelines-narrowing-conversions)
+        /* NOLINTBEGIN(cppcoreguidelines-narrowing-conversions) */
         near_range_mm(row_id, col_id) = std::round(near_bins * mm_per_bin);
         far_range_mm(row_id, col_id) = std::round(far_bins * mm_per_bin);
-        // NOLINTEND(cppcoreguidelines-narrowing-conversions)
+        /* NOLINTEND(cppcoreguidelines-narrowing-conversions) */
       }
     }
   }
