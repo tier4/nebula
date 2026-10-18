@@ -36,7 +36,7 @@ public:
   /**
    * Instantiate a Sha256 with an uninitialized hash value.
    */
-  // TODO(tws) refactor uses of this class so that we can remove the default
+  // TODO(tws): refactor uses of this class so that we can remove the default
   // constructor.
   OUSTER_API_FUNCTION
   Sha256() = default;
