@@ -25,7 +25,6 @@ protected:
     config_.sensor_ip = "127.0.0.2";
     config_.data_port = 7502;
     config_.receiver_mtu_bytes = 65527;
-    config_.filter_sender_ip = true;
   }
 
   void TearDown() override
