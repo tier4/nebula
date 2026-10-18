@@ -21,11 +21,12 @@ add_subdirectory("${_nebula_ouster_sdk}" "${CMAKE_CURRENT_BINARY_DIR}/ouster-sdk
 # Restore BUILD_TESTING after ouster-sdk subdirectory
 set(BUILD_TESTING ${_PARENT_BUILD_TESTING} CACHE BOOL "Build tests" FORCE)
 
-if(TARGET ouster_client)
+if(TARGET ouster_core)
   # ouster-sdk has few C++ warnings which are treated as errors by the CI. Disable them for now.
-  target_compile_options(ouster_client PRIVATE -Wno-pedantic)
+  target_compile_options(ouster_core PRIVATE -Wno-pedantic)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(ouster_client PRIVATE -Wno-error=stringop-overflow)  # cspell:ignore stringop
+    # cspell:ignore stringop memaccess
+    target_compile_options(ouster_core PRIVATE -Wno-error=stringop-overflow -Wno-class-memaccess)
   endif()
 endif()
 
@@ -55,14 +56,12 @@ add_library(
   src/ouster_decoder.cpp
   src/ouster_lidar_scan_conversions.cpp)
 
-set(_ouster_gen_includes "${CMAKE_CURRENT_BINARY_DIR}/ouster-sdk-build/generated")
 target_include_directories(
   nebula_ouster_decoders
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:include>
-         $<BUILD_INTERFACE:${_nebula_ouster_sdk}/ouster_client/include>
-         $<BUILD_INTERFACE:${_nebula_ouster_sdk}/ouster_client/include/optional-lite>
-         $<BUILD_INTERFACE:${_ouster_gen_includes}>
+         $<BUILD_INTERFACE:${_nebula_ouster_sdk}/ouster_core/include>
+         $<BUILD_INTERFACE:${_nebula_ouster_sdk}/ouster_core/include/optional-lite>
          $<INSTALL_INTERFACE:include/nebula_vendor>
          $<INSTALL_INTERFACE:include/nebula_vendor/optional-lite>)
 
@@ -74,17 +73,14 @@ target_link_libraries(
          nebula_ouster_common::nebula_ouster_common
          nebula_core_decoders::nebula_core_decoders
          Eigen3::Eigen
-  PRIVATE ouster_client
+  PRIVATE ouster_core
           OpenSSL::SSL
           OpenSSL::Crypto
           libzip::zip
           Threads::Threads)
 
 install(
-  DIRECTORY "${_nebula_ouster_sdk}/ouster_client/include/"
-  DESTINATION include/nebula_vendor)
-install(
-  DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ouster-sdk-build/generated/"
+  DIRECTORY "${_nebula_ouster_sdk}/ouster_core/include/"
   DESTINATION include/nebula_vendor)
 
 install(TARGETS nebula_ouster_decoders EXPORT export_nebula_ouster_decoders)
@@ -113,14 +109,13 @@ if(BUILD_TESTING)
     nebula_ouster_decoders
     nebula_core_common::nebula_core_common
     nebula_ouster_common::nebula_ouster_common
-    ouster_client
+    ouster_core
   )
   target_include_directories(
     test_ouster_decoder
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-            ${_nebula_ouster_sdk}/ouster_client/include
-            ${_nebula_ouster_sdk}/ouster_client/include/optional-lite
-            ${_ouster_gen_includes}
+            ${_nebula_ouster_sdk}/ouster_core/include
+            ${_nebula_ouster_sdk}/ouster_core/include/optional-lite
   )
 endif()
 

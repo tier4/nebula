@@ -18,22 +18,22 @@
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_decoders/angles.hpp>
 
-#include <ouster/lidar_scan.h>
-#include <ouster/types.h>
-#include <ouster/xyzlut.h>
+#include <ouster/core/lidar_frame.h>
+#include <ouster/core/types.h>
+#include <ouster/core/xyzlut.h>
 
 #include <memory>
 
 namespace nebula::drivers
 {
 
-/// @brief Convert a completed Ouster SDK @c LidarScan into Nebula's dense point cloud type.
-/// @param scan Staggered lidar scan (full frame) from @c ouster::sdk::core::ScanBatcher.
-/// @param lut XYZ lookup generated with @c ouster::sdk::core::make_xyz_lut.
+/// @brief Convert a completed Ouster SDK @c LidarFrame into Nebula's dense point cloud type.
+/// @param scan Staggered lidar frame from @c ouster::sdk::core::FrameBatcher.
+/// @param lut XYZ lookup table constructed from the sensor's @c SensorInfo.
 /// @param fov Angular crop in sensor spherical coordinates (degrees).
 /// @return Shared point cloud; empty if @p scan has no RANGE field or zero size.
 NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
-  const ouster::sdk::core::LidarScan & scan, const ouster::sdk::core::XYZLut & lut,
+  const ouster::sdk::core::LidarFrame & scan, const ouster::sdk::core::XYZLut & lut,
   const FieldOfView<float, Degrees> & fov);
 
 }  // namespace nebula::drivers

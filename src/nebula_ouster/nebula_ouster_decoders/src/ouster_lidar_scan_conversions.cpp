@@ -17,41 +17,45 @@
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_decoders/angles.hpp>
 
-#include <ouster/chanfield.h>
+#include <ouster/core/chanfield.h>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 
 namespace nebula::drivers
 {
 
-using ouster::sdk::core::LidarScan;
+using ouster::sdk::core::LidarFrame;
 using ouster::sdk::core::RANGE_UNIT;
 using ouster::sdk::core::SensorInfo;
 using ouster::sdk::core::XYZLut;
 namespace ChanField = ouster::sdk::core::ChanField;
 
 NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
-  const LidarScan & scan, const XYZLut & lut, const FieldOfView<float, Degrees> & fov)
+  const LidarFrame & scan, const XYZLut & lut, const FieldOfView<float, Degrees> & fov)
 {
   if (!scan.has_field(ChanField::RANGE) || scan.w == 0 || scan.h == 0) {
     return std::make_shared<NebulaPointCloud>();
   }
 
   const auto range_img = scan.field<uint32_t>(ChanField::RANGE);
-  const ouster::sdk::core::PointCloudXYZd xyz = ouster::sdk::core::cartesian(range_img, lut);
+  const ouster::sdk::core::PointCloudXYZd xyz = lut(range_img);
 
   const bool dual = scan.sensor_info->num_returns() > 1;
   const Eigen::Index h = static_cast<Eigen::Index>(scan.h);
   const Eigen::Index w = static_cast<Eigen::Index>(scan.w);
 
-  uint64_t base_ts = 0U;
-  const int first_col = scan.get_first_valid_column();
-  if (first_col >= 0 && first_col < static_cast<int>(scan.w)) {
-    base_ts = scan.timestamp()(first_col);
+  int first_col = 0;
+  try {
+    first_col = scan.get_first_valid_column();
+  } catch (const std::runtime_error &) {
+    // No valid columns, hence no valid points.
+    return std::make_shared<NebulaPointCloud>();
   }
+  const uint64_t base_ts = scan.timestamp()(first_col);
 
   auto cloud = std::make_shared<NebulaPointCloud>();
   cloud->reserve(static_cast<size_t>(scan.h * scan.w));

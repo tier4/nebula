@@ -16,7 +16,7 @@
 
 #include <nebula_core_common/util/expected.hpp>
 
-#include <ouster/types.h>
+#include <ouster/core/types.h>
 
 #include <cstdint>
 #include <fstream>

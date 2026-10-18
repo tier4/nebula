@@ -20,7 +20,7 @@
 #include <nebula_core_decoders/angles.hpp>
 #include <nebula_ouster_common/ouster_calibration_data.hpp>
 
-#include <ouster/types.h>
+#include <ouster/core/types.h>
 
 #include <cstdint>
 #include <functional>
@@ -66,7 +66,7 @@ struct PacketDecodeResult
   PacketDecodeResult() : performance_counters{}, metadata_or_error(DecodeError::CALLBACK_NOT_SET) {}
 };
 
-/// @brief Decoder that batches Ouster UDP packets via ouster-sdk (@c ScanBatcher) and publishes
+/// @brief Decoder that batches Ouster UDP packets via ouster-sdk (@c FrameBatcher) and publishes
 /// Nebula point clouds.
 class OusterDecoder
 {
