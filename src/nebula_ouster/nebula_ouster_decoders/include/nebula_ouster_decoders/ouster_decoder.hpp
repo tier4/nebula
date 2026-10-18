@@ -18,6 +18,7 @@
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_common/util/expected.hpp>
 #include <nebula_core_decoders/angles.hpp>
+#include <nebula_ouster_common/ouster_calibration_data.hpp>
 
 #include <ouster/types.h>
 
@@ -78,10 +79,10 @@ public:
 
   /// @brief Constructor
   /// @param fov Field of view to crop the point cloud to
-  /// @param sensor_info Ouster sensor info object.
+  /// @param calibration Ouster calibration data containing sensor info.
   /// @param pointcloud_cb Callback invoked when a full scan is assembled
   OusterDecoder(
-    FieldOfView<float, Degrees> fov, std::shared_ptr<ouster::sdk::core::SensorInfo> & sensor_info,
+    FieldOfView<float, Degrees> fov, const OusterCalibrationData & calibration,
     pointcloud_callback_t pointcloud_cb);
 
   ~OusterDecoder();
@@ -99,6 +100,10 @@ public:
 
   /// @brief Replace the callback used for completed scans.
   void set_pointcloud_callback(pointcloud_callback_t pointcloud_cb);
+
+  /// @brief Get the expected lidar packet size (for receiver MTU configuration).
+  /// @return The lidar packet size in bytes as reported by the Ouster PacketFormat.
+  [[nodiscard]] size_t lidar_packet_size() const;
 
 private:
   struct Impl;

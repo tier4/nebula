@@ -17,6 +17,7 @@
 #include <nebula_core_common/util/expected.hpp>
 #include <nebula_core_ros/parameter_descriptors.hpp>
 #include <nebula_core_ros/point_cloud_conversions.hpp>
+#include <nebula_ouster_common/ouster_calibration_data.hpp>
 #include <nebula_ouster_common/ouster_configuration.hpp>
 #include <nebula_ouster_hw_interfaces/ouster_hw_interface.hpp>
 #include <rcl_interfaces/msg/parameter_descriptor.hpp>
@@ -31,6 +32,7 @@
 #include <chrono>
 #include <cinttypes>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <memory>
@@ -191,8 +193,10 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
   diagnostics_(this),
   runtime_mode_(std::monostate{})
 {
-  const bool launch_hw = declare_parameter<bool>("launch_hw", true, param_read_only());
+  launch_hw_ = declare_parameter<bool>("launch_hw", true, param_read_only());
   frame_id_ = declare_parameter<std::string>("frame_id", "ouster_lidar", param_read_write());
+  const auto calibration_file_path =
+    declare_parameter<std::string>("calibration_file", "", param_read_only());
 
   const auto config_or_error = load_config_from_ros_parameters(*this);
   if (!config_or_error.has_value()) {
@@ -212,27 +216,33 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
 
   initialize_diagnostics();
 
-  const auto sensor_ip = config_.connection.sensor_ip;
-  const auto sensor_metadata_json = fetch_ouster_metadata_via_http(sensor_ip);
-  RCLCPP_INFO(
-    get_logger(), "Loaded Ouster metadata via HTTP (%zu bytes)", sensor_metadata_json.size());
+  auto calibration_result = get_calibration_data(calibration_file_path);
+  if (!calibration_result.has_value()) {
+    throw std::runtime_error(
+      "Failed to obtain Ouster calibration data: " + calibration_result.error().message);
+  }
+  const auto & calibration = calibration_result.value();
 
-  auto sensor_info = std::make_shared<ouster::sdk::core::SensorInfo>(sensor_metadata_json);
-  auto packet_format = std::make_shared<ouster::sdk::core::PacketFormat>(*sensor_info);
-  config_.connection.receiver_mtu_bytes = packet_format->lidar_packet_size;
+  RCLCPP_INFO(
+    get_logger(), "Loaded Ouster calibration metadata (%zu bytes, source: %s)",
+    calibration.metadata_json.size(),
+    calibration.calibration_file.empty() ? "sensor HTTP" : calibration.calibration_file.c_str());
+
+  decoder_.emplace(
+    config_.fov, calibration,
+    [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
+      publish_pointcloud_callback(pointcloud, timestamp_s);
+    });
+
+  config_.connection.receiver_mtu_bytes =
+    static_cast<uint32_t>(decoder_->lidar_packet_size());
 
   RCLCPP_INFO(
     get_logger(), "Ouster UDP: listening on %s:%u (sensor_ip=%s) receiver_mtu=%u",
     config_.connection.host_ip.c_str(), config_.connection.data_port,
     config_.connection.sensor_ip.c_str(), config_.connection.receiver_mtu_bytes);
 
-  decoder_.emplace(
-    config_.fov, sensor_info,
-    [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
-      publish_pointcloud_callback(pointcloud, timestamp_s);
-    });
-
-  if (launch_hw) {
+  if (launch_hw_) {
     auto & online_mode = runtime_mode_.emplace<OnlineMode>(config_.connection);
     online_mode.packets_pub =
       create_publisher<nebula_msgs::msg::NebulaPackets>("packets", rclcpp::SensorDataQoS());
@@ -466,6 +476,89 @@ const char * OusterRosWrapper::to_cstr(const Error::Code code)
     default:
       return "unknown wrapper error";
   }
+}
+
+OusterRosWrapper::get_calibration_result_t OusterRosWrapper::get_calibration_data(
+  const std::string & calibration_file_path)
+{
+  using Error = drivers::OusterCalibrationData::Error;
+  using ErrorCode = drivers::OusterCalibrationData::ErrorCode;
+
+  // Derive a "from sensor" path: original_name_from_sensor_<ip>.json
+  std::filesystem::path calibration_from_sensor_path;
+  if (!calibration_file_path.empty()) {
+    calibration_from_sensor_path = calibration_file_path;
+    calibration_from_sensor_path = calibration_from_sensor_path.parent_path() /
+                                   (calibration_from_sensor_path.stem().string() +
+                                    "_from_sensor_" + config_.connection.sensor_ip + ".json");
+  }
+
+  // 1. If sensor is connected (launch_hw), fetch metadata via HTTP and save to file
+  if (launch_hw_) {
+    try {
+      const auto sensor_metadata_json =
+        fetch_ouster_metadata_via_http(config_.connection.sensor_ip);
+      auto calib_from_sensor = drivers::OusterCalibrationData::load_from_string(sensor_metadata_json);
+      if (calib_from_sensor.has_value()) {
+        // Save to file for future offline use
+        if (!calibration_from_sensor_path.empty()) {
+          auto save_result =
+            calib_from_sensor.value().save_to_file(calibration_from_sensor_path.string());
+          if (save_result.has_value()) {
+            RCLCPP_INFO(
+              get_logger(), "Saved sensor metadata to: %s",
+              calibration_from_sensor_path.c_str());
+            calib_from_sensor.value().calibration_file = calibration_from_sensor_path.string();
+          } else {
+            RCLCPP_WARN(
+              get_logger(), "Could not save sensor metadata to file: %s",
+              save_result.error().message.c_str());
+          }
+        }
+        return calib_from_sensor.value();
+      }
+    } catch (const std::exception & e) {
+      RCLCPP_WARN(
+        get_logger(), "Could not fetch metadata from sensor via HTTP: %s. "
+        "Falling back to calibration file.", e.what());
+    }
+  }
+
+  // 2. Try to load previously-downloaded sensor metadata file
+  if (
+    !calibration_from_sensor_path.empty() &&
+    std::filesystem::exists(calibration_from_sensor_path)) {
+    auto calib = drivers::OusterCalibrationData::load_from_file(
+      calibration_from_sensor_path.string());
+    if (calib.has_value()) {
+      RCLCPP_INFO(
+        get_logger(), "Loaded previously-downloaded sensor metadata from: %s",
+        calibration_from_sensor_path.c_str());
+      return calib.value();
+    }
+    RCLCPP_WARN(
+      get_logger(), "Previously-downloaded metadata file exists but failed to load: %s",
+      calib.error().message.c_str());
+  }
+
+  if (calibration_file_path.empty()) {
+    return Error{
+      ErrorCode::EMPTY_METADATA,
+      "No calibration file path configured and sensor metadata could not be fetched. "
+      "Set the 'calibration_file' parameter to the path of a sensor metadata JSON file."};
+  }
+
+  if (!std::filesystem::exists(calibration_file_path)) {
+    return Error{
+      ErrorCode::OPEN_FOR_READ_FAILED,
+      "Calibration file does not exist: " + calibration_file_path};
+  }
+
+  auto calib = drivers::OusterCalibrationData::load_from_file(calibration_file_path);
+  if (!calib.has_value()) {
+    return calib.error();
+  }
+  return calib.value();
 }
 
 }  // namespace nebula::ros

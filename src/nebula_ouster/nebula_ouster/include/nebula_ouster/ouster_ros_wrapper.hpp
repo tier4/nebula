@@ -22,6 +22,7 @@
 #include <nebula_core_common/util/expected.hpp>
 #include <nebula_core_ros/diagnostics/liveness_monitor.hpp>
 #include <nebula_core_ros/diagnostics/rate_bound_status.hpp>
+#include <nebula_ouster_common/ouster_calibration_data.hpp>
 #include <nebula_ouster_common/ouster_configuration.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -157,10 +158,21 @@ private:
   void publish_debug_durations(
     uint64_t receive_duration_ns, uint64_t decode_duration_ns, uint64_t publish_duration_ns) const;
 
+  /// @brief Load calibration data from the best available source:
+  /// 1. If sensor connected (launch_hw), fetch metadata via HTTP and save to file
+  /// 2. If a previously-downloaded file exists, load that
+  /// 3. Fall back to the file given by `calibration_file_path`
+  /// @param calibration_file_path The file to use if no better option is available
+  /// @return The calibration data if successful, or an error description
+  using get_calibration_result_t =
+    util::expected<drivers::OusterCalibrationData, drivers::OusterCalibrationData::Error>;
+  get_calibration_result_t get_calibration_data(const std::string & calibration_file_path);
+
   static const char * to_cstr(Error::Code code);
 
   drivers::OusterSensorConfiguration config_;
   std::string frame_id_;
+  bool launch_hw_{false};
   Publishers publishers_;
   Diagnostics diagnostics_;
 

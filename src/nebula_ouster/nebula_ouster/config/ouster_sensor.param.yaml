@@ -8,6 +8,11 @@
     launch_hw: true
     frame_id: ouster_lidar
 
+    # Calibration: path to sensor metadata JSON file (used as fallback when sensor is unreachable)
+    # When launch_hw is true, metadata is fetched from the sensor and saved alongside this file.
+    # When launch_hw is false, this file (or a previously-saved _from_sensor_ variant) is required.
+    calibration_file: ""
+
     # Network configuration
     connection:
       sensor_ip: 127.0.0.1
