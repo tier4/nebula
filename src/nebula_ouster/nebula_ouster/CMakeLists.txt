@@ -29,6 +29,9 @@ add_subdirectory("${_nebula_ouster_sdk}" "${CMAKE_CURRENT_BINARY_DIR}/ouster-sdk
 
 if(TARGET ouster_client)
   target_compile_options(ouster_client PRIVATE -Wno-pedantic)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(ouster_client PRIVATE -Wno-error=stringop-overflow)
+  endif()
 endif()
 if(TARGET ouster_sensor)
   target_compile_options(ouster_sensor PRIVATE -Wno-pedantic)
