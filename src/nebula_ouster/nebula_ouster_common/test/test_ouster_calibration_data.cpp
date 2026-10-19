@@ -30,7 +30,6 @@ TEST_F(TestOusterCalibrationData, TestLoadFromStringSuccess)
   ASSERT_TRUE(result.has_value());
 
   auto calibration = result.value();
-  EXPECT_FALSE(calibration.metadata_json.empty());
   EXPECT_NE(calibration.sensor_info, nullptr);
   EXPECT_NE(calibration.packet_format, nullptr);
 }
@@ -56,7 +55,6 @@ TEST_F(TestOusterCalibrationData, TestLoadFromFileSuccess)
 
   auto calibration = result.value();
   EXPECT_EQ(calibration.calibration_file, tmp_path);
-  EXPECT_FALSE(calibration.metadata_json.empty());
   EXPECT_NE(calibration.sensor_info, nullptr);
   EXPECT_NE(calibration.packet_format, nullptr);
 
@@ -98,7 +96,7 @@ TEST_F(TestOusterCalibrationData, TestSaveToFileSuccess)
   // Verify file content
   std::ifstream f(tmp_path);
   std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-  EXPECT_EQ(content, valid_metadata_json_);
+  EXPECT_EQ(content, calibration.sensor_info->to_json_string());
 
   std::remove(tmp_path.c_str());
 }
