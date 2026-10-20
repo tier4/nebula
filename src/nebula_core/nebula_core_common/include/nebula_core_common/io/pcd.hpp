@@ -150,7 +150,7 @@ public:
   static PointCloud<PointT> read(const std::string & filename)
   {
     static_assert(IsPointType<PointT>::value, "PointT must have a fields() method");
-    static_assert(std::is_pod_v<PointT>, "PointT must be a POD type");
+    static_assert(is_pod_like_v<PointT>, "PointT must be a POD type");
 
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
@@ -488,7 +488,7 @@ public:
   static void write_binary(const std::string & filename, const PointCloud<PointT> & cloud)
   {
     static_assert(IsPointType<PointT>::value, "PointT must have a fields() method");
-    static_assert(std::is_pod_v<PointT>, "PointT must be a POD type");
+    static_assert(is_pod_like_v<PointT>, "PointT must be a POD type");
 
     std::ofstream file(filename, std::ios::binary);
     if (!file.is_open()) {
