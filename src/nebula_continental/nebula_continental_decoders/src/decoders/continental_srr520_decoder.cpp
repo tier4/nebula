@@ -99,6 +99,11 @@ Status ContinentalSRR520Decoder::register_packets_callback(
 bool ContinentalSRR520Decoder::process_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
+  if (packet_msg->data.size() < 4) {
+    print_error("Packet too short to contain a CAN message ID");
+    return false;
+  }
+
   const uint32_t can_message_id = (static_cast<uint32_t>(packet_msg->data[0]) << 24) |
                                   (static_cast<uint32_t>(packet_msg->data[1]) << 16) |
                                   (static_cast<uint32_t>(packet_msg->data[2]) << 8) |
