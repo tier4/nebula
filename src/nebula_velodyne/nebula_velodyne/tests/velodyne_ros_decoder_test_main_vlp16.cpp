@@ -85,6 +85,15 @@ TEST(TestDecoder, TestWrongSizedPacketIsRejected)
   }
 }
 
+TEST(TestDecoder, TestScanOfOnlyOverflowPointsDoesNotCrash)
+{
+  // A scan cut whose points all lie within a quarter turn after the scan phase moves every point
+  // to the overflow buffer. That must not read past the beginning of the emptied scan buffer.
+  for (const uint16_t azimuth : {1000, 2000, 0, 1000, 2000, 0, 1000}) {
+    EXPECT_NO_THROW(velodyne_driver->parse_cloud_packet(make_packet(azimuth), 0.0));
+  }
+}
+
 int main(int argc, char * argv[])
 {
   std::cout << "velodyne_ros_decoder_test_main_vlp16.cpp" << std::endl;
