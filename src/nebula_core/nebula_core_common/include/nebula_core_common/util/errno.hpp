@@ -24,7 +24,7 @@ namespace nebula::util
 inline std::string errno_to_string(int err_no)
 {
   static constexpr size_t gnu_max_strerror_length = 1024;
-  std::array<char, gnu_max_strerror_length> msg_buf;  // NOLINT
+  std::array<char, gnu_max_strerror_length> msg_buf{};  // NOLINT
   std::string_view msg = strerror_r(err_no, msg_buf.data(), msg_buf.size());
   return std::string{msg};
 }
