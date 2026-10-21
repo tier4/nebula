@@ -29,6 +29,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace nebula::ros
 {
@@ -78,6 +79,12 @@ public:
   /// @brief Read the specified bag file and compare the constructed point clouds with the
   /// corresponding PCD files
   void read_bag();
+
+  /// @brief Feed a raw packet to the driver (used for malformed-packet tests)
+  auto parse_cloud_packet(const std::vector<uint8_t> & packet, double packet_seconds)
+  {
+    return driver_ptr_->parse_cloud_packet(packet, packet_seconds);
+  }
   /*
   void SetUp() override {
     // Setup things that should occur before every test instance should go here
