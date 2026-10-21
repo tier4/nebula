@@ -133,8 +133,13 @@ void Vls128Decoder::reset_overflow(double time_stamp)
   overflow_pc_->reserve(max_pts_);
 }
 
-void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
+PacketDecodeStatus Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
 {
+  // Every fixed-offset access below assumes a full-size packet.
+  if (packet.size() != static_cast<size_t>(g_packet_size)) {
+    return PacketDecodeStatus::INVALID_PACKET_SIZE;
+  }
+
   check_and_handle_scan_complete(packet, packet_seconds, phase_);
 
   const raw_packet_t * raw = (const raw_packet_t *)packet.data();
@@ -164,9 +169,7 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
         bank_origin = 96;
         break;
       default:
-        // Do not flood the log with messages, only issue at most one
-        // of these warnings per minute.
-        return;  // bad packet: skip the rest
+        return PacketDecodeStatus::INVALID_BLOCK_HEADER;  // bad packet: skip the rest
     }
 
     float azimuth_diff;
@@ -343,6 +346,8 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
     }  // scan area condition
   }  // for (uint block = 0; block < static_cast < uint > (BLOCKS_PER_PACKET - (4 * dual_return));
      // block++)
+
+  return PacketDecodeStatus::OK;
 }
 
 bool Vls128Decoder::parse_packet(
