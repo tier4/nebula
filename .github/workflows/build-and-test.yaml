@@ -15,16 +15,13 @@ jobs:
       fail-fast: false
       matrix:
         rosdistro: [humble, jazzy]
-        agnocast_enabled: [0, 1]
-        exclude:
-          - rosdistro: jazzy
-            agnocast_enabled: 1  # Agnocast does not yet support Jazzy
+        enable_agnocast: [0, 1]
     env:
       CCACHE_DIR: /root/.ccache
       CCACHE_SIZE: 1G  # The GitHub cache action allows for 10G but the runners' disk space is limited
       CC: /usr/lib/ccache/gcc
       CXX: /usr/lib/ccache/g++
-      AGNOCAST_ENABLED: ${{ matrix.agnocast_enabled }}
+      ENABLE_AGNOCAST: ${{ matrix.enable_agnocast }}
 
     steps:
       - name: Check out repository
@@ -98,13 +95,21 @@ jobs:
         if: ${{ steps.get-self-packages.outputs.self-packages != '' }}
         id: test
         uses: autowarefoundation/autoware-github-actions/colcon-test@v1
+        env:
+          # The test runner has no Agnocast kernel module / heaphook, so nodes built with
+          # Agnocast support are exercised in rclcpp mode at test time.
+          ENABLE_AGNOCAST: 0
         with:
           rosdistro: ${{ matrix.rosdistro }}
+          # With ENABLE_AGNOCAST=0, colcon no longer resolves the conditional agnocastlib
+          # dependency, so its env hooks would not be sourced for the tests. Source the
+          # built workspace instead so that libagnocast.so is found at runtime.
+          underlay-workspace: install
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
           build-depends-repos: build_depends-${{ matrix.rosdistro }}.repos
 
       - name: Upload coverage to CodeCov
-        if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.agnocast_enabled == 0 }}
+        if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.enable_agnocast == 0 }}
         uses: codecov/codecov-action@v4
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
