@@ -115,6 +115,7 @@ private:
   std::shared_ptr<const continental_ars548::ContinentalARS548SensorConfiguration> config_ptr_{};
   std::shared_ptr<loggers::Logger> logger_;
   bool corner_radar_firmware_warned_{false};
+  bool short_object_list_warned_{false};
 };
 
 }  // namespace nebula::drivers::continental_ars548
