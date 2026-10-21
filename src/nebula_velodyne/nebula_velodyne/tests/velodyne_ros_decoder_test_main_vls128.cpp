@@ -85,6 +85,15 @@ TEST(TestDecoder, TestWrongSizedPacketIsRejected)
   }
 }
 
+TEST(TestDecoder, TestOutOfRangeAzimuthDoesNotCrash)
+{
+  // The wire azimuth is a free 16-bit value. Values >= 36000 must not index past the
+  // 36000-entry azimuth lookup table.
+  for (const uint16_t azimuth : {35999, 36000, 36001, 40000, 65535, 0, 65535}) {
+    EXPECT_NO_THROW(velodyne_driver->parse_cloud_packet(make_packet(azimuth), 0.0));
+  }
+}
+
 TEST(TestDecoder, TestScanOfOnlyOverflowPointsDoesNotCrash)
 {
   // A scan cut whose points all lie within a quarter turn after the scan phase moves every point
