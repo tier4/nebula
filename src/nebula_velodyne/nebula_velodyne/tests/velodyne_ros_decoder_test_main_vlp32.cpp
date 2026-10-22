@@ -72,6 +72,7 @@ TEST(TestDecoder, TestWrongSizedPacketIsRejected)
   // fixed-offset access happens (see CVE-2026-74238). The packets are truncated or padded copies
   // of a well-formed packet, so every byte that is present looks valid.
   const auto full = make_packet(18000);
+  ASSERT_EQ(velodyne_driver->unpack(full, 0.0), nebula::drivers::PacketDecodeStatus::OK);
   for (const size_t size : {0u,    1u,    2u,    3u,    4u,    8u,    64u,   100u,  1101u, 1102u,
                             1103u, 1104u, 1200u, 1203u, 1204u, 1205u, 1207u, 1208u, 1500u, 9000u}) {
     // Allocate exactly `size` bytes so that out-of-bounds reads are not hidden by spare capacity
@@ -82,8 +83,10 @@ TEST(TestDecoder, TestWrongSizedPacketIsRejected)
       packet[2] = 0;
       packet[3] = 0;
     }
-    const auto pointcloud = std::get<0>(velodyne_driver->parse_cloud_packet(packet, 0.0));
-    EXPECT_EQ(pointcloud, nullptr) << "packet of " << size << " bytes was not rejected";
+    EXPECT_EQ(
+      velodyne_driver->unpack(packet, 0.0),
+      nebula::drivers::PacketDecodeStatus::INVALID_PACKET_SIZE)
+      << "packet of " << size << " bytes was not rejected";
   }
 }
 
