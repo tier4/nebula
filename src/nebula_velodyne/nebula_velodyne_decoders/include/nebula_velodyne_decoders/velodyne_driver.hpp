@@ -42,6 +42,8 @@ private:
   Status driver_status_;
   /// @brief Decoder according to the model
   std::shared_ptr<drivers::VelodyneScanDecoder> scan_decoder_;
+  /// @brief Clock used to throttle error logging
+  rclcpp::Clock clock_{RCL_STEADY_TIME};
 
 public:
   VelodyneDriver() = delete;
