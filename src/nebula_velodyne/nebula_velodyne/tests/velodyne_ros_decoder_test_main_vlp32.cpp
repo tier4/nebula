@@ -47,7 +47,7 @@ std::vector<uint8_t> make_packet(uint16_t azimuth_centideg)
     }
   }
   packet[1204] = 55;    // return mode: strongest
-  packet[1205] = 0x22;  // product id
+  packet[1205] = 0x28;  // product id
   return packet;
 }
 
