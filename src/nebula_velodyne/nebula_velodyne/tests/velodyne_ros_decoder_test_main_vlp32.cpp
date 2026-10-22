@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -73,8 +74,9 @@ TEST(TestDecoder, TestWrongSizedPacketIsRejected)
   const auto full = make_packet(18000);
   for (const size_t size : {0u,    1u,    2u,    3u,    4u,    8u,    64u,   100u,  1101u, 1102u,
                             1103u, 1104u, 1200u, 1203u, 1204u, 1205u, 1207u, 1208u, 1500u, 9000u}) {
-    std::vector<uint8_t> packet(full);
-    packet.resize(size, 0xAB);
+    // Allocate exactly `size` bytes so that out-of-bounds reads are not hidden by spare capacity
+    std::vector<uint8_t> packet(size, 0xAB);
+    std::copy_n(full.begin(), std::min(size, full.size()), packet.begin());
     // Alternate azimuths so that the scan-cutting logic would trigger if the packet were decoded
     if (size > g_last_block_azimuth_offset + 1) {
       packet[2] = 0;
