@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <type_traits>
 
 namespace nebula::drivers
 {
@@ -125,12 +126,34 @@ inline bool angle_is_between(
 template <typename T, typename U = T>
 inline T normalize_angle(T angle, U max_angle)
 {
-  // Note: double can represent the full int32_t range, so this is not less accurate than using
-  // integer math. Reconciling T and U as double, in case they differ in size and signedness.
-  const auto a = static_cast<double>(angle);
-  const auto m = static_cast<double>(max_angle);
-  const double factor = std::floor(a / m);
-  return static_cast<T>(a - (factor * m));
+  if constexpr (std::is_integral_v<T> && std::is_integral_v<U>) {
+    // Exact zero-float p/q Euclidean integer modulo for centi-degree / milli-degree LiDAR returns.
+    const int64_t a = static_cast<int64_t>(angle);
+    const int64_t m = static_cast<int64_t>(max_angle);
+    if (m <= 0) {
+      return static_cast<T>(0);
+    }
+    int64_t r = a % m;
+    if (r < 0) {
+      r += m;
+    }
+    return static_cast<T>(r);
+  } else {
+    const auto a = static_cast<double>(angle);
+    const auto m = static_cast<double>(max_angle);
+    if (m <= 0.0) {
+      return static_cast<T>(0);
+    }
+    const double factor = std::floor(a / m);
+    const double res = a - (factor * m);
+    const T typed_res = static_cast<T>(res);
+    // Guard against IEEE-754 rounding of tiny negative angles (e.g. -1e-9f) up to max_angle,
+    // strictly preserving the half-open interval [0, max_angle).
+    if (typed_res >= static_cast<T>(max_angle) || typed_res < static_cast<T>(0)) {
+      return static_cast<T>(0);
+    }
+    return typed_res;
+  }
 }
 
 }  // namespace nebula::drivers
