@@ -6,10 +6,15 @@ on:
     - cron: 0 0 * * *
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   build-and-test:
     if: ${{ github.event_name != 'push' || github.ref_name == github.event.repository.default_branch }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Codecov OIDC upload
     container: ros:${{ matrix.rosdistro }}
     strategy:
       fail-fast: false
@@ -25,10 +30,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Free disk space (Ubuntu)
-        uses: jlumbroso/free-disk-space@v1.2.0
+        uses: jlumbroso/free-disk-space@76866dbe54312617f00798d1762df7f43def6e5c # v1.2.0
         with:
           tool-cache: false
           dotnet: false
@@ -36,11 +41,11 @@ jobs:
           large-packages: false
 
       - name: Remove exec_depend
-        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
+        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
 
       - name: Get self packages
         id: get-self-packages
-        uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
+        uses: autowarefoundation/autoware-github-actions/get-self-packages@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
 
       - name: Install ccache
         run: sudo apt-get update && sudo apt-get install -y ccache
@@ -59,7 +64,7 @@ jobs:
         shell: bash
 
       - name: Attempt to restore ccache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -74,7 +79,7 @@ jobs:
 
       - name: Build
         if: ${{ steps.get-self-packages.outputs.self-packages != '' }}
-        uses: autowarefoundation/autoware-github-actions/colcon-build@v1
+        uses: autowarefoundation/autoware-github-actions/colcon-build@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
@@ -86,7 +91,7 @@ jobs:
         shell: bash
 
       - name: Upload ccache to cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -94,7 +99,7 @@ jobs:
       - name: Test
         if: ${{ steps.get-self-packages.outputs.self-packages != '' }}
         id: test
-        uses: autowarefoundation/autoware-github-actions/colcon-test@v1
+        uses: autowarefoundation/autoware-github-actions/colcon-test@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
         env:
           # The test runner has no Agnocast kernel module / heaphook, so nodes built with
           # Agnocast support are exercised in rclcpp mode at test time.
@@ -110,10 +115,10 @@ jobs:
 
       - name: Upload coverage to CodeCov
         if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.enable_agnocast == 0 }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           fail_ci_if_error: false
           verbose: true
           flags: total
