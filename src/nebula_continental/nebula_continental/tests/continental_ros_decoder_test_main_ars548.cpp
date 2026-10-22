@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -34,6 +35,23 @@ TEST(TestDecoder, TestBag)
 {
   std::cout << "TEST(TestDecoder, TestBag)" << std::endl;
   continental_driver->read_bag();
+}
+
+// Recorded from an ARS548 flashed with the ARS540DI firmware (5.40.4), mounted as a corner radar.
+// It sends the 200-object list format (37452-byte payload, PDU length 37444).
+TEST(TestDecoder, TestBagArs540di)
+{
+  std::cout << "TEST(TestDecoder, TestBagArs540di)" << std::endl;
+  const auto objects_before = continental_driver->get_object_list_callback_count();
+  const auto detections_before = continental_driver->get_detection_list_callback_count();
+
+  std::filesystem::path bag_path = _SRC_RESOURCES_DIR_PATH;
+  bag_path = bag_path / "decoder_ground_truth" / "ars548" / "1764575091";
+  continental_driver->set_bag(bag_path.string(), "/sensing/radar/front_left/nebula_packets");
+  continental_driver->read_bag();
+
+  EXPECT_EQ(continental_driver->get_object_list_callback_count(), objects_before + 1);
+  EXPECT_EQ(continental_driver->get_detection_list_callback_count(), detections_before + 1);
 }
 
 namespace

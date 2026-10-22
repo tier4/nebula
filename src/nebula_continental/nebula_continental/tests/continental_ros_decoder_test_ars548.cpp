@@ -155,6 +155,7 @@ void ContinentalRosDecoderTest::check_result(
 void ContinentalRosDecoderTest::detection_list_callback(
   std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg)
 {
+  detection_list_callback_count_++;
   EXPECT_EQ(sensor_cfg_ptr_->frame_id, msg->header.frame_id);
   std::string msg_as_string = continental_msgs::msg::to_yaml(*msg);
 
