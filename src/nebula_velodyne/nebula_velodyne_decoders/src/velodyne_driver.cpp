@@ -66,15 +66,15 @@ std::tuple<drivers::NebulaPointCloudPtr, double> VelodyneDriver::parse_cloud_pac
     case PacketDecodeStatus::OK:
       break;
     case PacketDecodeStatus::INVALID_PACKET_SIZE:
-      RCLCPP_ERROR_ONCE(
-        rclcpp::get_logger("VelodyneDriver"),
+      RCLCPP_ERROR_THROTTLE(
+        rclcpp::get_logger("VelodyneDriver"), clock_, 5000,
         "Packet size mismatch: got %zu bytes, expected %d bytes. Dropping packet.", packet.size(),
         g_packet_size);
       return pointcloud;
     case PacketDecodeStatus::INVALID_BLOCK_HEADER:
       // The decoder skipped the rest of the packet; the scan state is still updated.
-      RCLCPP_WARN_ONCE(
-        rclcpp::get_logger("VelodyneDriver"),
+      RCLCPP_WARN_THROTTLE(
+        rclcpp::get_logger("VelodyneDriver"), clock_, 5000,
         "Unrecognized block header, skipping the rest of the packet.");
       break;
   }
