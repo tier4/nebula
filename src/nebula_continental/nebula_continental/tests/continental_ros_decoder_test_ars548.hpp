@@ -85,10 +85,19 @@ public:
   /// @brief Disable ground-truth comparison for synthetic packets that are not in the test bag
   void set_compare_with_ground_truth(bool enabled) { compare_with_ground_truth_ = enabled; }
   size_t get_object_list_callback_count() const { return object_list_callback_count_; }
+  size_t get_detection_list_callback_count() const { return detection_list_callback_count_; }
+
+  /// @brief Point the fixture at a different ground-truth bag and packet topic
+  void set_bag(const std::string & bag_path, const std::string & target_topic)
+  {
+    bag_path_ = bag_path;
+    target_topic_ = target_topic;
+  }
 
 private:
   bool compare_with_ground_truth_{true};
   size_t object_list_callback_count_{0};
+  size_t detection_list_callback_count_{0};
   std::string bag_path_{};
   std::string storage_id_{};
   std::string format_{};
