@@ -15,7 +15,6 @@
 #include "nebula_continental_decoders/decoders/continental_ars548_decoder.hpp"
 
 #include <nebula_continental_common/continental_ars548.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
@@ -30,9 +29,10 @@ namespace nebula::drivers::continental_ars548
 {
 ContinentalARS548Decoder::ContinentalARS548Decoder(
   const std::shared_ptr<const continental_ars548::ContinentalARS548SensorConfiguration> &
-    sensor_configuration)
+    sensor_configuration,
+  const std::shared_ptr<loggers::Logger> & logger)
+: config_ptr_(sensor_configuration), logger_(logger)
 {
-  config_ptr_ = sensor_configuration;
 }
 
 Status ContinentalARS548Decoder::get_status()
@@ -270,13 +270,18 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
 {
   if (nebula::drivers::continental_ars548::is_corner_radar(radar_status_.yaw)) {
     if (radar_status_.sw_version_minor != sw_version_minor_corner_radar) {
-      RCLCPP_WARN_ONCE(
-        rclcpp::get_logger("ContinentalARS548Decoder"),
-        "Tried to parse an object list packet from a corner radar, but the required software "
-        "version is X.%d.Z. The connected radar firmware version is %d.%d.%d. The object list will "
-        "be skipped.",
-        sw_version_minor_corner_radar, radar_status_.sw_version_major,
-        radar_status_.sw_version_minor, radar_status_.sw_version_patch);
+      if (!corner_radar_firmware_warned_) {
+        corner_radar_firmware_warned_ = true;
+        NEBULA_LOG_STREAM(
+          logger_->warn,
+          "Tried to parse an object list packet from a corner radar, but the required software "
+          "version is X."
+            << sw_version_minor_corner_radar << ".Z. The connected radar firmware version is "
+            << static_cast<int>(radar_status_.sw_version_major) << "."
+            << static_cast<int>(radar_status_.sw_version_minor) << "."
+            << static_cast<int>(radar_status_.sw_version_patch)
+            << ". The object list will be skipped.");
+      }
       return true;
     }
   }

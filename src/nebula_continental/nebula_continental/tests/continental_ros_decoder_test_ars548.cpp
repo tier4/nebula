@@ -17,6 +17,7 @@
 #include "parameter_descriptors.hpp"
 
 #include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
+#include <nebula_core_ros/rclcpp_logger.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <rcpputils/filesystem_helper.hpp>
@@ -75,7 +76,8 @@ Status ContinentalRosDecoderTest::initialize_driver(
   // driver should be initialized here with proper decoder
   driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(
     std::static_pointer_cast<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
-      sensor_configuration));
+      sensor_configuration),
+    std::make_shared<drivers::loggers::RclcppLogger>(get_logger()));
   return Status::OK;
 }
 
