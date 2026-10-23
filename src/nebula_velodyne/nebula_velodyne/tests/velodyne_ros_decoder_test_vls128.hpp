@@ -29,12 +29,14 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace nebula::ros
 {
 class VelodyneRosDecoderTest final : public rclcpp::Node
 {
   std::shared_ptr<drivers::VelodyneDriver> driver_ptr_;
+  std::shared_ptr<drivers::VelodyneScanDecoder> decoder_ptr_;
   Status wrapper_status_;
 
   std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_cfg_ptr_;
@@ -61,6 +63,18 @@ public:
   void receive_scan_msg_callback(const velodyne_msgs::msg::VelodyneScan::SharedPtr scan_msg);
   Status get_status();
   void read_bag();
+
+  /// @brief Feed a raw packet to the driver (used for malformed-packet tests)
+  auto parse_cloud_packet(const std::vector<uint8_t> & packet, double packet_seconds)
+  {
+    return driver_ptr_->parse_cloud_packet(packet, packet_seconds);
+  }
+
+  /// @brief Feed a raw packet directly to the decoder (used for malformed-packet tests)
+  drivers::PacketDecodeStatus unpack(const std::vector<uint8_t> & packet, double packet_seconds)
+  {
+    return decoder_ptr_->unpack(packet, packet_seconds);
+  }
 
 private:
   std::string bag_path_;

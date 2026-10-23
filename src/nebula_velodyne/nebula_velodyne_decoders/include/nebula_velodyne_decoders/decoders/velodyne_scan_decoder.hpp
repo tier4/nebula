@@ -149,6 +149,13 @@ enum RETURN_TYPE {
   DUAL_ONLY = 7
 };
 
+/// @brief Result of decoding a single packet
+enum class PacketDecodeStatus : uint8_t {
+  OK,                    ///< The packet was decoded
+  INVALID_PACKET_SIZE,   ///< The packet was dropped because its size is not the expected one
+  INVALID_BLOCK_HEADER,  ///< A block header was not recognized, the rest of the packet was skipped
+};
+
 /// @brief Base class for Velodyne LiDAR decoder
 class VelodyneScanDecoder
 {
@@ -217,8 +224,10 @@ public:
   VelodyneScanDecoder() = default;
 
   /// @brief Virtual function for parsing and shaping VelodynePacket
-  /// @param pandar_packet
-  virtual void unpack(const std::vector<uint8_t> & packet, double packet_seconds) = 0;
+  /// @param packet The packet payload
+  /// @param packet_seconds The packet's timestamp in seconds, including the sub-second part
+  /// @return OK if the packet was decoded, or the reason it was dropped
+  virtual PacketDecodeStatus unpack(const std::vector<uint8_t> & packet, double packet_seconds) = 0;
   /// @brief Virtual function for parsing VelodynePacket based on packet structure
   /// @param pandar_packet
   /// @return Resulting flag
