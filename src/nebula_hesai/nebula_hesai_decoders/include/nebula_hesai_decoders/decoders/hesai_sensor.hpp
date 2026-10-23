@@ -94,6 +94,10 @@ public:
     AngleCorrectorCalibrationBased<PacketT::n_channels, PacketT::degree_subdivisions>,
     AngleCorrectorCorrectionBased<PacketT::n_channels, PacketT::degree_subdivisions>>::type;
 
+  /// @brief Whether this sensor uses calibration-based angle correction
+  static constexpr bool uses_calibration_based_angles =
+    (AngleCorrection == AngleCorrectionType::CALIBRATION);
+
   HesaiSensor() = default;
   virtual ~HesaiSensor() = default;
 
