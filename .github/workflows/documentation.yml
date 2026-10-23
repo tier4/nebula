@@ -8,27 +8,30 @@ on:
   pull_request:
     types: [closed]
 
-permissions:
-  contents: write
-  id-token: write
-  pages: write
+permissions: {}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      pages: write
     if: github.event_name == 'push' || github.event.pull_request.merged == true
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           key: ${{ github.ref }}
           path: .cache
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: 3.x
 
@@ -46,10 +49,13 @@ jobs:
           mkdocs build --config-file scripts/mkdoxy_gen.yml
 
       - name: Preprocess documentation
+        env:
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
         run: |
           python3 scripts/preprocess_zensical_docs.py \
             --mkdoxy-dir .mkdoxy \
-            --site-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+            --site-url "https://${REPOSITORY_OWNER}.github.io/${REPOSITORY_NAME}/"
 
       - name: Build documentation site
         run: |
@@ -68,7 +74,7 @@ jobs:
           done
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
 
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
