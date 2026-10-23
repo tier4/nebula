@@ -16,9 +16,16 @@
       # from the variable name, which clashes with our naming conventions; readability/casting
       # flags intentional C-style casts in the socket code. (-build/c++17 now lives in the
       # synced CPPLINT.cfg.)
+      # Also keep vendored third-party sources (e.g. src/nebula_ouster/vendor/ouster-sdk) out of
+      # all hooks.
       pre-commands: |
         sed -i "s|args: \[--quiet\]|args: [--quiet, '--filter=-runtime/arrays,-readability/casting']|" {source}
+        printf '\nexclude: vendor/\n' >> {source}
     - source: .pre-commit-config-optional.yaml
+      # Keep vendored third-party sources out of the optional hooks too, e.g. markdown-link-check
+      # would otherwise fail on dead links in upstream READMEs we don't maintain.
+      pre-commands: |
+        printf '\nexclude: vendor/\n' >> {source}
     - source: .prettierignore
       # Nebula's calibration data files (e.g. the velodyne .yaml files) use a flow style
       # that Prettier and yamllint format incompatibly, so keep all *.yaml Prettier-ignored
