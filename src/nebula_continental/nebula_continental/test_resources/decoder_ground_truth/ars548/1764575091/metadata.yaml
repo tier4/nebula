@@ -1,0 +1,26 @@
+rosbag2_bagfile_information:
+  version: 5
+  storage_identifier: sqlite3
+  duration:
+    nanoseconds: 133076080
+  starting_time:
+    nanoseconds_since_epoch: 1764575091186058514
+  message_count: 3
+  topics_with_message_count:
+    - topic_metadata:
+        name: /sensing/radar/front_left/nebula_packets
+        type: nebula_msgs/msg/NebulaPackets
+        serialization_format: cdr
+        offered_qos_profiles: ""
+      message_count: 3
+  compression_format: ""
+  compression_mode: ""
+  relative_file_paths:
+    - 1764575091.db3
+  files:
+    - path: 1764575091.db3
+      starting_time:
+        nanoseconds_since_epoch: 1764575091186058514
+      duration:
+        nanoseconds: 133076080
+      message_count: 3
