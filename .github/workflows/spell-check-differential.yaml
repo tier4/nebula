@@ -23,10 +23,33 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Run spell-check
-        uses: autowarefoundation/autoware-github-actions/spell-check@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
+      # Inlined from autowarefoundation/autoware-github-actions/spell-check, which references
+      # streetsidesoftware/cspell-action by tag.
+      - name: Install dict packages
+        run: |
+          npm install https://github.com/autowarefoundation/autoware-spell-check-dict
+          npm install https://github.com/tier4/cspell-dicts
+
+      - name: Retrieve remote dictionary
+        run: |
+          curl -fsSL -o remote.cspell.json \
+            https://raw.githubusercontent.com/autowarefoundation/autoware-spell-check-dict/main/.cspell.json
+
+      - name: Prepare local dictionary
+        run: |
+          if [ -f .cspell.json ]; then
+            cp .cspell.json local.cspell.json
+          else
+            echo "No local dictionary found."
+            echo "{}" > local.cspell.json
+          fi
+
+      - name: Create combined dictionary
+        run: |
+          echo '{ "import": ["./remote.cspell.json", "./local.cspell.json"] }' > .cspell.json
+
+      - name: Run spell check
+        uses: streetsidesoftware/cspell-action@6f3c77c1406bc930f944ba97e9801a22e42caf58 # v9.1.0
         with:
-          cspell-json-url: https://raw.githubusercontent.com/autowarefoundation/autoware-spell-check-dict/main/.cspell.json
-          dict-packages: |
-            https://github.com/autowarefoundation/autoware-spell-check-dict
-            https://github.com/tier4/cspell-dicts
+          config: .cspell.json
+          incremental_files_only: true
