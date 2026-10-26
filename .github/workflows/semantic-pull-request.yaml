@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   semantic-pull-request:
+    # cspell:ignore amannn
     # Inlined from autowarefoundation/autoware-github-actions/.github/workflows/semantic-pull-request.yaml,
     # which references amannn/action-semantic-pull-request by tag.
     runs-on: ubuntu-latest
