@@ -19,6 +19,7 @@
 
 #include <nebula_core_common/util/string_conversions.hpp>
 #include <nebula_core_ros/point_cloud_conversions.hpp>
+#include <nebula_core_ros/rclcpp_logger.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -131,7 +132,8 @@ Status ContinentalARS548DecoderWrapper::initialize_driver(
     const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config)
 {
   driver_ptr_.reset();
-  driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(config);
+  driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(
+    config, std::make_shared<drivers::loggers::RclcppLogger>(logger_));
 
   driver_ptr_->register_detection_list_callback(
     std::bind(
