@@ -16,4 +16,29 @@ permissions:
 
 jobs:
   semantic-pull-request:
-    uses: autowarefoundation/autoware-github-actions/.github/workflows/semantic-pull-request.yaml@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
+    # Inlined from autowarefoundation/autoware-github-actions/.github/workflows/semantic-pull-request.yaml,
+    # which references amannn/action-semantic-pull-request by tag.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        with:
+          # Comply with https://github.com/commitizen/conventional-commit-types/blob/c3a9be4c73e47f2e8197de775f41d981701407fb/index.json
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          subjectPattern: ^(?![A-Z]).+$
+          ignoreLabels: |
+            bot
+            ignore-semantic-pull-request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
