@@ -4,14 +4,23 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   check-if-relevant-files-changed:
     runs-on: ubuntu-latest
     outputs:
       run-check: ${{ steps.paths_filter.outputs.json_or_yaml }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
         id: paths_filter
         with:
           filters: |
@@ -25,10 +34,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Run json-schema-check
-        uses: autowarefoundation/autoware-github-actions/json-schema-check@b1dbb7c0a900d86e8d724cd526a17eb88b2e917c
+        uses: autowarefoundation/autoware-github-actions/json-schema-check@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
 
   no-relevant-changes:
     needs: check-if-relevant-files-changed
