@@ -447,6 +447,75 @@ private:
   Internal value;
 };
 
+/// @brief Inventory of the AT128P. Same as the AT128E2X one, but with a part number inserted after
+/// the serial number (216 bytes in total).
+struct HesaiInventory_AT128P : public HesaiInventoryBase
+{
+  struct Internal
+  {
+    char sn[18];
+    char pn[32];
+    char date_of_manufacture[16];
+    uint8_t mac[6];
+    char sw_ver[16];
+    char hw_ver[16];
+    char control_fw_ver[16];
+    char sensor_fw_ver[16];
+    char fpga_para_ver[16];
+    char fpga_cfg_ver[16];
+    char fpga_para_sha[16];
+    char fpga_cfg_sha[16];
+    big_int16_buf_t unused_angle_offset;
+    uint8_t product_model;
+    uint8_t motor_type;
+    uint8_t num_of_lines;
+    uint8_t motor_correction_flag;
+    uint8_t encoder_disk_correction_flag;
+    uint8_t reserved[9];
+  };
+
+  /// The AT128P reports 0 as its product model, which would be mistaken for a Pandar40P. Report the
+  /// AT128 model number instead, so that the AT128P is handled like the AT128 (PTC only).
+  static constexpr uint8_t g_model_number = 48;
+
+  explicit HesaiInventory_AT128P(Internal value) : value(value)
+  {
+    std::copy_n(value.sn, sizeof(base.sn), base.sn);
+    std::copy_n(
+      value.date_of_manufacture, sizeof(base.date_of_manufacture), base.date_of_manufacture);
+    std::copy_n(value.mac, sizeof(base.mac), base.mac);
+    std::copy_n(value.sw_ver, sizeof(base.sw_ver), base.sw_ver);
+    std::copy_n(value.hw_ver, sizeof(base.hw_ver), base.hw_ver);
+    std::copy_n(value.control_fw_ver, sizeof(base.control_fw_ver), base.control_fw_ver);
+    std::copy_n(value.sensor_fw_ver, sizeof(base.sensor_fw_ver), base.sensor_fw_ver);
+  }
+
+  [[nodiscard]] uint8_t model_number() const override { return g_model_number; }
+
+  [[nodiscard]] const HesaiInventoryBase::Internal & get() const override { return base; }
+
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
+  {
+    ordered_json j;
+    j["pn"] = to_string(value.pn);
+    j["fpga_para_ver"] = to_string(value.fpga_para_ver);
+    j["fpga_cfg_ver"] = to_string(value.fpga_cfg_ver);
+    j["fpga_para_sha"] = to_string(value.fpga_para_sha);
+    j["fpga_cfg_sha"] = to_string(value.fpga_cfg_sha);
+    j["product_model"] = value.product_model;
+    j["motor_type"] = get_motor_type(value.motor_type);
+    j["num_of_lines"] = value.num_of_lines;
+    j["motor_correction_flag"] = value.motor_correction_flag ? "finished" : "not finished";
+    j["encoder_disk_correction_flag"] =
+      value.encoder_disk_correction_flag ? "finished" : "not finished";
+    return j;
+  }
+
+private:
+  Internal value;
+  HesaiInventoryBase::Internal base{};
+};
+
 /// @brief struct of PTC_COMMAND_GET_CONFIG_INFO
 struct HesaiConfigBase
 {
