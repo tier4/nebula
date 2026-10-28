@@ -192,6 +192,7 @@ enum class SensorModel : uint8_t {
   HESAI_PANDARXT32M,
   HESAI_PANDARAT128,
   HESAI_AT128P,
+  HESAI_FTX140,
   HESAI_PANDAR128_E3X,
   HESAI_PANDAR128_E4X,
   VELODYNE_VLS128,
@@ -254,6 +255,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
       break;
     case SensorModel::HESAI_AT128P:
       os << "AT128P";
+      break;
+    case SensorModel::HESAI_FTX140:
+      os << "FTX140";
       break;
     case SensorModel::HESAI_PANDAR128_E3X:
       os << "Pandar128_E3X";
@@ -411,6 +415,7 @@ inline SensorModel sensor_model_from_string(const std::string & sensor_model)
   if (sensor_model == "PandarXT32M") return SensorModel::HESAI_PANDARXT32M;
   if (sensor_model == "PandarAT128") return SensorModel::HESAI_PANDARAT128;
   if (sensor_model == "AT128P") return SensorModel::HESAI_AT128P;
+  if (sensor_model == "FTX140") return SensorModel::HESAI_FTX140;
   if (sensor_model == "PandarQT64") return SensorModel::HESAI_PANDARQT64;
   if (sensor_model == "PandarQT128") return SensorModel::HESAI_PANDARQT128;
   if (sensor_model == "Pandar128E4X") return SensorModel::HESAI_PANDAR128_E4X;
@@ -452,6 +457,8 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
       return "PandarAT128";
     case SensorModel::HESAI_AT128P:
       return "AT128P";
+    case SensorModel::HESAI_FTX140:
+      return "FTX140";
     case SensorModel::HESAI_PANDARQT64:
       return "PandarQT64";
     case SensorModel::HESAI_PANDARQT128:

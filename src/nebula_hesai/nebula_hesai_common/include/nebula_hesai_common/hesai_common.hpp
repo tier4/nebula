@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// cspell:ignore libhesai
+
 #ifndef NEBULA_HESAI_COMMON__HESAI_COMMON_HPP_
 #define NEBULA_HESAI_COMMON__HESAI_COMMON_HPP_
 
@@ -20,10 +22,13 @@
 #include "nebula_core_common/util/string_conversions.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <optional>
 #include <sstream>
@@ -591,6 +596,200 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   }
 };
 
+/// @brief Angle correction data of the FTX140 (point cloud UDP protocol 7.3)
+///
+/// Instead of per-pixel angles, the sensor provides a fisheye camera model: focal length, principal
+/// point, four radial distortion coefficients and a tilt of the image plane. The ray direction of
+/// each pixel is computed from this model on load.
+///
+/// The model and its constants follow `FT::CorrectionV3::generate_pixel_vectors()` of the Hesai
+/// LiDAR SDK 2.0 (libhesai/UdpProtocol/udp_protocol_v7_3.h, Copyright (C) 2023 Hesai Technology
+/// Co., Ltd., Modified BSD License), so that points match the ones produced by Hesai's tools.
+struct HesaiFtxCalibration : public HesaiCalibrationConfigurationBase
+{
+  static constexpr size_t max_rows = 192;
+  static constexpr size_t max_columns = 256;
+  /// @brief Header (10 bytes), 9 float model parameters, SHA-256 checksum (32 bytes)
+  static constexpr size_t correction_size = 10 + 9 * sizeof(float) + 32;
+
+  uint16_t rows{};
+  uint16_t columns{};
+  float focal_length{};
+  float cx{};
+  float cy{};
+  std::array<float, 4> k{};
+  float p1{};
+  float p2{};
+
+  /// @brief Unit ray direction (x, y, z) of each pixel, indexed by `row * max_columns + column`.
+  /// Pixels outside of the model's valid area are all zero.
+  std::vector<std::array<float, 3>> pixel_directions;
+
+  inline nebula::Status load_from_bytes(const std::vector<uint8_t> & buf) override
+  {
+    if (
+      buf.size() < correction_size || buf[0] != 0xEE || buf[1] != 0xFF || buf[2] != 0x07 ||
+      buf[3] != 0x03) {
+      return Status::INVALID_CALIBRATION_FILE;
+    }
+
+    rows = static_cast<uint16_t>(buf[6] | (buf[7] << 8));
+    columns = static_cast<uint16_t>(buf[8] | (buf[9] << 8));
+    if (rows == 0 || rows > max_rows || columns == 0 || columns > max_columns) {
+      return Status::INVALID_CALIBRATION_FILE;
+    }
+
+    // The model parameters are little-endian floats
+    std::array<float, 9> params{};
+    std::memcpy(params.data(), buf.data() + 10, sizeof(params));
+    focal_length = params[0];
+    cx = params[1];
+    cy = params[2];
+    std::copy(params.begin() + 3, params.begin() + 7, k.begin());
+    p1 = params[7];
+    p2 = params[8];
+
+    if (!(focal_length > 0)) {
+      return Status::INVALID_CALIBRATION_FILE;
+    }
+
+    compute_pixel_directions();
+    return Status::OK;
+  }
+
+  inline nebula::Status load_from_file(const std::string & calibration_file) override
+  {
+    std::ifstream ifs(calibration_file, std::ios::in | std::ios::binary);
+    if (!ifs) {
+      return Status::INVALID_CALIBRATION_FILE;
+    }
+    std::vector<uint8_t> buf(
+      (std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    return load_from_bytes(buf);
+  }
+
+  inline nebula::Status save_to_file_from_bytes(
+    const std::string & calibration_file, const std::vector<uint8_t> & buf) override
+  {
+    std::ofstream ofs(calibration_file, std::ios::trunc | std::ios::binary);
+    if (!ofs) {
+      std::cerr << "Could not create file: " << calibration_file << "\n";
+      return Status::CANNOT_SAVE_FILE;
+    }
+    ofs.write(reinterpret_cast<const char *>(buf.data()), static_cast<std::streamsize>(buf.size()));
+    return Status::OK;
+  }
+
+  /// @brief The FTX140 has no lidar range setting, so no padding is needed
+  [[nodiscard]] std::tuple<float, float> get_fov_padding() const override { return {0, 0}; }
+
+  /// @brief Get the unit ray direction of a pixel, or all zeros if the pixel is not usable
+  [[nodiscard]] const std::array<float, 3> & pixel_direction(size_t row, size_t column) const
+  {
+    return pixel_directions.at(row * max_columns + column);
+  }
+
+private:
+  /// @brief Radial distortion: theta_d = theta + k1 theta^3 + k2 theta^5 + k3 theta^7 + k4 theta^9
+  [[nodiscard]] float distort(float theta) const
+  {
+    return theta + k[0] * std::pow(theta, 3) + k[1] * std::pow(theta, 5) +
+           k[2] * std::pow(theta, 7) + k[3] * std::pow(theta, 9);
+  }
+
+  void compute_pixel_directions()
+  {
+    // The model is defined on the 768 x 576 detector image. Each output pixel covers 3 x 3 detector
+    // pixels and is sampled at the center one.
+    constexpr float detector_max_x = 767;
+    constexpr float detector_max_y = 575;
+    constexpr int binning = 3;
+    constexpr auto pi = static_cast<float>(M_PI);
+
+    // Tilt of the image plane: rotation by alpha about an in-plane axis at angle phi
+    float alpha = 2 * std::atan(p1);
+    float phi = p2;
+    if (alpha < 0) {
+      alpha = -alpha;
+      phi = p2 + pi;
+    }
+    phi = (phi / pi / 2 - static_cast<int>(phi / pi / 2)) * 2 * pi + pi;
+
+    const float cos_a = std::cos(alpha);
+    const float sin_a = std::sin(alpha);
+    const float cos_p = std::cos(phi);
+    const float sin_p = std::sin(phi);
+    const float r00 = cos_a + (1 - cos_a) * cos_p * cos_p;
+    const float r01 = (1 - cos_a) * cos_p * sin_p;
+    const float r10 = (1 - cos_a) * cos_p * sin_p;
+    const float r11 = cos_a + (1 - cos_a) * sin_p * sin_p;
+    const float r20 = -sin_a * sin_p;
+    const float r21 = sin_a * cos_p;
+
+    const float theta_d_max =
+      std::hypot(std::max(cx, detector_max_x - cx), std::max(cy, detector_max_y - cy)) /
+      focal_length;
+    const float tan_theta_max = 750.0f / focal_length;
+
+    // Tabulate the distortion function (up to where it stops increasing) to invert it
+    constexpr int n_interp = 1024;
+    std::vector<float> theta_table;
+    std::vector<float> theta_d_table;
+    for (int i = 0; i < n_interp; ++i) {
+      float theta = static_cast<float>(i) * tan_theta_max / n_interp;
+      float theta_d = distort(theta);
+      if (!theta_d_table.empty() && theta_d < theta_d_table.back()) {
+        break;
+      }
+      theta_table.push_back(theta);
+      theta_d_table.push_back(theta_d);
+    }
+
+    pixel_directions.assign(max_rows * max_columns, {0, 0, 0});
+    const int row_offset = static_cast<int>(max_rows - rows) / 2;
+    const int column_offset = static_cast<int>(max_columns - columns) / 2;
+
+    for (int i = row_offset; i < rows + row_offset; ++i) {
+      for (int j = column_offset; j < columns + column_offset; ++j) {
+        const float x = (static_cast<float>(j * binning + 1) - cx) / focal_length;
+        const float y = (detector_max_y - static_cast<float>(i * binning + 1) - cy) / focal_length;
+        const float x1 = x * r00 + y * r01;
+        const float y1 = x * r10 + y * r11;
+        const float z1 = x * r20 + y * r21;
+        const float x2 = -x1 / (z1 - 1);
+        const float y2 = -y1 / (z1 - 1);
+        const float theta_d = std::sqrt(x2 * x2 + y2 * y2);
+
+        std::array<float, 3> direction{0, 0, 1};
+        if (theta_d != 0) {
+          if (
+            theta_d > theta_d_max || theta_d_table.empty() || theta_d < theta_d_table.front() ||
+            theta_d > theta_d_table.back()) {
+            continue;
+          }
+          // Last table entry strictly below theta_d
+          auto pos = std::lower_bound(theta_d_table.begin(), theta_d_table.end(), theta_d) -
+                     theta_d_table.begin() - 1;
+          if (pos < 0) {
+            continue;
+          }
+          const float theta = (theta_table[pos + 1] - theta_table[pos]) /
+                                (theta_d_table[pos + 1] - theta_d_table[pos]) *
+                                (theta_d - theta_d_table[pos]) +
+                              theta_table[pos];
+          const float z2 = theta_d / std::tan(theta);
+          const float norm = std::sqrt(x2 * x2 + y2 * y2 + z2 * z2);
+          direction = {x2 / norm, y2 / norm, z2 / norm};
+        }
+
+        // Axis order and signs of the SDK's output frame
+        pixel_directions[(i - row_offset) * max_columns + (j - column_offset)] = {
+          direction[2], -direction[0], -direction[1]};
+      }
+    }
+  }
+};
+
 /*
 <option value="0">Last Return</option>
 <option value="1">Strongest Return</option>
@@ -652,6 +851,12 @@ inline ReturnMode return_mode_from_string_hesai(
       if (return_mode == "First") return ReturnMode::FIRST;
       if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
       break;
+    case SensorModel::HESAI_FTX140:
+      // Dual return modes are not supported
+      if (return_mode == "First") return ReturnMode::FIRST;
+      if (return_mode == "Last") return ReturnMode::LAST;
+      if (return_mode == "Strongest") return ReturnMode::STRONGEST;
+      break;
     default:
       throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
   }
@@ -692,6 +897,15 @@ inline ReturnMode return_mode_from_int_hesai(
       if (return_mode == 0) return ReturnMode::LAST;
       if (return_mode == 1) return ReturnMode::STRONGEST;
       if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
+      break;
+    case SensorModel::HESAI_FTX140:
+      // FTX TCP API, section 3.1.3
+      if (return_mode == 0) return ReturnMode::LAST;
+      if (return_mode == 1) return ReturnMode::STRONGEST;
+      if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
+      if (return_mode == 3) return ReturnMode::FIRST;
+      if (return_mode == 4) return ReturnMode::DUAL_LAST_FIRST;
+      if (return_mode == 5) return ReturnMode::DUAL_FIRST_STRONGEST;
       break;
     default:
       throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
@@ -736,6 +950,12 @@ inline int int_from_return_mode_hesai(
       if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_STRONGEST)
         return 2;
       break;
+    case SensorModel::HESAI_FTX140:
+      // Dual return modes are not supported
+      if (return_mode == ReturnMode::LAST) return 0;
+      if (return_mode == ReturnMode::STRONGEST) return 1;
+      if (return_mode == ReturnMode::FIRST) return 3;
+      break;
     default:
       throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
   }
@@ -752,6 +972,7 @@ inline bool supports_lidar_monitor(const SensorModel & sensor_model)
     case drivers::SensorModel::HESAI_PANDARAT128:
     case drivers::SensorModel::HESAI_PANDAR40P:
     case drivers::SensorModel::HESAI_PANDAR64:
+    case drivers::SensorModel::HESAI_FTX140:
       return false;
     default:
       return true;
@@ -785,6 +1006,7 @@ inline bool supports_packet_loss_detection(const SensorModel & sensor_model)
     case SensorModel::HESAI_PANDARQT128:
     case SensorModel::HESAI_PANDARAT128:
     case SensorModel::HESAI_AT128P:
+    case SensorModel::HESAI_FTX140:
     case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
       return true;

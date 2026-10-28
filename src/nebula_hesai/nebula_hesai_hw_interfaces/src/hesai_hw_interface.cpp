@@ -42,9 +42,10 @@ namespace
 uint8_t effective_sensor_ptp_profile(const HesaiSensorConfiguration & config)
 {
   auto desired_profile = static_cast<uint8_t>(config.ptp_profile);
-  // OT128 uses 0x03 for automotive profile on the wire.
+  // OT128 and FTX140 use 0x03 for automotive profile on the wire.
   if (
-    config.sensor_model == SensorModel::HESAI_PANDAR128_E4X &&
+    (config.sensor_model == SensorModel::HESAI_PANDAR128_E4X ||
+     config.sensor_model == SensorModel::HESAI_FTX140) &&
     desired_profile == static_cast<uint8_t>(PtpProfile::IEEE_802_1AS_AUTO)) {
     return 3;
   }
@@ -409,7 +410,8 @@ std::shared_ptr<HesaiInventoryBase> HesaiHwInterface::get_inventory()
       auto lidar_config = check_size_and_parse<HesaiInventory_AT128::Internal>(response);
       return std::make_shared<HesaiInventory_AT128>(lidar_config);
     }
-    case SensorModel::HESAI_AT128P: {
+    case SensorModel::HESAI_AT128P:
+    case SensorModel::HESAI_FTX140: {
       auto lidar_config = check_size_and_parse<HesaiInventory_AT128P::Internal>(response);
       return std::make_shared<HesaiInventory_AT128P>(lidar_config);
     }
@@ -438,11 +440,21 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::get_config()
     }
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARAT128:
-    case SensorModel::HESAI_AT128P: {
+    case SensorModel::HESAI_AT128P:
+    case SensorModel::HESAI_FTX140: {
       auto lidar_config = check_size_and_parse<HesaiConfig_OT128_AT128::Internal>(response);
       return std::make_shared<HesaiConfig_OT128_AT128>(lidar_config);
     }
   }
+}
+
+std::shared_ptr<HesaiConfig_FTX> HesaiHwInterface::get_config_ftx()
+{
+  auto response_or_err = send_receive(g_ptc_command_get_config_info);
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto lidar_config = check_size_and_parse<HesaiConfig_FTX::Internal>(response);
+  return std::make_shared<HesaiConfig_FTX>(lidar_config);
 }
 
 std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::get_lidar_status()
@@ -472,6 +484,10 @@ std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::get_lidar_status()
     case SensorModel::HESAI_PANDARQT128: {
       auto hesai_lidarstatus = check_size_and_parse<HesaiLidarStatusQT128::Internal>(response);
       return std::make_shared<HesaiLidarStatusQT128>(hesai_lidarstatus);
+    }
+    case SensorModel::HESAI_FTX140: {
+      auto hesai_lidarstatus = check_size_and_parse<HesaiLidarStatusFTX::Internal>(response);
+      return std::make_shared<HesaiLidarStatusFTX>(hesai_lidarstatus);
     }
   }
 }
@@ -582,7 +598,8 @@ Status HesaiHwInterface::set_lidar_range(int method, std::vector<unsigned char> 
 {
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
-    sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P) {
+    sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_FTX140) {
     return Status::SENSOR_CONFIG_ERROR;
   }
   // 0 - for all channels : 5-1 bytes
@@ -602,6 +619,7 @@ Status HesaiHwInterface::set_lidar_range(int start_ddeg, int end_ddeg)
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
     sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_FTX140 ||
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
     return Status::SENSOR_CONFIG_ERROR;
   }
@@ -627,6 +645,7 @@ HesaiLidarRangeAll HesaiHwInterface::get_lidar_range()
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
     sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_FTX140 ||
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
     throw std::runtime_error("Not supported on this sensor");
   }
@@ -713,7 +732,8 @@ Status HesaiHwInterface::check_and_set_lidar_range(
 {
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
-    sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P) {
+    sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_FTX140) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -754,9 +774,10 @@ Status HesaiHwInterface::set_ptp_config(
     return Status::ERROR_1;
   }
 
-  // Handle the OT128 differently - it has TSN settings and defines the PTP profile
+  // Handle the OT128 and FTX140 differently - they have TSN settings and define the PTP profile
   // for automotive as 0x03 instead of 0x02 for other sensors.
-  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
+  const bool is_ftx = sensor_configuration_->sensor_model == SensorModel::HESAI_FTX140;
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X || is_ftx) {
     if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
       return Status::SENSOR_CONFIG_ERROR;
     }
@@ -764,6 +785,10 @@ Status HesaiHwInterface::set_ptp_config(
   }
 
   std::vector<unsigned char> request_payload;
+  // The FTX140 expects the PTP status (1: enabled) before the profile (FTX TCP API, section 3.2.6)
+  if (is_ftx) {
+    request_payload.emplace_back(1);
+  }
   request_payload.emplace_back(profile & 0xff);
   request_payload.emplace_back(domain & 0xff);
   request_payload.emplace_back(network & 0xff);
@@ -1290,11 +1315,94 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
 
+HesaiStatus HesaiHwInterface::check_and_set_config(
+  std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
+  std::shared_ptr<HesaiConfig_FTX> hesai_config_ptr)
+{
+  using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+  const auto & hesai_config = hesai_config_ptr->get();
+  // Avoids spamming the sensor, which leads to failure when configuring it.
+  auto wait_time = 100ms;
+
+  auto current_return_mode = nebula::drivers::return_mode_from_int_hesai(
+    hesai_config.return_mode, sensor_configuration->sensor_model);
+  if (sensor_configuration->return_mode != current_return_mode) {
+    std::stringstream ss;
+    ss << "Current LiDAR return_mode: " << current_return_mode
+       << ", current configuration return_mode: " << sensor_configuration->return_mode;
+    logger_->info(ss.str());
+    auto return_mode_int = nebula::drivers::int_from_return_mode_hesai(
+      sensor_configuration->return_mode, sensor_configuration->sensor_model);
+    // Unlike the other sensors, do not fall back to a dual return mode, which is not supported for
+    // the FTX140
+    if (return_mode_int < 0) {
+      logger_->error("Invalid Return Mode for this sensor, keeping the sensor's return mode");
+    } else {
+      set_return_mode(return_mode_int);
+      std::this_thread::sleep_for(wait_time);
+    }
+  }
+
+  std::stringstream ss;
+  ss << static_cast<int>(hesai_config.dest_ipaddr[0]) << "."
+     << static_cast<int>(hesai_config.dest_ipaddr[1]) << "."
+     << static_cast<int>(hesai_config.dest_ipaddr[2]) << "."
+     << static_cast<int>(hesai_config.dest_ipaddr[3]);
+  auto current_host_addr = ss.str();
+  auto desired_host_addr = sensor_configuration->multicast_ip.empty()
+                             ? sensor_configuration->host_ip
+                             : sensor_configuration->multicast_ip;
+  auto current_host_dport = hesai_config.dest_LiDAR_udp_port.value();
+  if (
+    desired_host_addr != current_host_addr ||
+    sensor_configuration->data_port != current_host_dport) {
+    logger_->info(
+      "current lidar destination: " + current_host_addr + ":" + std::to_string(current_host_dport));
+    logger_->info(
+      "current configuration destination: " + desired_host_addr + ":" +
+      std::to_string(sensor_configuration->data_port));
+    std::vector<std::string> list_string;
+    boost::split(list_string, desired_host_addr, boost::is_any_of("."));
+    // The FTX140 does not support a GPS port, it has to be 0 (FTX TCP API, section 3.2.4)
+    set_destination_ip(
+      std::stoi(list_string[0]), std::stoi(list_string[1]), std::stoi(list_string[2]),
+      std::stoi(list_string[3]), sensor_configuration->data_port, 0);
+    std::this_thread::sleep_for(wait_time);
+  }
+
+  auto current_ptp = get_ptp_config();
+  if (!ptp_config_matches_desired(*current_ptp, *sensor_configuration)) {
+    std::ostringstream tmp_ostringstream;
+    tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
+                      << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
+                      << ", Transport: " << sensor_configuration->ptp_transport_type
+                      << ", Switch Type: " << sensor_configuration->ptp_switch_type << " via TCP";
+    logger_->info(tmp_ostringstream.str());
+    auto status = set_ptp_config(
+      static_cast<int>(sensor_configuration->ptp_profile), sensor_configuration->ptp_domain,
+      static_cast<int>(sensor_configuration->ptp_transport_type),
+      static_cast<int>(sensor_configuration->ptp_switch_type));
+    if (status != Status::OK) {
+      logger_->error("Only the automotive PTP profile is supported for the FTX140");
+    }
+  }
+
+  return Status::OK;
+}
+
 HesaiStatus HesaiHwInterface::check_and_set_config()
 {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   logger_->debug("Start CheckAndSetConfig!");
 #endif
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_FTX140) {
+    // The FTX140 has a different config layout and supports fewer setting commands (e.g. no lidar
+    // range or spin rate)
+    return check_and_set_config(
+      std::static_pointer_cast<const HesaiSensorConfiguration>(sensor_configuration_),
+      get_config_ftx());
+  }
+
   {
     auto result = get_config();
     check_and_set_config(

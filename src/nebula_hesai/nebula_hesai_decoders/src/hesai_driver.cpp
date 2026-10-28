@@ -5,6 +5,7 @@
 #include "nebula_core_decoders/point_filters/blockage_mask.hpp"
 #include "nebula_hesai_decoders/decoders/functional_safety.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_decoder.hpp"
+#include "nebula_hesai_decoders/decoders/hesai_ftx140_decoder.hpp"
 #include "nebula_hesai_decoders/decoders/pandar_128e3x.hpp"
 #include "nebula_hesai_decoders/decoders/pandar_128e4x.hpp"
 #include "nebula_hesai_decoders/decoders/pandar_40.hpp"
@@ -76,6 +77,16 @@ HesaiDriver::HesaiDriver(
       scan_decoder_ = initialize_decoder<PandarAT128P>(
         sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
+    case SensorModel::HESAI_FTX140: {
+      auto packet_loss_detector =
+        std::make_shared<PacketLossDetector<HesaiFtx140Decoder::packet_t>>();
+      packet_loss_detector->set_lost_callback(std::move(lost_cb));
+      scan_decoder_ = std::make_shared<HesaiFtx140Decoder>(
+        sensor_configuration,
+        std::dynamic_pointer_cast<const HesaiFtxCalibration>(calibration_data),
+        logger_->child("Decoder"), packet_loss_detector);
+      break;
+    }
     case SensorModel::HESAI_PANDAR128_E3X: {
       scan_decoder_ = initialize_decoder<Pandar128E3X>(
         sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);

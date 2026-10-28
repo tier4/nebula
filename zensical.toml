@@ -26,6 +26,7 @@ nav = [
       { "QT128" = "parameters/vendors/hesai/qt128.md" },
       { "AT128" = "parameters/vendors/hesai/at128.md" },
       { "AT128P" = "parameters/vendors/hesai/at128p.md" },
+      { "FTX140" = "parameters/vendors/hesai/ftx140.md" },
       { "XT16" = "parameters/vendors/hesai/xt16.md" },
       { "XT32" = "parameters/vendors/hesai/xt32.md" },
       { "XT32M" = "parameters/vendors/hesai/xt32m.md" },
