@@ -393,7 +393,7 @@ TEST(TestHesaiInventoryAT128P, ParsesPartNumberLayout)
   static_assert(sizeof(HesaiInventory_AT128P_FTX::Internal) == 216);
 
   HesaiInventory_AT128P_FTX::Internal raw{};
-  const std::string sn = "AT128PTESTSN0001";
+  const std::string sn = "AT128P-TEST-SN-01";
   const std::string pn = "AT128P-TEST-PN";
   const std::string date = "2000-01-01";
   const std::string sw_ver = "1.2.3";

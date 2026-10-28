@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// cspell:ignore libhesai
+
 #ifndef NEBULA_HESAI_COMMON__HESAI_COMMON_HPP_
 #define NEBULA_HESAI_COMMON__HESAI_COMMON_HPP_
 
