@@ -37,6 +37,9 @@ override:
     - name: radar_info
       message_type: autoware_sensing_msgs/msg/RadarInfo
       remap_target: radar_info
+    - name: diagnostics
+      message_type: diagnostic_msgs/msg/DiagnosticArray
+      global: /diagnostics
   param_values:
     - name: launch_hw
       type: bool
