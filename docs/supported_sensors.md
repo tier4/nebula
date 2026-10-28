@@ -25,7 +25,7 @@ The `sensor_model` parameter below decides which sensor driver is launched.
 
 \*: AT128 needs software version 3.50.8 or newer for the `scan_angle` setting to work correctly.
 
-\*\*: FTX140 sensor settings (`setup_sensor`) are not supported. Points are output in the coordinate frame of the Hesai SDK.
+\*\*: For the FTX140, only single return modes (`First`, `Last`, `Strongest`) are supported, and `setup_sensor` only sets the return mode, the destination and the PTP config (automotive profile). Points are output in the coordinate frame of the Hesai SDK.
 
 ## Velodyne LiDARs
 

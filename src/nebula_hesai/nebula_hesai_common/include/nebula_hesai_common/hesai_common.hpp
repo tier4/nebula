@@ -852,7 +852,10 @@ inline ReturnMode return_mode_from_string_hesai(
       if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
       break;
     case SensorModel::HESAI_FTX140:
+      // Dual return modes are not supported
       if (return_mode == "First") return ReturnMode::FIRST;
+      if (return_mode == "Last") return ReturnMode::LAST;
+      if (return_mode == "Strongest") return ReturnMode::STRONGEST;
       break;
     default:
       throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
@@ -896,7 +899,13 @@ inline ReturnMode return_mode_from_int_hesai(
       if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
       break;
     case SensorModel::HESAI_FTX140:
-      // The return mode of the FTX140 cannot be configured
+      // FTX TCP API, section 3.1.3
+      if (return_mode == 0) return ReturnMode::LAST;
+      if (return_mode == 1) return ReturnMode::STRONGEST;
+      if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
+      if (return_mode == 3) return ReturnMode::FIRST;
+      if (return_mode == 4) return ReturnMode::DUAL_LAST_FIRST;
+      if (return_mode == 5) return ReturnMode::DUAL_FIRST_STRONGEST;
       break;
     default:
       throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
@@ -942,7 +951,10 @@ inline int int_from_return_mode_hesai(
         return 2;
       break;
     case SensorModel::HESAI_FTX140:
-      // The return mode of the FTX140 cannot be configured
+      // Dual return modes are not supported
+      if (return_mode == ReturnMode::LAST) return 0;
+      if (return_mode == ReturnMode::STRONGEST) return 1;
+      if (return_mode == ReturnMode::FIRST) return 3;
       break;
     default:
       throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));

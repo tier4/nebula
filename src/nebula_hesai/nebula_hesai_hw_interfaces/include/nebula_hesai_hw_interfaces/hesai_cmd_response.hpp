@@ -664,6 +664,67 @@ private:
   Internal value;
 };
 
+/// @brief Config info (PTC_COMMAND_GET_CONFIG_INFO) of the FTX140 (FTX TCP API, section 3.1.3).
+/// It has the same size as HesaiConfigBase, but no spin rate, sync angle or GPS port, so it is not
+/// a HesaiConfigBase.
+struct HesaiConfig_FTX
+{
+  struct Internal
+  {
+    uint8_t ipaddr[4];
+    uint8_t mask[4];
+    uint8_t gateway[4];
+    uint8_t dest_ipaddr[4];
+    big_uint16_buf_t dest_LiDAR_udp_port;
+    uint8_t reserved1[4];
+    uint8_t alignment_enable;
+    /// @brief In units of 2 us
+    big_uint16_buf_t frame_header_timestamp;
+    uint8_t reserved2[4];
+    uint8_t clock_source;
+    uint8_t udp_seq;
+    uint8_t trigger_method;
+    uint8_t return_mode;
+    uint8_t standby_mode;
+    uint8_t reserved3;
+    uint8_t vlan_flag;
+    big_uint16_buf_t vlan_id;
+    uint8_t reserved4[9];
+  };
+
+  explicit HesaiConfig_FTX(Internal value) : value(value) {}
+
+  [[nodiscard]] const Internal & get() const { return value; }
+
+  [[nodiscard]] ordered_json to_json() const
+  {
+    auto ip_to_string = [](const uint8_t (&ip)[4]) {
+      return std::to_string(ip[0]) + "." + std::to_string(ip[1]) + "." + std::to_string(ip[2]) +
+             "." + std::to_string(ip[3]);
+    };
+
+    ordered_json j;
+    j["ipaddr"] = ip_to_string(value.ipaddr);
+    j["mask"] = ip_to_string(value.mask);
+    j["gateway"] = ip_to_string(value.gateway);
+    j["dest_ipaddr"] = ip_to_string(value.dest_ipaddr);
+    j["dest_LiDAR_udp_port"] = value.dest_LiDAR_udp_port.value();
+    j["alignment_enable"] = value.alignment_enable;
+    j["frame_header_timestamp"] = std::to_string(value.frame_header_timestamp.value() * 2) + " us";
+    j["clock_source"] = value.clock_source;
+    j["udp_seq"] = value.udp_seq;
+    j["trigger_method"] = value.trigger_method;
+    j["return_mode"] = value.return_mode;
+    j["standby_mode"] = value.standby_mode;
+    j["vlan_flag"] = value.vlan_flag;
+    j["vlan_id"] = value.vlan_id.value();
+    return j;
+  }
+
+private:
+  Internal value;
+};
+
 /// @brief struct of PTC_COMMAND_GET_LIDAR_STATUS
 struct HesaiLidarStatusBase
 {

@@ -303,3 +303,22 @@ TEST_F(TestHesaiFtx140, CropsToFieldOfView)
     EXPECT_LE(point.azimuth, nebula::drivers::deg2rad(100.f) + 1e-5);
   }
 }
+
+TEST(TestHesaiFtx140ReturnMode, SupportsOnlySingleReturnModes)
+{
+  using nebula::drivers::int_from_return_mode_hesai;
+  using nebula::drivers::return_mode_from_string_hesai;
+  using nebula::drivers::ReturnMode;
+  constexpr auto model = nebula::drivers::SensorModel::HESAI_FTX140;
+
+  // Return mode codes of the FTX TCP API, section 3.2.7
+  EXPECT_EQ(int_from_return_mode_hesai(return_mode_from_string_hesai("Last", model), model), 0);
+  EXPECT_EQ(
+    int_from_return_mode_hesai(return_mode_from_string_hesai("Strongest", model), model), 1);
+  EXPECT_EQ(int_from_return_mode_hesai(return_mode_from_string_hesai("First", model), model), 3);
+
+  for (const auto * dual : {"Dual", "LastStrongest", "LastFirst", "FirstStrongest"}) {
+    EXPECT_EQ(return_mode_from_string_hesai(dual, model), ReturnMode::UNKNOWN) << dual;
+  }
+  EXPECT_LT(int_from_return_mode_hesai(ReturnMode::DUAL_LAST_STRONGEST, model), 0);
+}

@@ -240,6 +240,10 @@ public:
   /// @brief Getting data with PTC_COMMAND_GET_CONFIG_INFO
   /// @return Resulting status
   std::shared_ptr<HesaiConfigBase> get_config();
+  /// @brief Getting data with PTC_COMMAND_GET_CONFIG_INFO from an FTX140, whose layout differs
+  /// from the other sensors
+  /// @return Resulting status
+  std::shared_ptr<HesaiConfig_FTX> get_config_ftx();
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_STATUS
   /// @return Resulting status
   std::shared_ptr<HesaiLidarStatusBase> get_lidar_status();
@@ -397,6 +401,14 @@ public:
   HesaiStatus check_and_set_config(
     std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
     HesaiLidarRangeAll hesai_lidar_range_all);
+  /// @brief Checking the current settings of an FTX140 and changing the difference point. Only the
+  /// return mode, the destination and the PTP config are set.
+  /// @param sensor_configuration Current SensorConfiguration
+  /// @param hesai_config Current HesaiConfig_FTX
+  /// @return Resulting status
+  HesaiStatus check_and_set_config(
+    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
+    std::shared_ptr<HesaiConfig_FTX> hesai_config);
   /// @brief Checking the current settings and changing the difference point
   /// @return Resulting status
   HesaiStatus check_and_set_config();

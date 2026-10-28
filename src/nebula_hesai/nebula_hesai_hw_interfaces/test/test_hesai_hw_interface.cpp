@@ -9,13 +9,19 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
+#include <cstring>
+#include <iterator>
+#include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 using std::chrono_literals::operator""ms;
@@ -120,6 +126,20 @@ public:
   uint16_t get_tcp_port() const { return tcp_port_; }
   uint16_t get_http_port() const { return http_port_; }
 
+  /// @brief Respond to `command_id` with `payload` instead of the default response
+  void set_response(uint8_t command_id, std::vector<uint8_t> payload)
+  {
+    std::lock_guard lock(mutex_);
+    responses_[command_id] = std::move(payload);
+  }
+
+  /// @brief The (command ID, payload) pairs of all requests received so far
+  std::vector<std::pair<uint8_t, std::vector<uint8_t>>> get_requests()
+  {
+    std::lock_guard lock(mutex_);
+    return requests_;
+  }
+
 private:
   void handle_tcp_client(int client)
   {
@@ -147,7 +167,18 @@ private:
       std::vector<uint8_t> response_payload;
       uint8_t ptc_error = nebula::drivers::g_ptc_error_code_no_error;
 
-      if (command_id == nebula::drivers::g_ptc_command_get_lidar_calibration) {
+      std::optional<std::vector<uint8_t>> custom_response;
+      {
+        std::lock_guard lock(mutex_);
+        requests_.emplace_back(command_id, payload);
+        if (auto it = responses_.find(command_id); it != responses_.end()) {
+          custom_response = it->second;
+        }
+      }
+
+      if (custom_response) {
+        response_payload = *custom_response;
+      } else if (command_id == nebula::drivers::g_ptc_command_get_lidar_calibration) {
         std::string calib = "mock_calibration_data";
         response_payload.assign(calib.begin(), calib.end());
       } else if (command_id == nebula::drivers::g_ptc_command_set_spin_rate) {
@@ -219,6 +250,9 @@ private:
   std::atomic_bool running_;
   std::thread tcp_thread_;
   std::thread http_thread_;
+  std::mutex mutex_;
+  std::map<uint8_t, std::vector<uint8_t>> responses_;
+  std::vector<std::pair<uint8_t, std::vector<uint8_t>>> requests_;
 };
 
 class MockHesaiCalibration : public nebula::drivers::HesaiCalibrationConfigurationBase
@@ -368,7 +402,7 @@ TEST_F(TestHesaiHwInterface, TestFTX140Commands)
   hw_interface_->set_target_model(config->sensor_model);
   EXPECT_EQ(hw_interface_->initialize_tcp_socket(), nebula::Status::OK);
 
-  // Sensor setup is skipped, lidar range is not supported
+  // Lidar range is not supported
   EXPECT_EQ(hw_interface_->check_and_set_config(), nebula::HesaiStatus::OK);
   EXPECT_EQ(hw_interface_->set_lidar_range(40, 320), nebula::Status::SENSOR_CONFIG_ERROR);
   EXPECT_THROW(hw_interface_->get_lidar_range(), std::runtime_error);
@@ -384,6 +418,132 @@ TEST_F(TestHesaiHwInterface, TestFTX140Commands)
   auto status_json = status->to_json();
   EXPECT_FALSE(status_json.contains("temperature"));
   EXPECT_TRUE(status_json.contains("ptp_status"));
+}
+
+namespace
+{
+
+/// @brief Config info of an FTX140 with the defaults of the FTX TCP API (section 3.1.3), except
+/// for the given return mode and destination
+std::vector<uint8_t> make_ftx_config_info(
+  uint8_t return_mode, const std::array<uint8_t, 4> & dest_ip, uint16_t dest_port)
+{
+  std::vector<uint8_t> payload(sizeof(nebula::HesaiConfig_FTX::Internal), 0);
+  const std::array<uint8_t, 12> ip_mask_gateway{192, 168, 1, 201, 255, 255, 255, 0, 192, 168, 1, 1};
+  std::copy(ip_mask_gateway.begin(), ip_mask_gateway.end(), payload.begin());
+  std::copy(dest_ip.begin(), dest_ip.end(), payload.begin() + 12);
+  payload[16] = dest_port >> 8;
+  payload[17] = dest_port & 0xff;
+  payload[29] = 1;  // clock source: PTP
+  payload[30] = 1;  // UDP sequence: on
+  payload[31] = 1;  // trigger method: time-based
+  payload[32] = return_mode;
+  payload[37] = 1;  // VLAN ID
+  return payload;
+}
+
+/// @brief An FTX140 configuration that matches `make_ftx_config_info(3, {127, 0, 0, 1}, 2368)` and
+/// a PTP config of {enabled, automotive, domain 0, L2, TSN}
+std::shared_ptr<nebula::drivers::HesaiSensorConfiguration> make_ftx_sensor_configuration()
+{
+  auto config = std::make_shared<nebula::drivers::HesaiSensorConfiguration>();
+  config->sensor_model = nebula::drivers::SensorModel::HESAI_FTX140;
+  config->sensor_ip = "127.0.0.1";
+  config->host_ip = "127.0.0.1";
+  config->data_port = 2368;
+  config->udp_socket_receive_buffer_size_bytes = 1024 * 1024;
+  config->return_mode = nebula::drivers::ReturnMode::FIRST;
+  config->ptp_profile = nebula::drivers::PtpProfile::IEEE_802_1AS_AUTO;
+  config->ptp_domain = 0;
+  config->ptp_transport_type = nebula::drivers::PtpTransportType::L2;
+  config->ptp_switch_type = nebula::drivers::PtpSwitchType::TSN;
+  return config;
+}
+
+const std::vector<uint8_t> g_ftx_ptp_config{1, 3, 0, 1, 1};
+
+std::vector<std::pair<uint8_t, std::vector<uint8_t>>> set_requests(
+  const std::vector<std::pair<uint8_t, std::vector<uint8_t>>> & requests)
+{
+  std::vector<std::pair<uint8_t, std::vector<uint8_t>>> result;
+  std::copy_if(requests.begin(), requests.end(), std::back_inserter(result), [](const auto & r) {
+    return r.first == nebula::drivers::g_ptc_command_set_return_mode ||
+           r.first == nebula::drivers::g_ptc_command_set_destination_ip ||
+           r.first == nebula::drivers::g_ptc_command_set_ptp_config;
+  });
+  return result;
+}
+
+}  // namespace
+
+TEST(TestHesaiConfigFTX, ParsesDocumentedLayout)
+{
+  using nebula::HesaiConfig_FTX;
+  static_assert(sizeof(HesaiConfig_FTX::Internal) == 47);
+
+  auto payload = make_ftx_config_info(3, {255, 255, 255, 255}, 2368);
+  payload[22] = 1;     // frame time alignment: enabled
+  payload[23] = 0xc3;  // frame header timestamp: 49999 (x 2 us)
+  payload[24] = 0x4f;
+  payload[35] = 1;  // VLAN: on
+  payload[37] = 14;
+
+  HesaiConfig_FTX::Internal raw{};
+  std::memcpy(&raw, payload.data(), sizeof(raw));
+  HesaiConfig_FTX config(raw);
+
+  auto json = config.to_json();
+  EXPECT_EQ(json["ipaddr"], "192.168.1.201");
+  EXPECT_EQ(json["mask"], "255.255.255.0");
+  EXPECT_EQ(json["gateway"], "192.168.1.1");
+  EXPECT_EQ(json["dest_ipaddr"], "255.255.255.255");
+  EXPECT_EQ(json["dest_LiDAR_udp_port"], 2368);
+  EXPECT_EQ(json["alignment_enable"], 1);
+  EXPECT_EQ(json["frame_header_timestamp"], "99998 us");
+  EXPECT_EQ(json["clock_source"], 1);
+  EXPECT_EQ(json["return_mode"], 3);
+  EXPECT_EQ(json["vlan_flag"], 1);
+  EXPECT_EQ(json["vlan_id"], 14);
+}
+
+TEST_F(TestHesaiHwInterface, TestFTX140SetsDifferingConfig)
+{
+  auto config = make_ftx_sensor_configuration();
+  hw_interface_->set_sensor_configuration(config);
+  hw_interface_->set_target_model(config->sensor_model);
+
+  // Return mode Last, broadcast destination, PTP over UDP with a non-TSN switch
+  mock_sensor_->set_response(
+    nebula::drivers::g_ptc_command_get_config_info,
+    make_ftx_config_info(0, {255, 255, 255, 255}, 2368));
+  mock_sensor_->set_response(nebula::drivers::g_ptc_command_get_ptp_config, {1, 3, 0, 0, 0});
+  EXPECT_EQ(hw_interface_->initialize_tcp_socket(), nebula::Status::OK);
+
+  EXPECT_EQ(hw_interface_->check_and_set_config(), nebula::HesaiStatus::OK);
+
+  const std::vector<std::pair<uint8_t, std::vector<uint8_t>>> expected{
+    {nebula::drivers::g_ptc_command_set_return_mode, {3}},
+    // 127.0.0.1:2368, GPS port 0
+    {nebula::drivers::g_ptc_command_set_destination_ip, {127, 0, 0, 1, 0x09, 0x40, 0, 0}},
+    // Enabled, automotive, domain 0, L2, TSN
+    {nebula::drivers::g_ptc_command_set_ptp_config, g_ftx_ptp_config},
+  };
+  EXPECT_EQ(set_requests(mock_sensor_->get_requests()), expected);
+}
+
+TEST_F(TestHesaiHwInterface, TestFTX140KeepsMatchingConfig)
+{
+  auto config = make_ftx_sensor_configuration();
+  hw_interface_->set_sensor_configuration(config);
+  hw_interface_->set_target_model(config->sensor_model);
+
+  mock_sensor_->set_response(
+    nebula::drivers::g_ptc_command_get_config_info, make_ftx_config_info(3, {127, 0, 0, 1}, 2368));
+  mock_sensor_->set_response(nebula::drivers::g_ptc_command_get_ptp_config, g_ftx_ptp_config);
+  EXPECT_EQ(hw_interface_->initialize_tcp_socket(), nebula::Status::OK);
+
+  EXPECT_EQ(hw_interface_->check_and_set_config(), nebula::HesaiStatus::OK);
+  EXPECT_TRUE(set_requests(mock_sensor_->get_requests()).empty());
 }
 
 TEST(TestHesaiInventoryAT128P, ParsesPartNumberLayout)
