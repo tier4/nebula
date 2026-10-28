@@ -17,6 +17,8 @@
 #include "nebula_hesai_decoders/decoders/hesai_packet.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_sensor.hpp"
 
+#include <vector>
+
 namespace nebula::drivers
 {
 
@@ -96,6 +98,32 @@ public:
     }
 
     return block_offset_ns + firing_time_offset_ns[channel_id];
+  }
+};
+
+/// @brief The AT128P uses the same point cloud packet format as the AT128E2X, but has a wider range
+/// and additionally supports the First and Strongest+First return modes.
+class PandarAT128P : public PandarAT128
+{
+public:
+  static constexpr float min_range = 0.5f;
+  static constexpr float max_range = 260.0f;
+
+  ReturnType get_return_type(
+    hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
+    const std::vector<const packet_t::body_t::block_t::unit_t *> & return_units) override
+  {
+    // In Strongest+First mode, the AT128P stores the strongest return in the first block and the
+    // first return in the second block (AT128P user manual, section 3.1.2.3). The base class
+    // expects the opposite order, so swap the returns before classifying them.
+    if (
+      return_mode == hesai_packet::return_mode::DUAL_FIRST_STRONGEST && return_units.size() == 2) {
+      const std::vector<const packet_t::body_t::block_t::unit_t *> first_then_strongest{
+        return_units[1], return_units[0]};
+      return PandarAT128::get_return_type(return_mode, 1 - return_idx, first_then_strongest);
+    }
+
+    return PandarAT128::get_return_type(return_mode, return_idx, return_units);
   }
 };
 

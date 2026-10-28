@@ -16,6 +16,8 @@ if(BUILD_TESTING)
     PandarQT128
     Pandar128E4X
     PandarAT128
+    AT128P
+    FTX140
     PandarXT16
     PandarXT32
     PandarXT32M
