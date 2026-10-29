@@ -24,24 +24,8 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      # Inlined from autowarefoundation/autoware-github-actions/pre-commit and pre-commit/action,
-      # which reference other actions by tag. Autofixes are not pushed back, as this workflow
-      # only has read access to the repository.
-      - name: Install pre-commit
-        run: |
-          python -m pip install pre-commit
-          python -m pip freeze --local
-
-      - name: Cache pre-commit environments
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config-optional.yaml') }}
-
       - name: Run pre-commit
-        env:
-          BASE_REF: origin/${{ github.base_ref }}
-        run: |
-          pre-commit run --show-diff-on-failure --color=always \
-            --config .pre-commit-config-optional.yaml \
-            --from-ref "${BASE_REF}" --to-ref HEAD
+        uses: autowarefoundation/autoware-github-actions/pre-commit@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
+        with:
+          pre-commit-config: .pre-commit-config-optional.yaml
+          base-branch: origin/${{ github.base_ref }}

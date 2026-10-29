@@ -29,41 +29,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # Inlined from autowarefoundation/autoware_system_designer's action, which references
-      # actions/setup-python by tag.
-      - name: Check out autoware_system_designer
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          repository: autowarefoundation/autoware_system_designer
-          ref: 0bb96f29d8e27ee88658b506fa56967054b19f64 # v0.4.1
-          path: .autoware_system_designer
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.10"
-
-      - name: Install autoware_system_designer
-        run: |
-          pip install -r .autoware_system_designer/autoware_system_designer/requirements.txt
-          pip install -e .autoware_system_designer/autoware_system_designer
-
       - name: Lint system design format files
-        run: |
-          find . -type f \( \
-            -name "*.node.yaml" \
-            -o -name "*.module.yaml" \
-            -o -name "*.system.yaml" \
-            -o -name "*.parameter_set.yaml" \
-          \) -not -path "./.autoware_system_designer/*" -not -path "*/.git/*" \
-            -not -path "*/build/*" -not -path "*/install/*" > /tmp/design_files.txt || true
-          if [ ! -s /tmp/design_files.txt ]; then
-            echo "No design files found to lint"
-            exit 0
-          fi
-          echo "Found $(wc -l < /tmp/design_files.txt) design files to lint:"
-          cat /tmp/design_files.txt
-          autoware-system-designer-lint \
-            --format github-actions \
-            $(sed 's|^\./||' /tmp/design_files.txt | tr '\n' ' ')
+        uses: autowarefoundation/autoware_system_designer@0bb96f29d8e27ee88658b506fa56967054b19f64 # v0.4.1
+        with:
+          design_files_path: .

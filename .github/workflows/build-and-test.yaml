@@ -79,7 +79,7 @@ jobs:
 
       - name: Build
         if: ${{ steps.get-self-packages.outputs.self-packages != '' }}
-        uses: ./.github/actions/colcon-build
+        uses: autowarefoundation/autoware-github-actions/colcon-build@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
@@ -99,7 +99,7 @@ jobs:
       - name: Test
         if: ${{ steps.get-self-packages.outputs.self-packages != '' }}
         id: test
-        uses: ./.github/actions/colcon-test
+        uses: autowarefoundation/autoware-github-actions/colcon-test@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
         env:
           # The test runner has no Agnocast kernel module / heaphook, so nodes built with
           # Agnocast support are exercised in rclcpp mode at test time.
