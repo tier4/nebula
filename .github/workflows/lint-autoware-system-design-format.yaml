@@ -25,11 +25,11 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@v4.4.0
         with:
           persist-credentials: false
 
       - name: Lint system design format files
-        uses: autowarefoundation/autoware_system_designer@0bb96f29d8e27ee88658b506fa56967054b19f64 # v0.4.1
+        uses: autowarefoundation/autoware_system_designer@v0.4.1
         with:
           design_files_path: .
