@@ -409,6 +409,10 @@ std::shared_ptr<HesaiInventoryBase> HesaiHwInterface::get_inventory()
       auto lidar_config = check_size_and_parse<HesaiInventory_AT128::Internal>(response);
       return std::make_shared<HesaiInventory_AT128>(lidar_config);
     }
+    case SensorModel::HESAI_AT128P: {
+      auto lidar_config = check_size_and_parse<HesaiInventory_AT128P::Internal>(response);
+      return std::make_shared<HesaiInventory_AT128P>(lidar_config);
+    }
     case SensorModel::HESAI_PANDAR128_E4X: {
       auto lidar_config = check_size_and_parse<HesaiInventory_OT128::Internal>(response);
       return std::make_shared<HesaiInventory_OT128>(lidar_config);
@@ -433,7 +437,8 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::get_config()
       return std::make_shared<HesaiConfig_XT_40P_64_QT128>(lidar_config);
     }
     case SensorModel::HESAI_PANDAR128_E4X:
-    case SensorModel::HESAI_PANDARAT128: {
+    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_AT128P: {
       auto lidar_config = check_size_and_parse<HesaiConfig_OT128_AT128::Internal>(response);
       return std::make_shared<HesaiConfig_OT128_AT128>(lidar_config);
     }
@@ -459,7 +464,8 @@ std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::get_lidar_status()
       auto hesai_lidarstatus = check_size_and_parse<HesaiLidarStatusOT128::Internal>(response);
       return std::make_shared<HesaiLidarStatusOT128>(hesai_lidarstatus);
     }
-    case SensorModel::HESAI_PANDARAT128: {
+    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_AT128P: {
       auto hesai_lidarstatus = check_size_and_parse<HesaiLidarStatusAT128::Internal>(response);
       return std::make_shared<HesaiLidarStatusAT128>(hesai_lidarstatus);
     }
@@ -574,7 +580,9 @@ Status HesaiHwInterface::set_control_port(
 
 Status HesaiHwInterface::set_lidar_range(int method, std::vector<unsigned char> data)
 {
-  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+  if (
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P) {
     return Status::SENSOR_CONFIG_ERROR;
   }
   // 0 - for all channels : 5-1 bytes
@@ -593,6 +601,7 @@ Status HesaiHwInterface::set_lidar_range(int start_ddeg, int end_ddeg)
 {
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P ||
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
     return Status::SENSOR_CONFIG_ERROR;
   }
@@ -617,6 +626,7 @@ HesaiLidarRangeAll HesaiHwInterface::get_lidar_range()
 {
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P ||
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
     throw std::runtime_error("Not supported on this sensor");
   }
@@ -701,7 +711,9 @@ bool HesaiHwInterface::get_up_close_blockage_detection()
 Status HesaiHwInterface::check_and_set_lidar_range(
   const HesaiCalibrationConfigurationBase & calibration)
 {
-  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+  if (
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -765,6 +777,7 @@ Status HesaiHwInterface::set_ptp_config(
     bool is_new_gen =
       (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT128 ||
        sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+       sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P ||
        sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X);
 
     if (is_new_gen) {
@@ -1290,6 +1303,7 @@ HesaiStatus HesaiHwInterface::check_and_set_config()
 
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_AT128P ||
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
     return Status::OK;
   }
@@ -1381,6 +1395,7 @@ int HesaiHwInterface::nebula_model_to_hesai_model_no(nebula::drivers::SensorMode
     case SensorModel::HESAI_PANDAR128_E4X:  // OT128
       return 42;
     case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_AT128P:  // reports 0 in its inventory, see HesaiInventory_AT128P
       return 48;
     // All other vendors and unknown sensors
     default:
