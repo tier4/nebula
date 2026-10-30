@@ -30,21 +30,21 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
       - name: Remove exec_depend
-        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
+        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1.69.1
 
       - name: Get modified packages
         id: get-modified-packages
-        uses: autowarefoundation/autoware-github-actions/get-modified-packages@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
+        uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1.69.1
 
       - run: ./.github/workflows/scripts/ensure-apt-up-to-date.sh
       - run: ./.github/workflows/scripts/setup-ccache.sh
 
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - uses: actions/cache@v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -59,7 +59,7 @@ jobs:
       - name: Build
         id: build
         if: steps.get-modified-packages.outputs.modified-packages != ''
-        uses: ./.github/actions/colcon-build
+        uses: autowarefoundation/autoware-github-actions/colcon-build@v1.69.1
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
@@ -73,7 +73,7 @@ jobs:
       - name: Test
         id: test
         if: steps.build.outcome == 'success'
-        uses: ./.github/actions/colcon-test
+        uses: autowarefoundation/autoware-github-actions/colcon-test@v1.69.1
         env:
           # The test runner has no Agnocast kernel module / heaphook, so nodes built with
           # Agnocast support are exercised in rclcpp mode at test time.
@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload coverage to CodeCov
         if: steps.test.outputs.coverage-report-files != '' && matrix.rosdistro == 'humble' && steps.determine-flags.outputs.flags != ''
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
+        uses: codecov/codecov-action@v5.5.5
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
           use_oidc: true
@@ -133,14 +133,14 @@ jobs:
       FB_INFER_VERSION: 1.2.0
     steps:
       - name: Check out PR repo
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Get modified packages
         id: get-modified-packages
-        uses: autowarefoundation/autoware-github-actions/get-modified-packages@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
+        uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1.69.1
 
       - name: Back up .github folder
         run: |
@@ -148,7 +148,7 @@ jobs:
 
       - name: Checkout matrix ref code
         id: checkout-ref
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
           ref: ${{ matrix.ref }}
@@ -165,12 +165,12 @@ jobs:
 
       - name: Cache analysis results
         id: cache-analysis
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@v4.3.0
         with:
           path: infer-out/
           key: infer-${{ matrix.ref }}-${{ runner.os }}
 
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - uses: actions/cache@v4.3.0
         if: steps.cache-analysis.outputs.cache-hit != 'true'
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -186,12 +186,12 @@ jobs:
 
       - name: Remove exec_depend
         if: steps.cache-analysis.outputs.cache-hit != 'true'
-        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@3419182c5e20616d2ca4c81c73ef94199eb26172 # v1.69.1
+        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1.69.1
 
       - name: Build
         id: build
         if: steps.cache-analysis.outputs.cache-hit != 'true'
-        uses: ./.github/actions/colcon-build
+        uses: autowarefoundation/autoware-github-actions/colcon-build@v1.69.1
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
@@ -214,7 +214,7 @@ jobs:
 
       - name: Upload FB Infer Reports
         id: upload-infer-reports
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: infer-report-${{ matrix.ref }}
           path: |
@@ -232,7 +232,7 @@ jobs:
       FB_INFER_VERSION: 1.2.0
     steps:
       - name: Check out GitHub workflow definitions
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
           # This repo checkout is only for .github workflow definitions. Use the feature branch's version as it might contain updated functionality.
@@ -245,13 +245,13 @@ jobs:
 
       - name: Download FB Infer report (PR head ref)
         id: download-infer-reports
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@v4.3.0
         with:
           name: infer-report-${{ github.event.pull_request.head.sha }}
           path: infer-report-head
 
       - name: Download FB Infer report (PR base ref)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@v4.3.0
         with:
           name: infer-report-${{ github.event.pull_request.base.sha }}
           path: infer-report-base
@@ -270,7 +270,7 @@ jobs:
 
       - name: Upload FB Infer Reports
         id: upload-infer-reports
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: infer-reports-${{ github.sha }}
           path: |
@@ -290,7 +290,7 @@ jobs:
 
       - name: Find Comment
         if: ${{ steps.generate-infer-summary.outcome == 'success' }}
-        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
+        uses: peter-evans/find-comment@v3.1.0
         id: find-comment
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -300,7 +300,7 @@ jobs:
       # If the comment-id is empty, this creates a new comment
       - name: Post or update PR comment
         if: ${{ steps.generate-infer-summary.outcome == 'success' }}
-        uses: peter-evans/create-or-update-comment@23ff15729ef2fc348714a3bb66d2f655ca9066f2 # v3.1.0
+        uses: peter-evans/create-or-update-comment@v3.1.0
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
