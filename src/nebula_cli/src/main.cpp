@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "converters.hpp"
+#include "model_detect.hpp"
 #include "params.hpp"
 
 #include <nebula_core_common/nebula_common.hpp>
@@ -21,8 +22,10 @@
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writer.hpp>
+#include <rosbag2_storage/storage_filter.hpp>
 #include <rosbag2_storage/storage_options.hpp>
 
+#include <builtin_interfaces/msg/time.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 #include <pandar_msgs/msg/pandar_scan.hpp>
 #include <robosense_msgs/msg/robosense_info_packet.hpp>
@@ -30,13 +33,13 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
 
-#include <chrono>
+#include <algorithm>
+#include <cinttypes>
 #include <cstdio>
-#include <functional>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -102,8 +105,9 @@ bool unpack(
 {
   if (type == "pandar_msgs/msg/PandarScan") {
     for (const auto & p : deserialize<pandar_msgs::msg::PandarScan>(m).packets) {
-      // The array is fixed-size; `size` is the valid length
-      out.push_back({to_ns(p.stamp), {p.data.begin(), p.data.begin() + p.size}});
+      // The array is fixed-size; `size` is the valid length (clamped: a corrupt message may lie)
+      const auto size = std::min<size_t>(p.size, p.data.size());
+      out.push_back({to_ns(p.stamp), {p.data.begin(), p.data.begin() + size}});
     }
   } else if (type == "velodyne_msgs/msg/VelodyneScan") {
     for (const auto & p : deserialize<velodyne_msgs::msg::VelodyneScan>(m).packets) {
@@ -178,7 +182,8 @@ Args parse_args(int argc, char ** argv)
     else if (flag == "--point-format") sensor().point_format = value;
     else if (flag == "--params-file") sensor().params_file = value;
     else if (flag == "-p") sensor().assignments.push_back(value);
-    else if (param_flags.count(flag)) sensor().flag_params.emplace_back(param_flags.at(flag), value);
+    else if (param_flags.count(flag))
+      sensor().flag_params.emplace_back(param_flags.at(flag), value);
     else throw std::runtime_error("Unknown option " + flag);
   }
 
@@ -228,38 +233,14 @@ int convert(const Args & args)
   int64_t bag_time_ns = 0;  // record time of the bag message currently being decoded
 
   std::vector<Sensor> sensors(args.sensors.size());
+  std::vector<nebula::cli::Params> all_params(sensors.size());
   for (size_t n = 0; n < sensors.size(); ++n) {
     const auto & sa = args.sensors[n];
-    nebula::cli::Params params;
+    auto & params = all_params[n];
     if (!sa.params_file.empty()) params.load_yaml(sa.params_file);
     for (const auto & [k, v] : sa.flag_params) params.set(k, v);
     for (const auto & a : sa.assignments) params.set_assignment(a);
-
-    Sensor & sensor = sensors[n];
-    sensor.args = &sa;
-    const std::string frame_id = params.get_string("frame_id", "lidar");
-    auto write_cloud = [&writer, &bag_time_ns, &sensor, frame_id](
-                         const nebula::drivers::NebulaPointCloudPtr & cloud, double timestamp_s) {
-      sensor_msgs::msg::PointCloud2 msg;
-      if (sensor.args->point_format == "xyzir") {
-        msg = nebula::ros::to_ros_msg(
-          nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(*cloud));
-      } else if (sensor.args->point_format == "xyziradt") {
-        msg = nebula::ros::to_ros_msg(
-          nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(*cloud, timestamp_s));
-      } else {
-        msg = nebula::ros::to_ros_msg(*cloud);
-      }
-      msg.header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp_s * 1e9));
-      msg.header.frame_id = frame_id;
-      writer.write(msg, sensor.args->output_topic, rclcpp::Time(bag_time_ns));
-      ++sensor.clouds;
-    };
-    try {
-      sensor.converter = nebula::cli::make_converter(sa.vendor, params, write_cloud);
-    } catch (const std::exception & e) {
-      throw std::runtime_error("sensor " + std::to_string(n + 1) + " (" + sa.topic + "): " + e.what());
-    }
+    sensors[n].args = &sa;
     if (sa.vendor == "robosense" && sa.info_topic.empty()) {
       throw std::runtime_error(
         "sensor " + std::to_string(n + 1) +
@@ -282,13 +263,110 @@ int convert(const Args & args)
     for (const bool is_info : {false, true}) {
       const auto & topic = is_info ? sensor.args->info_topic : sensor.args->topic;
       if (topic.empty()) continue;
-      if (!types.count(topic)) throw std::runtime_error("Topic " + topic + " not found in " + args.input);
+      if (!types.count(topic)) {
+        throw std::runtime_error("Topic " + topic + " not found in " + args.input);
+      }
       routes[topic] = {&sensor, is_info};
     }
     if (args.copy_other && types.count(sensor.args->output_topic)) {
       throw std::runtime_error(
         "--output-topic " + sensor.args->output_topic +
         " already exists in the input bag; pick another or use --drop-other-topics");
+    }
+  }
+
+  // Pre-pass: detect model / return mode from the first scan packet of each sensor that needs it
+  {
+    std::map<std::string, size_t> pending;  // scan topic -> sensor index
+    std::vector<std::string> topics;
+    for (size_t n = 0; n < sensors.size(); ++n) {
+      const auto & params = all_params[n];
+      const bool auto_model = params.get_string("sensor_model", "auto") == "auto";
+      // Robosense takes its return mode from the info packets, and its model cannot be detected
+      const bool auto_mode = sensors[n].args->vendor != "robosense" &&
+                             params.get_string("return_mode", "auto") == "auto";
+      if (auto_model && sensors[n].args->vendor == "robosense") {
+        throw std::runtime_error(
+          "sensor " + std::to_string(n + 1) +
+          ": Robosense models cannot be detected; pass --model");
+      }
+      if (auto_model || auto_mode) {
+        pending[sensors[n].args->topic] = n;
+        topics.push_back(sensors[n].args->topic);
+      }
+    }
+    if (!pending.empty()) {
+      rosbag2_cpp::Reader probe;
+      probe.open(in_options);
+      rosbag2_storage::StorageFilter filter;
+      filter.topics = topics;
+      probe.set_filter(filter);
+      std::vector<Packet> first;
+      while (!pending.empty() && probe.has_next()) {
+        const auto msg = probe.read_next();
+        const auto it = pending.find(msg->topic_name);
+        if (it == pending.end()) continue;
+        first.clear();
+        if (!unpack(types.at(msg->topic_name), *msg, first)) {
+          throw std::runtime_error("Unsupported message type " + types.at(msg->topic_name));
+        }
+        if (first.empty()) continue;
+        const size_t n = it->second;
+        pending.erase(it);
+        const auto & vendor = sensors[n].args->vendor;
+        auto & params = all_params[n];
+        try {
+          // Explicit --model / --return-mode win over detection
+          if (params.get_string("sensor_model", "auto") == "auto") {
+            params.set("sensor_model", nebula::cli::detect_model(vendor, first.front().data));
+          }
+          if (vendor != "robosense" && params.get_string("return_mode", "auto") == "auto") {
+            params.set(
+              "return_mode", nebula::cli::detect_return_mode(
+                               vendor, params.get_string("sensor_model", ""), first.front().data));
+          }
+        } catch (const std::exception & e) {
+          throw std::runtime_error(
+            "sensor " + std::to_string(n + 1) + " (" + sensors[n].args->topic + "): " + e.what());
+        }
+        std::fprintf(
+          stderr, "%s: model %s, return mode %s\n", vendor.c_str(),
+          params.get_string("sensor_model", "").c_str(),
+          params.get_string("return_mode", "").c_str());
+      }
+      if (!pending.empty()) {
+        throw std::runtime_error(
+          "No packets on topic " + pending.begin()->first + " to detect the model; pass --model");
+      }
+    }
+  }
+
+  for (size_t n = 0; n < sensors.size(); ++n) {
+    Sensor & sensor = sensors[n];
+    const auto & params = all_params[n];
+    const std::string frame_id = params.get_string("frame_id", "lidar");
+    auto write_cloud = [&writer, &bag_time_ns, &sensor, frame_id](
+                         const nebula::drivers::NebulaPointCloudPtr & cloud, double timestamp_s) {
+      sensor_msgs::msg::PointCloud2 msg;
+      if (sensor.args->point_format == "xyzir") {
+        msg = nebula::ros::to_ros_msg(
+          nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(*cloud));
+      } else if (sensor.args->point_format == "xyziradt") {
+        msg = nebula::ros::to_ros_msg(
+          nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(*cloud, timestamp_s));
+      } else {
+        msg = nebula::ros::to_ros_msg(*cloud);
+      }
+      msg.header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp_s * 1e9));
+      msg.header.frame_id = frame_id;
+      writer.write(msg, sensor.args->output_topic, rclcpp::Time(bag_time_ns));
+      ++sensor.clouds;
+    };
+    try {
+      sensor.converter = nebula::cli::make_converter(sensor.args->vendor, params, write_cloud);
+    } catch (const std::exception & e) {
+      throw std::runtime_error(
+        "sensor " + std::to_string(n + 1) + " (" + sensor.args->topic + "): " + e.what());
     }
   }
 
@@ -342,8 +420,9 @@ int convert(const Args & args)
   bool all_ok = true;
   for (const auto & s : sensors) {
     std::printf(
-      "%s: decoded %lu packets (%lu dropped) into %lu clouds on %s\n", s.args->topic.c_str(),
-      s.packets, s.converter->dropped_packets(), s.clouds, s.args->output_topic.c_str());
+      "%s: decoded %" PRIu64 " packets (%" PRIu64 " dropped) into %" PRIu64 " clouds on %s\n",
+      s.args->topic.c_str(), s.packets, s.converter->dropped_packets(), s.clouds,
+      s.args->output_topic.c_str());
     all_ok = all_ok && s.clouds > 0;
   }
   std::printf("Output bag: %s\n", args.output.c_str());
