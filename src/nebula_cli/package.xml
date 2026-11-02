@@ -12,6 +12,7 @@
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
   <depend>ament_index_cpp</depend>
+  <depend>builtin_interfaces</depend>
   <depend>nebula_core_common</depend>
   <depend>nebula_core_ros</depend>
   <depend>nebula_hesai_common</depend>
@@ -25,6 +26,7 @@
   <depend>rclcpp</depend>
   <depend>robosense_msgs</depend>
   <depend>rosbag2_cpp</depend>
+  <depend>rosbag2_storage</depend>
   <depend>sensor_msgs</depend>
   <depend>velodyne_msgs</depend>
 
