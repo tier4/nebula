@@ -327,6 +327,63 @@ TEST_F(TestHesaiHwInterface, TestXT32Commands)
   EXPECT_NO_THROW(hw_interface_->get_lidar_monitor());
 }
 
+TEST_F(TestHesaiHwInterface, TestAT128PCommands)
+{
+  auto config = std::make_shared<nebula::drivers::HesaiSensorConfiguration>();
+  config->sensor_model = nebula::drivers::SensorModel::HESAI_AT128P;
+  config->sensor_ip = "127.0.0.1";
+  config->host_ip = "127.0.0.1";
+  config->data_port = 2368;
+  config->udp_socket_receive_buffer_size_bytes = 1024 * 1024;
+
+  hw_interface_->set_sensor_configuration(config);
+  hw_interface_->set_target_model(config->sensor_model);
+  EXPECT_EQ(hw_interface_->initialize_tcp_socket(), nebula::Status::OK);
+
+  // The AT128P rejects the lidar range commands, like the AT128
+  EXPECT_EQ(hw_interface_->set_lidar_range(40, 320), nebula::Status::SENSOR_CONFIG_ERROR);
+  EXPECT_THROW(hw_interface_->get_lidar_range(), std::runtime_error);
+
+  auto inventory = hw_interface_->get_inventory();
+  ASSERT_NE(inventory, nullptr);
+  EXPECT_EQ(inventory->model_number(), nebula::HesaiInventory_AT128P::g_model_number);
+  EXPECT_NE(hw_interface_->get_config(), nullptr);
+  EXPECT_NE(hw_interface_->get_lidar_status(), nullptr);
+
+  // Unlike the AT128, the AT128P answers lidar monitor requests via PTC
+  EXPECT_FALSE(hw_interface_->use_http_get_lidar_monitor());
+  EXPECT_NO_THROW(hw_interface_->get_lidar_monitor());
+}
+
+TEST(TestHesaiInventoryAT128P, ParsesPartNumberLayout)
+{
+  using nebula::HesaiInventory_AT128P;
+  // Size of the AT128P inventory response
+  static_assert(sizeof(HesaiInventory_AT128P::Internal) == 216);
+
+  HesaiInventory_AT128P::Internal raw{};
+  const std::string sn = "AT128P-TEST-SN-01";
+  const std::string pn = "AT128P-TEST-PN";
+  const std::string date = "2000-01-01";
+  const std::string sw_ver = "1.2.3";
+  std::copy(sn.begin(), sn.end(), raw.sn);
+  std::copy(pn.begin(), pn.end(), raw.pn);
+  std::copy(date.begin(), date.end(), raw.date_of_manufacture);
+  std::copy(sw_ver.begin(), sw_ver.end(), raw.sw_ver);
+  raw.product_model = 0;  // the AT128P reports 0 here
+  raw.num_of_lines = 128;
+
+  HesaiInventory_AT128P inventory(raw);
+  EXPECT_EQ(inventory.model_number(), HesaiInventory_AT128P::g_model_number);
+
+  auto json = inventory.to_json();
+  EXPECT_EQ(json["sn"], sn);
+  EXPECT_EQ(json["date_of_manufacture"], date);
+  EXPECT_EQ(json["sw_ver"], sw_ver);
+  EXPECT_EQ(json["pn"], pn);
+  EXPECT_EQ(json["num_of_lines"], 128);
+}
+
 TEST_F(TestHesaiHwInterface, TestHTTPMethods)
 {
   EXPECT_EQ(hw_interface_->initialize_tcp_socket(), nebula::Status::OK);
