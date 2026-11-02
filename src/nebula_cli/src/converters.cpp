@@ -14,8 +14,6 @@
 
 #include "converters.hpp"
 
-#include "model_detect.hpp"
-
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_ros/rclcpp_logger.hpp>
@@ -27,12 +25,12 @@
 #include <nebula_velodyne_common/velodyne_common.hpp>
 #include <nebula_velodyne_decoders/velodyne_driver.hpp>
 
-#include <cstdio>
 #include <filesystem>
+#include <memory>
 #include <optional>
 #include <sstream>
-#include <string>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace nebula::cli
@@ -54,7 +52,8 @@ std::string calibration_path(
   const std::string & model, const std::string & ext)
 {
   auto path = p.get_string(
-    key, ament_index_cpp::get_package_share_directory(decoders_pkg) + "/calibration/" + model + ext);
+    key,
+    ament_index_cpp::get_package_share_directory(decoders_pkg) + "/calibration/" + model + ext);
   if (!std::filesystem::exists(path)) {
     throw std::runtime_error("Calibration file not found: " + path + " (set --" + key + ")");
   }
@@ -124,7 +123,8 @@ public:
       std::make_shared<const drivers::HesaiSensorConfiguration>(cfg), calib, make_logger(),
       std::move(cb));
     if (driver_->get_status() != Status::OK) {
-      throw std::runtime_error("Hesai driver init failed: " + status_message(driver_->get_status()));
+      throw std::runtime_error(
+        "Hesai driver init failed: " + status_message(driver_->get_status()));
     }
   }
 
@@ -243,64 +243,11 @@ private:
   uint64_t dropped_{0};
 };
 
-/// Defers creating the vendor converter until the first scan packet, whose size/content tells the
-/// sensor model and return mode.
-class AutoConverter : public Converter
-{
-public:
-  AutoConverter(std::string vendor, Params params, CloudCallback cb)
-  : vendor_(std::move(vendor)), params_(std::move(params)), cb_(std::move(cb))
-  {
-  }
-
-  void feed_scan(const Packet & packet) override
-  {
-    if (!inner_) {
-      // Explicit --model / --return-mode win over detection
-      auto model = params_.get_string("sensor_model", "auto");
-      if (model == "auto") {
-        model = detect_model(vendor_, packet.data);
-        params_.set("sensor_model", model);
-      }
-      auto return_mode = params_.get_string("return_mode", "auto");
-      if (return_mode == "auto") {
-        return_mode = detect_return_mode(vendor_, model, packet.data);
-        params_.set("return_mode", return_mode);
-      }
-      std::fprintf(
-        stderr, "%s: model %s, return mode %s\n", vendor_.c_str(), model.c_str(),
-        return_mode.c_str());
-      inner_ = make_converter(vendor_, params_, cb_);
-    }
-    inner_->feed_scan(packet);
-  }
-  uint64_t dropped_packets() const override { return inner_ ? inner_->dropped_packets() : 0; }
-
-private:
-  std::string vendor_;
-  Params params_;
-  CloudCallback cb_;
-  std::unique_ptr<Converter> inner_;
-};
-
 }  // namespace
 
 std::unique_ptr<Converter> make_converter(
   const std::string & vendor, const Params & params, Converter::CloudCallback callback)
 {
-  const bool auto_model = params.get_string("sensor_model", "auto") == "auto";
-  // Robosense gets its return mode from the info packets, so it never needs detection for it
-  const bool auto_return_mode =
-    vendor != "robosense" && params.get_string("return_mode", "auto") == "auto";
-  if (auto_model && vendor == "robosense") {
-    throw std::runtime_error("Robosense models cannot be detected; pass --model");
-  }
-  if (auto_model || auto_return_mode) {
-    if (vendor != "hesai" && vendor != "velodyne") {
-      throw std::runtime_error("Unknown vendor '" + vendor + "' (hesai, velodyne, robosense)");
-    }
-    return std::make_unique<AutoConverter>(vendor, params, std::move(callback));
-  }
   if (vendor == "hesai") return std::make_unique<HesaiConverter>(params, std::move(callback));
   if (vendor == "velodyne") return std::make_unique<VelodyneConverter>(params, std::move(callback));
   if (vendor == "robosense") {

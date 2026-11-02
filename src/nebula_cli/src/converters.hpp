@@ -53,6 +53,7 @@ public:
 };
 
 /// @brief Create the converter for a vendor ("hesai", "velodyne" or "robosense").
+/// `params` must hold a concrete sensor_model and (except Robosense) return_mode.
 /// Throws std::runtime_error on invalid configuration.
 std::unique_ptr<Converter> make_converter(
   const std::string & vendor, const Params & params, Converter::CloudCallback callback);

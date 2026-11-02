@@ -27,7 +27,8 @@ Input topic types: `PandarScan`, `VelodyneScan`, `RobosenseScan`, `NebulaPackets
   byte (VLP16, VLP32, VLS128; others need `--model`). Robosense cannot be detected, pass `--model`.
   `--return-mode` defaults to `auto` too: read from the packet (Hesai tail, Velodyne factory byte);
   Robosense takes it from its info packets. Detection uses the first scan packet of each topic;
-  explicit `--model` / `--return-mode` always win.
+  explicit `--model` / `--return-mode` always win. Detection runs in a pre-pass before the output
+  bag is created, so a bad configuration or an empty scan topic fails without leaving a bag behind.
 - Robosense needs `--info-topic` (`RobosenseInfoPacket`): calibration and return mode come from it.
   Scan packets before the first info packet are dropped.
 - Calibration files default to those shipped with the vendor `_decoders` package.
