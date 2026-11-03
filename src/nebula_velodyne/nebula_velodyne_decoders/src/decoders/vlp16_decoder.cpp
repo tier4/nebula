@@ -313,7 +313,7 @@ PacketDecodeStatus Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, dou
                 current_point.z = z_coord;
                 current_point.return_type = return_type;
                 current_point.channel = corrections.laser_ring;
-                current_point.azimuth = rotation_radians_[azimuth_corrected];
+                current_point.azimuth = azimuth_rad(azimuth_corrected);
                 current_point.elevation = sin_vert_angle;
                 auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
                 if (point_ts < 0) point_ts = 0;

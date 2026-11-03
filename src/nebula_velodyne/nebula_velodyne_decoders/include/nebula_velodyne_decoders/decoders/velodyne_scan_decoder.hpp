@@ -27,6 +27,7 @@
 
 #include <angles/angles.h>
 
+#include <array>
 #include <cerrno>
 #include <cmath>
 #include <cstdint>
@@ -165,6 +166,18 @@ private:
   bool has_scanned_{false};
 
 protected:
+  /// @brief Azimuth in radians for each possible wire azimuth value in [deg/100]
+  std::array<float, g_rotation_max_units> rotation_radians_{};
+
+  /// @brief Look up the azimuth in radians for a wire azimuth value.
+  /// The wire value is an unchecked 16-bit field, so it is wrapped into the table's range.
+  /// @param rotation The azimuth value in [deg/100] as sent by the sensor
+  /// @return The azimuth in radians
+  float azimuth_rad(uint16_t rotation) const
+  {
+    return rotation_radians_[rotation % g_rotation_max_units];
+  }
+
   /// @brief Checks if the current packet completes the ongoing scan.
   /// TODO: this has been moved from velodyne_hw_interface.cpp and is a temporary solution until
   /// the Velodyne decoder uses the same structure as Hesai/Robosense

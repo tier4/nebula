@@ -58,7 +58,6 @@ private:
   bool parse_packet(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) override;
   float sin_rot_table_[g_rotation_max_units];
   float cos_rot_table_[g_rotation_max_units];
-  float rotation_radians_[g_rotation_max_units];
   std::vector<std::vector<float>> timing_offsets_;
   int phase_;
   int max_pts_;
