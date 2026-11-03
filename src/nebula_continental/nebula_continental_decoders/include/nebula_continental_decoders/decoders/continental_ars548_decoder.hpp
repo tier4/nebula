@@ -17,6 +17,7 @@
 #include "nebula_continental_decoders/decoders/continental_packets_decoder.hpp"
 
 #include <nebula_continental_common/continental_ars548.hpp>
+#include <nebula_core_common/loggers/logger.hpp>
 
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
 #include <continental_msgs/msg/continental_ars548_object_list.hpp>
@@ -36,8 +37,10 @@ class ContinentalARS548Decoder : public ContinentalPacketsDecoder
 public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
-  explicit ContinentalARS548Decoder(
-    const std::shared_ptr<const ContinentalARS548SensorConfiguration> & sensor_configuration);
+  /// @param logger Logger used by this decoder
+  ContinentalARS548Decoder(
+    const std::shared_ptr<const ContinentalARS548SensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<loggers::Logger> & logger);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -110,6 +113,8 @@ private:
 
   /// @brief SensorConfiguration for this decoder
   std::shared_ptr<const continental_ars548::ContinentalARS548SensorConfiguration> config_ptr_{};
+  std::shared_ptr<loggers::Logger> logger_;
+  bool corner_radar_firmware_warned_{false};
 };
 
 }  // namespace nebula::drivers::continental_ars548
