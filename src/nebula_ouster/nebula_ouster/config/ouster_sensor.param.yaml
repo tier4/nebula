@@ -1,0 +1,46 @@
+# Ouster Sensor ROS 2 Parameters
+# Example configuration for an OS-128. Adjust `connection.*` and `frame_id` to match your setup.
+
+/**:
+  ros__parameters:
+    # ROS wrapper configuration
+    sensor_model: OS-128
+    launch_hw: true
+    frame_id: ouster_lidar
+
+    # Optional: cache sensor metadata JSON. When launch_hw is true and this path is set,
+    # the wrapper saves metadata fetched via HTTP here. When launch_hw is false, it loads
+    # metadata from this file instead of contacting the sensor. Leave empty to always use HTTP.
+    metadata_file: ""
+
+    # Network configuration. `data_port` 7502 is the Ouster default for lidar data; the sensor
+    # also sends IMU packets to the same port.
+    connection:
+      sensor_ip: 192.168.1.201
+      host_ip: 192.168.1.100
+      data_port: 7502
+      # Set to 0 to disable the separate IMU socket. Ouster's factory default is 7503.
+      imu_port: 7503
+      filter_sender_ip: true
+
+    # Decoder configuration — points outside this azimuth/elevation range are filtered out.
+    fov:
+      azimuth:
+        min_deg: 0.0
+        max_deg: 360.0
+      elevation:
+        min_deg: -45.0
+        max_deg: 45.0
+
+    # Diagnostics configuration
+    diagnostics:
+      pointcloud_publish_rate:
+        frequency_ok:
+          min_hz: 9.0
+          max_hz: 11.0
+        frequency_warn:
+          min_hz: 8.0
+          max_hz: 12.0
+        num_frame_transition: 1
+      packet_liveness:
+        timeout_ms: 1000
