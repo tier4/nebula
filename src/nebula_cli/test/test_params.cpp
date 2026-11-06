@@ -16,6 +16,9 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <fstream>
+
 using nebula::cli::Params;
 
 TEST(Params, AssignmentAndTypedGetters)
@@ -39,4 +42,33 @@ TEST(Params, Substitution)
   EXPECT_EQ(p.get_string("file", ""), "a/Pandar64.csv");
   EXPECT_THROW(p.substitute("$(var nope)"), std::runtime_error);
   EXPECT_EQ(p.substitute("plain"), "plain");
+}
+
+TEST(Params, LoadYaml)
+{
+  const auto path = std::filesystem::temp_directory_path() / "nebula_cli_params_test.yaml";
+  {
+    std::ofstream(path) << "/**:\n  ros__parameters:\n    sensor_model: VLP16\n"
+                           "    rotation_speed: 600\n    cut_angle: 1.5\n";
+  }
+  Params p;
+  p.load_yaml(path.string());
+  EXPECT_EQ(p.get_string("sensor_model", ""), "VLP16");
+  EXPECT_EQ(p.get_int("rotation_speed", 0), 600);
+  EXPECT_DOUBLE_EQ(p.get_double("cut_angle", 0), 1.5);
+  EXPECT_TRUE(p.has("cut_angle"));
+  EXPECT_FALSE(p.has("nope"));
+
+  {
+    std::ofstream(path) << "/some_node:\n  ros__parameters:\n    a: 1\n";
+  }
+  EXPECT_THROW(Params().load_yaml(path.string()), std::runtime_error);
+  std::filesystem::remove(path);
+  EXPECT_THROW(Params().load_yaml(path.string()), std::exception);
+}
+
+TEST(Params, FindPkgShare)
+{
+  Params p;
+  EXPECT_NE(p.substitute("$(find-pkg-share rclcpp)/x").find("rclcpp"), std::string::npos);
 }
