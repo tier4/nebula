@@ -129,8 +129,13 @@ void Vlp32Decoder::reset_overflow(double time_stamp)
   overflow_pc_->reserve(max_pts_);
 }
 
-void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
+PacketDecodeStatus Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
 {
+  // Every fixed-offset access below assumes a full-size packet.
+  if (packet.size() != static_cast<size_t>(g_packet_size)) {
+    return PacketDecodeStatus::INVALID_PACKET_SIZE;
+  }
+
   check_and_handle_scan_complete(packet, packet_seconds, phase_);
 
   const raw_packet_t * raw = (const raw_packet_t *)packet.data();
@@ -380,6 +385,8 @@ void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
       }
     }
   }
+
+  return PacketDecodeStatus::OK;
 }
 
 bool Vlp32Decoder::parse_packet(

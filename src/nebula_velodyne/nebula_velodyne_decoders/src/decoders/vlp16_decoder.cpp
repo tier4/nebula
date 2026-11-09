@@ -132,8 +132,13 @@ void Vlp16Decoder::reset_overflow(double time_stamp)
   overflow_pc_->reserve(max_pts_);
 }
 
-void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
+PacketDecodeStatus Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
 {
+  // Every fixed-offset access below assumes a full-size packet.
+  if (packet.size() != static_cast<size_t>(g_packet_size)) {
+    return PacketDecodeStatus::INVALID_PACKET_SIZE;
+  }
+
   check_and_handle_scan_complete(packet, packet_seconds, phase_);
 
   const raw_packet_t * raw = (const raw_packet_t *)packet.data();
@@ -146,9 +151,7 @@ void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
     // Cache block for use.
     const raw_block_t & current_block = raw->blocks[block];
     if (g_upper_bank != raw->blocks[block].header) {
-      // Do not flood the log with messages, only issue at most one
-      // of these warnings per minute.
-      return;  // bad packet: skip the rest
+      return PacketDecodeStatus::INVALID_BLOCK_HEADER;  // bad packet: skip the rest
     }
 
     float azimuth_diff;
@@ -325,6 +328,8 @@ void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
       }
     }
   }
+
+  return PacketDecodeStatus::OK;
 }
 
 bool Vlp16Decoder::parse_packet(
