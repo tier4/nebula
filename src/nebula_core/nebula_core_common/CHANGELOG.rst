@@ -2,6 +2,13 @@
 Changelog for package nebula_core_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (2026-11-11)
+------------------
+* fix(common): replace deprecated std::is_pod_v with non-deprecated traits (`#492 <https://github.com/tier4/nebula/issues/492>`_)
+  std::is_pod_v is deprecated since C++20. PointCloud and the PCD reader/writer now use a new
+  is_pod_like_v<T> trait (standard layout, trivially copyable and trivially default-constructible).
+* Contributors: Max Schmeller
+
 1.3.1 (2026-10-15)
 ------------------
 
