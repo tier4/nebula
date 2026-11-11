@@ -96,6 +96,13 @@ private:
 
   std::array<DecodeFrame, 2> frame_buffers_{initialize_frame(), initialize_frame()};
 
+  /// @brief Whether the packet is a fault message (SOP 0xCDDC). Some sensors (e.g. the AT128P)
+  /// send these to the data port alongside point cloud packets.
+  static bool is_fault_message(const std::vector<uint8_t> & packet)
+  {
+    return packet.size() >= 2 && packet[0] == 0xCD && packet[1] == 0xDC;
+  }
+
   /// @brief Validates and parse PandarPacket. Checks size and, if present, CRC checksums.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
@@ -365,6 +372,10 @@ public:
     util::Stopwatch decode_watch;
     callback_time_ns_ = 0;
     did_scan_complete_ = false;
+
+    if (is_fault_message(packet)) {
+      return {PerformanceCounters{decode_watch.elapsed_ns()}, DecodeError::PACKET_IGNORED};
+    }
 
     if (!parse_packet(packet)) {
       return {PerformanceCounters{decode_watch.elapsed_ns()}, DecodeError::PACKET_PARSE_FAILED};
