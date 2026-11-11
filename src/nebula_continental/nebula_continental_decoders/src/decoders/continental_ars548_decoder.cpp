@@ -115,7 +115,7 @@ bool ContinentalARS548Decoder::process_packet(
     parse_detections_list_packet(*packet_msg);
   } else if (header.method_id.value() == object_list_method_id) {
     if (
-      data.size() == object_list_udp_payload_common ||
+      data.size() == object_list_udp_payload_common &&
       header.length.value() == object_list_pdu_length_common) {
       parse_objects_list_packet(*packet_msg, max_objects_common);
     } else if (
@@ -291,8 +291,20 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
 
   ObjectListPacket object_list;
 
-  // Header part
   const size_t header_part_size = offsetof(ObjectListPacket, objects);
+  const size_t required_size = header_part_size + max_objects * sizeof(ObjectPacket);
+  if (packet_msg.data.size() < required_size) {
+    if (!short_object_list_warned_) {
+      short_object_list_warned_ = true;
+      NEBULA_LOG_STREAM(
+        logger_->error, "Object list packet too short: got "
+                          << packet_msg.data.size() << " bytes, need at least " << required_size
+                          << " bytes. Skipping.");
+    }
+    return false;
+  }
+
+  // Header part
   std::memcpy(reinterpret_cast<void *>(&object_list), packet_msg.data.data(), header_part_size);
 
   // Objects list part
