@@ -12,21 +12,56 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <nebula_core_common/util/string_conversions.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
+
+namespace
+{
+
 using nebula::drivers::get_scan_rate_hz;
 using nebula::drivers::SensorModel;
 
-TEST(TestHesaiScanRate, RotatingSensorsOutputOneScanPerRotation)
+struct ScanRateTestParams
 {
-  EXPECT_DOUBLE_EQ(get_scan_rate_hz(SensorModel::HESAI_PANDAR128_E4X, 600), 10.0);
-  EXPECT_DOUBLE_EQ(get_scan_rate_hz(SensorModel::HESAI_PANDARQT128, 1200), 20.0);
+  SensorModel sensor_model;
+  /// The rotation speed at which the sensor outputs scans at 10 Hz
+  uint16_t rpm_at_10_hz;
+};
+
+class ScanRateTest : public testing::TestWithParam<ScanRateTestParams>
+{
+};
+
+TEST_P(ScanRateTest, ScanRateMatchesRotationSpeed)
+{
+  const auto & [sensor_model, rpm_at_10_hz] = GetParam();
+
+  EXPECT_DOUBLE_EQ(get_scan_rate_hz(sensor_model, rpm_at_10_hz), 10.0);
+  EXPECT_DOUBLE_EQ(get_scan_rate_hz(sensor_model, static_cast<uint16_t>(2 * rpm_at_10_hz)), 20.0);
 }
 
-TEST(TestHesaiScanRate, AT128OutputsOneScanPerMirrorFace)
-{
-  EXPECT_DOUBLE_EQ(get_scan_rate_hz(SensorModel::HESAI_PANDARAT128, 200), 10.0);
-  EXPECT_DOUBLE_EQ(get_scan_rate_hz(SensorModel::HESAI_PANDARAT128, 400), 20.0);
-}
+// All Hesai sensors output one scan per rotation, except for the AT128, which outputs one scan per
+// face of its three-sided mirror
+INSTANTIATE_TEST_SUITE_P(
+  TestHesaiScanRate, ScanRateTest,
+  testing::Values(
+    ScanRateTestParams{SensorModel::HESAI_PANDAR64, 600},
+    ScanRateTestParams{SensorModel::HESAI_PANDAR40P, 600},
+    ScanRateTestParams{SensorModel::HESAI_PANDAR40M, 600},
+    ScanRateTestParams{SensorModel::HESAI_PANDARQT64, 600},
+    ScanRateTestParams{SensorModel::HESAI_PANDARQT128, 600},
+    ScanRateTestParams{SensorModel::HESAI_PANDARXT16, 600},
+    ScanRateTestParams{SensorModel::HESAI_PANDARXT32, 600},
+    ScanRateTestParams{SensorModel::HESAI_PANDARXT32M, 600},
+    ScanRateTestParams{SensorModel::HESAI_PANDARAT128, 200},
+    ScanRateTestParams{SensorModel::HESAI_PANDAR128_E3X, 600},
+    ScanRateTestParams{SensorModel::HESAI_PANDAR128_E4X, 600}),
+  [](const testing::TestParamInfo<ScanRateTestParams> & info) {
+    return nebula::util::to_string(info.param.sensor_model);
+  });
+
+}  // namespace
