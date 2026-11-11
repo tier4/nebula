@@ -63,15 +63,16 @@ Vlp32Decoder::Vlp32Decoder(
 std::tuple<drivers::NebulaPointCloudPtr, double> Vlp32Decoder::get_pointcloud()
 {
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
-  if (!scan_pc_->empty()) {
-    auto current_azimuth = scan_pc_->back().azimuth;
-    auto phase_diff = (2 * M_PI + current_azimuth - phase);
-    while (phase_diff < M_PI_2 && !scan_pc_->empty()) {
-      overflow_pc_->push_back(scan_pc_->back());
-      scan_pc_->pop_back();
-      current_azimuth = scan_pc_->back().azimuth;
-      phase_diff = (2 * M_PI + current_azimuth - phase);
+  // Move the trailing points that already belong to the next scan to the overflow buffer.
+  // The scan may consist only of such points, so the emptiness check must come before back().
+  while (!scan_pc_->empty()) {
+    const auto current_azimuth = scan_pc_->back().azimuth;
+    const auto phase_diff = (2 * M_PI + current_azimuth - phase);
+    if (phase_diff >= M_PI_2) {
+      break;
     }
+    overflow_pc_->push_back(scan_pc_->back());
+    scan_pc_->pop_back();
   }
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
