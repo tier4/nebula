@@ -2,6 +2,23 @@
 Changelog for package nebula_velodyne
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (2026-11-11)
+------------------
+* fix(nebula_velodyne): bound azimuth lookups to the table size (`#511 <https://github.com/tier4/nebula/issues/511>`_)
+  The VLP32 decoder indexed the 36000-entry azimuth table with the raw 16-bit wire azimuth, which
+  crafted packets could push past the end of the table. All three decoders now share the table and
+  look it up through an azimuth_rad() helper that wraps the index.
+* fix(nebula_velodyne): do not read past the start of an emptied scan buffer (`#510 <https://github.com/tier4/nebula/issues/510>`_)
+  get_pointcloud() called back() on the scan buffer without re-checking for emptiness, so a scan
+  made up only of points just after the scan phase, which crafted packets can produce, read before
+  the start of the buffer.
+* fix(nebula_velodyne): validate packet size before decoding (`#506 <https://github.com/tier4/nebula/issues/506>`_)
+  Fixes CVE-2026-74238 / GHSA-7rjx-37vw-389j: the VLP16, VLP32 and VLS128 decoders read fixed
+  offsets of a 1206-byte packet without checking the received size. unpack() now returns a
+  PacketDecodeStatus and rejects packets that are not exactly 1206 bytes; the driver drops them
+  with a throttled error.
+* Contributors: Max Schmeller
+
 1.3.1 (2026-10-15)
 ------------------
 

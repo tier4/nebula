@@ -2,6 +2,21 @@
 Changelog for package nebula_continental
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (2026-11-11)
+------------------
+* fix(nebula_continental): reject truncated ARS548 object list packets (`#505 <https://github.com/tier4/nebula/issues/505>`_)
+  Fixes GHSA-vfxx-jpg9-gqcp: a common-format object list packet whose PDU length matched but whose
+  payload was short was read out of bounds. Both the payload size and the PDU length must now match,
+  and parse_objects_list_packet() also rejects packets too short for the maximum object count.
+* refactor(nebula_continental): inject a logger into the ARS548 decoder (`#515 <https://github.com/tier4/nebula/issues/515>`_)
+  ContinentalARS548Decoder takes a loggers::Logger instead of calling rclcpp logging macros, so
+  several decoder instances in one process log independently. Code constructing the decoder
+  directly now has to pass a logger.
+* fix(nebula_continental): guard SRR520 CAN id read against short packets (`#507 <https://github.com/tier4/nebula/issues/507>`_)
+  process_packet() read the 4-byte CAN message ID before checking the packet size, so replayed
+  NebulaPacket messages shorter than that were read out of bounds.
+* Contributors: Max Schmeller
+
 1.3.1 (2026-10-15)
 ------------------
 * fix(nebula_continental): use agnocast_wrapper TF listener in ARS548 set_sensor_mounting (`#499 <https://github.com/tier4/nebula/issues/499>`_)
