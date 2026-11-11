@@ -48,8 +48,10 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
+  const double scan_rate_hz =
+    drivers::get_scan_rate_hz(sensor_cfg_ptr_->sensor_model, sensor_cfg_ptr_->rotation_speed);
   diagnostic_updater_functional_safety_.setPeriod(
-    std::chrono::duration<double>(1.0 / drivers::rpm2hz(sensor_cfg_ptr_->rotation_speed)));
+    std::chrono::duration<double>(1.0 / scan_rate_hz));
 
   diagnostic_updater_general_.setHardwareID(sensor_cfg_ptr_->frame_id);
   diagnostic_updater_functional_safety_.setHardwareID(sensor_cfg_ptr_->frame_id);

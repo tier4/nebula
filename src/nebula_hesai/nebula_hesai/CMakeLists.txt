@@ -90,6 +90,11 @@ if(BUILD_TESTING)
   target_link_libraries(test_hesai_fault_message
                         nebula_hesai_decoders::nebula_hesai_decoders)
 
+  # Scan rate test
+  ament_add_gtest(test_hesai_scan_rate tests/test_hesai_scan_rate.cpp)
+  target_link_libraries(test_hesai_scan_rate
+                        nebula_hesai_common::nebula_hesai_common)
+
   # Functional safety test
   ament_add_gtest(test_hesai_functional_safety
                   tests/test_hesai_functional_safety.cpp)

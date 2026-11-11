@@ -44,7 +44,8 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   parent_node_(*parent_node),
   sensor_cfg_(config),
   calibration_cfg_ptr_(calibration),
-  publish_diagnostic_(make_rate_bound_status(sensor_cfg_->rotation_speed, *parent_node)),
+  publish_diagnostic_(
+    make_rate_bound_status(sensor_cfg_->sensor_model, sensor_cfg_->rotation_speed, *parent_node)),
   debug_publisher_(parent_node, "nebula")
 {
   if (!sensor_cfg_) {
