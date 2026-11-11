@@ -39,7 +39,7 @@ jobs:
           persist-credentials: false
 
       - name: Run json-schema-check
-        uses: autowarefoundation/autoware-github-actions/json-schema-check@v1.69.1
+        uses: autowarefoundation/autoware-github-actions/json-schema-check@59d62f3c051a826a79db12b91811e5dc422d6409
 
   no-relevant-changes:
     needs: check-if-relevant-files-changed
