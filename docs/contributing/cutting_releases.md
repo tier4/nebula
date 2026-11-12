@@ -9,8 +9,9 @@ icon: lucide/rocket
 
 Release rules at one glance:
 
-* Releases are always cut from the `main` branch.
-* Nebula follows [Semantic Versioning](https://semver.org/).
+* Releases are cut from the `main` branch, except for [backport releases](#backport-releases).
+* Nebula follows [Semantic Versioning](https://semver.org/). Its public API is the ROS 2 interface:
+  node names, topics, services, parameters, launch arguments and message definitions.
 * Version tags are prefixed with `v`, e.g. `v1.2.3`.
 * The tag `vX.Y.Z` must point at a commit where every `package.xml` has version `X.Y.Z`. Bloom
   reads the release version from the `package.xml` files at that tag.
@@ -77,6 +78,8 @@ for every release:
     As per the semantic versioning rules, the major/minor/patch version should be bumped based
     on the type of changes in the release. Please familiarize yourself with [Semantic Versioning](https://semver.org/),
     and ensure the version is bumped correctly in accordance with the changes in the release.
+    Only breaking changes to the ROS 2 interface require a major version bump. Breaking changes to
+    the C++ API, e.g. a decoder constructor taking a new argument, are released as a minor version.
 
 ## ROS 2 Releases
 
@@ -103,5 +106,26 @@ as follows:
     Time-sensitive users can install from the `ros2-testing` repository (see
     [Testing with Pre-release Binaries](https://docs.ros.org/en/humble/Installation/Testing.html)),
     or add Nebula to their `build_depends.repos` and do a source build.
+
+## Backport Releases
+
+Nebula does not backport fixes by default. Only when a consumer cannot upgrade because of breaking
+changes are fixes backported to a `release-<major>.<minor>` branch, e.g. `release-1.1`, and
+backport releases cut from there:
+
+1. If the branch does not exist yet, create it from the latest release of that version:
+
+    ```shell
+    git switch -c release-X.Y vX.Y.Z
+    git push -u origin release-X.Y
+    ```
+
+2. Backport the required fixes from `main` to `release-X.Y` through pull requests.
+3. Follow the [Release Process](#release-process) with `release-X.Y` in place of `main`: base the
+   release branch on `origin/release-X.Y` and open the release pull request against it
+   (`gh pr create --base release-X.Y`). Only bump the patch version.
+4. Skip `bloom-release`. Rosdistro holds a single Nebula version per ROS 2 distribution, which is
+   the latest release from `main`, so backport releases are only published as tags and GitHub
+   releases.
 
 <!-- prettier-ignore-end -->
