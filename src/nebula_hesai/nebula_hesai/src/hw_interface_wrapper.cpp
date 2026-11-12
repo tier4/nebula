@@ -144,15 +144,23 @@ void HesaiHwInterfaceWrapper::configure_lidar_range(
   const int attempts = retry_hw_ ? g_hw_config_max_attempts : 1;
   for (int attempt = 1; attempt <= attempts; ++attempt) {
     try {
+      // Temporary: grep "[ptc-fix]". attempt 2+ after a Timeout means the write was retried
+      // instead of exiting the process.
+      RCLCPP_INFO_STREAM(
+        logger_,
+        "[ptc-fix] setting padded FoV (attempt " << attempt << "/" << attempts << ")");
       const auto status = hw_interface_->check_and_set_lidar_range(*lidar_calibration_);
       if (status != Status::OK) {
         throw std::runtime_error("Could not set sensor FoV: " + util::to_string(status));
       }
+      RCLCPP_INFO_STREAM(
+        logger_, "[ptc-fix] padded FoV set (attempt " << attempt << "/" << attempts << ")");
       return;
     } catch (const std::exception & e) {
       RCLCPP_ERROR_STREAM(
         logger_,
-        "Could not set sensor FoV (attempt " << attempt << "/" << attempts << "): " << e.what());
+        "[ptc-fix] Could not set sensor FoV (attempt " << attempt << "/" << attempts
+                                                       << "): " << e.what());
     }
     if (attempt < attempts) {
       std::this_thread::sleep_for(g_hw_retry_delay);

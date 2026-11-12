@@ -147,6 +147,13 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
     return left.count() > 0 ? left : std::chrono::milliseconds::zero();
   };
   const auto timed_out = [&remaining]() { return remaining().count() <= 0; };
+  // Temporary: grep "[ptc-fix]" to see a PTC call return instead of wedging the diagnostics worker.
+  const auto log_abort = [&](const std::string & reason) {
+    std::ostringstream ss;
+    ss << "[ptc-fix] PTC command 0x" << std::hex << std::uppercase << static_cast<int>(command_id)
+       << " returned: " << reason;
+    logger_->warn(ss.str());
+  };
 
   try {
     tcp_socket_->send(send_buf, remaining());
@@ -168,12 +175,17 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
     }
 
     if (header_bytes.size() < 8 || timed_out()) {
+      std::ostringstream why;
+      why << "1s deadline during header, got " << header_bytes.size() << "/8, empty reads "
+          << retry_count;
+      log_abort(why.str());
       tcp_socket_.reset();
       return ptc_error_t{g_tcp_error_timeout, 0};
     }
 
     if (
       header_bytes[0] != g_ptc_command_header_high || header_bytes[1] != g_ptc_command_header_low) {
+      log_abort("header is not 0x47 0x74");
       tcp_socket_.reset();
       return ptc_error_t{g_tcp_error_timeout, 0};
     }
@@ -185,6 +197,9 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
       (header_bytes[4] << 24) | (header_bytes[5] << 16) | (header_bytes[6] << 8) | header_bytes[7];
 
     if (payload_len > max_payload_bytes) {
+      std::ostringstream why;
+      why << "payload length " << payload_len << " exceeds 256KB";
+      log_abort(why.str());
       tcp_socket_.reset();
       return ptc_error_t{g_tcp_error_timeout, 0};
     }
@@ -221,6 +236,10 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
     }
 
     if (timed_out() && bytes_received < payload_len) {
+      std::ostringstream why;
+      why << "1s deadline during payload, got " << bytes_received << "/" << payload_len
+          << ", empty reads " << retry_count;
+      log_abort(why.str());
       tcp_socket_.reset();
       return ptc_error_t{g_tcp_error_timeout, 0};
     }
@@ -243,6 +262,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
     const bool send_timeout = std::string_view(error.what()) == "Send timeout";
     tcp_socket_.reset();
     if (send_timeout || timed_out()) {
+      log_abort(send_timeout ? "send did not finish within 1s" : error.what());
       return ptc_error_t{g_tcp_error_timeout, 0};
     }
     return ptc_error_t{0, g_ptc_error_code_server_conn_failed};
