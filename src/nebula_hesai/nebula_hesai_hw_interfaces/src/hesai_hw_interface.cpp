@@ -10,13 +10,16 @@
 #include "nebula_hesai_common/hesai_status.hpp"
 #include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cstddef>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -131,17 +134,31 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
   send_buf.emplace_back(len & 0xff);
   send_buf.insert(send_buf.end(), payload.begin(), payload.end());
 
+  // One deadline for the whole command. A peer that trickles bytes never increments the
+  // empty-read counter, and a blocking send() otherwise never returns. Either one leaves the
+  // diagnostics worker stuck with no error log.
+  constexpr auto io_timeout = std::chrono::milliseconds(1000);
+  constexpr size_t max_payload_bytes = 256 * 1024;
+  constexpr size_t read_chunk_bytes = 4096;
+  const auto deadline = std::chrono::steady_clock::now() + io_timeout;
+  const auto remaining = [&deadline]() {
+    const auto left = std::chrono::duration_cast<std::chrono::milliseconds>(
+      deadline - std::chrono::steady_clock::now());
+    return left.count() > 0 ? left : std::chrono::milliseconds::zero();
+  };
+  const auto timed_out = [&remaining]() { return remaining().count() <= 0; };
+
   try {
-    tcp_socket_->send(send_buf);
+    tcp_socket_->send(send_buf, remaining());
 
     // Receive Header (8 bytes)
     std::vector<uint8_t> header_bytes;
     size_t bytes_received = 0;
     int retry_count = 0;
-    while (bytes_received < 8 && retry_count < 100) {
-      std::vector<uint8_t> chunk;
-
-      chunk = tcp_socket_->receive(8 - bytes_received, std::chrono::milliseconds(10));
+    while (bytes_received < 8 && retry_count < 100 && !timed_out()) {
+      const auto wait = std::min(std::chrono::milliseconds(10), remaining());
+      if (wait.count() <= 0) break;
+      std::vector<uint8_t> chunk = tcp_socket_->receive(8 - bytes_received, wait);
       if (chunk.empty()) {
         retry_count++;
         continue;
@@ -150,7 +167,13 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
       bytes_received += chunk.size();
     }
 
-    if (header_bytes.size() < 8) {
+    if (header_bytes.size() < 8 || timed_out()) {
+      tcp_socket_.reset();
+      return ptc_error_t{g_tcp_error_timeout, 0};
+    }
+
+    if (
+      header_bytes[0] != g_ptc_command_header_high || header_bytes[1] != g_ptc_command_header_low) {
       tcp_socket_.reset();
       return ptc_error_t{g_tcp_error_timeout, 0};
     }
@@ -160,6 +183,11 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
 
     size_t payload_len =
       (header_bytes[4] << 24) | (header_bytes[5] << 16) | (header_bytes[6] << 8) | header_bytes[7];
+
+    if (payload_len > max_payload_bytes) {
+      tcp_socket_.reset();
+      return ptc_error_t{g_tcp_error_timeout, 0};
+    }
 
     if (header_bytes[2] != command_id) {
       error_code.error_flags |= g_tcp_error_unrelated_response;
@@ -175,19 +203,26 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
       return std::vector<uint8_t>();
     }
 
-    // Receive Payload
+    // Receive Payload. Ask for at most one chunk so a hostile length cannot allocate up front.
     std::vector<uint8_t> recv_buf;
     bytes_received = 0;
     retry_count = 0;
-    while (bytes_received < payload_len && retry_count < 100) {  // 1000ms timeout approx
-      std::vector<uint8_t> chunk =
-        tcp_socket_->receive(payload_len - bytes_received, std::chrono::milliseconds(10));
+    while (bytes_received < payload_len && retry_count < 100 && !timed_out()) {
+      const auto wait = std::min(std::chrono::milliseconds(10), remaining());
+      if (wait.count() <= 0) break;
+      const auto slice = std::min(payload_len - bytes_received, read_chunk_bytes);
+      std::vector<uint8_t> chunk = tcp_socket_->receive(slice, wait);
       if (chunk.empty()) {
         retry_count++;
         continue;
       }
       recv_buf.insert(recv_buf.end(), chunk.begin(), chunk.end());
       bytes_received += chunk.size();
+    }
+
+    if (timed_out() && bytes_received < payload_len) {
+      tcp_socket_.reset();
+      return ptc_error_t{g_tcp_error_timeout, 0};
     }
 
     // Check payload completeness?
@@ -203,9 +238,13 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
       return error_code;
     }
     return recv_buf;
-  } catch (const connections::SocketError &) {
+  } catch (const connections::SocketError & error) {
     // If socket failed, reset it so next call tries to reconnect
+    const bool send_timeout = std::string_view(error.what()) == "Send timeout";
     tcp_socket_.reset();
+    if (send_timeout || timed_out()) {
+      return ptc_error_t{g_tcp_error_timeout, 0};
+    }
     return ptc_error_t{0, g_ptc_error_code_server_conn_failed};
   }
 }
