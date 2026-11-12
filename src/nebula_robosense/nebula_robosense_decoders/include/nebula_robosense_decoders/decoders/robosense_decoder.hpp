@@ -18,8 +18,9 @@
 #include "nebula_robosense_decoders/decoders/robosense_packet.hpp"
 #include "nebula_robosense_decoders/decoders/robosense_scan_decoder.hpp"
 
-#include <rclcpp/rclcpp.hpp>
+#include <nebula_core_common/loggers/logger.hpp>
 
+#include <cstring>
 #include <memory>
 #include <tuple>
 #include <utility>
@@ -56,7 +57,7 @@ protected:
   /// @brief Whether a full scan has been processed
   bool has_scanned_;
 
-  rclcpp::Logger logger_;
+  std::shared_ptr<loggers::Logger> logger_;
 
   /// @brief Validates and parses MsopPacket. Currently only checks size, not checksums etc.
   /// @param msop_packet The incoming MsopPacket
@@ -64,16 +65,16 @@ protected:
   bool parse_packet(const std::vector<uint8_t> & msop_packet)
   {
     if (msop_packet.size() < sizeof(typename SensorT::packet_t)) {
-      RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch: " << msop_packet.size() << " | Expected at least: "
-                                          << sizeof(typename SensorT::packet_t));
+      NEBULA_LOG_STREAM(
+        logger_->error, "Packet size mismatch: " << msop_packet.size() << " | Expected at least: "
+                                                 << sizeof(typename SensorT::packet_t));
       return false;
     }
     if (std::memcpy(&packet_, msop_packet.data(), sizeof(typename SensorT::packet_t))) {
       return true;
     }
 
-    RCLCPP_ERROR(logger_, "Packet memcopy failed");
+    logger_->error("Packet memcopy failed");
     return false;
   }
 
@@ -203,15 +204,16 @@ public:
   /// @param sensor_configuration SensorConfiguration for this decoder
   /// @param calibration_configuration Calibration for this decoder
   /// calibration_configuration is set)
+  /// @param logger Logger used by this decoder
   explicit RobosenseDecoder(
     const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_configuration)
+    const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_configuration,
+    const std::shared_ptr<loggers::Logger> & logger)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(calibration_configuration),
-    logger_(rclcpp::get_logger("RobosenseDecoder"))
+    logger_(logger)
   {
-    logger_.set_level(rclcpp::Logger::Level::Debug);
-    RCLCPP_INFO_STREAM(logger_, sensor_configuration_);
+    NEBULA_LOG_STREAM(logger_->info, *sensor_configuration_);
 
     decode_pc_.reset(new NebulaPointCloud);
     output_pc_.reset(new NebulaPointCloud);
