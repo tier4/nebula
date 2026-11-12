@@ -271,17 +271,15 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
 {
   if (nebula::drivers::continental_ars548::is_corner_radar(radar_status_.yaw)) {
     if (radar_status_.sw_version_minor != sw_version_minor_corner_radar) {
-      if (auto log = logger_->once()) {
-        NEBULA_LOG_STREAM(
-          log.warn,
-          "Tried to parse an object list packet from a corner radar, but the required software "
-          "version is X."
-            << sw_version_minor_corner_radar << ".Z. The connected radar firmware version is "
-            << static_cast<int>(radar_status_.sw_version_major) << "."
-            << static_cast<int>(radar_status_.sw_version_minor) << "."
-            << static_cast<int>(radar_status_.sw_version_patch)
-            << ". The object list will be skipped.");
-      }
+      NEBULA_LOG_STREAM(
+        logger_->once().warn,
+        "Tried to parse an object list packet from a corner radar, but the required software "
+        "version is X."
+          << sw_version_minor_corner_radar << ".Z. The connected radar firmware version is "
+          << static_cast<int>(radar_status_.sw_version_major) << "."
+          << static_cast<int>(radar_status_.sw_version_minor) << "."
+          << static_cast<int>(radar_status_.sw_version_patch)
+          << ". The object list will be skipped.");
       return true;
     }
   }
@@ -294,12 +292,10 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
   const size_t header_part_size = offsetof(ObjectListPacket, objects);
   const size_t required_size = header_part_size + max_objects * sizeof(ObjectPacket);
   if (packet_msg.data.size() < required_size) {
-    if (auto log = logger_->throttled(std::chrono::seconds(5))) {
-      NEBULA_LOG_STREAM(
-        log.error, "Object list packet too short: got " << packet_msg.data.size()
-                                                        << " bytes, need at least " << required_size
-                                                        << " bytes. Skipping.");
-    }
+    NEBULA_LOG_STREAM(
+      logger_->throttled(std::chrono::seconds(5)).error,
+      "Object list packet too short: got " << packet_msg.data.size() << " bytes, need at least "
+                                           << required_size << " bytes. Skipping.");
     return false;
   }
 

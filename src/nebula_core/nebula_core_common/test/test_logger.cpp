@@ -160,15 +160,36 @@ TEST(Logger, FilteredViewTellsWhetherItForwards)
   EXPECT_EQ(logger.messages, std::vector<std::string>{"WARN value 0"});
 }
 
-TEST(Logger, FilteredViewWorksWithStreamMacro)
+TEST(Logger, StreamMacroDoesNotBuildDroppedMessages)
 {
   RecordingLogger logger;
+  int n_formatted = 0;
+  auto count_formatting = [&n_formatted](int value) {
+    ++n_formatted;
+    return value;
+  };
 
   for (int i = 0; i < 3; ++i) {
-    NEBULA_LOG_STREAM(logger.throttled(1s).error, "value " << i);
+    NEBULA_LOG_STREAM(logger.throttled(1s).error, "value " << count_formatting(i));
+    NEBULA_LOG_STREAM(logger.once().warn, "value " << count_formatting(i));
   }
 
-  EXPECT_EQ(logger.messages, std::vector<std::string>{"ERROR value 0"});
+  EXPECT_EQ(n_formatted, 2);
+  EXPECT_EQ(logger.messages, (std::vector<std::string>{"ERROR value 0", "WARN value 0"}));
+}
+
+TEST(Logger, StreamMacroWorksWithUnfilteredLogger)
+{
+  RecordingLogger logger;
+  std::shared_ptr<Logger> logger_ptr = std::make_shared<RecordingLogger>();
+
+  NEBULA_LOG_STREAM(logger.info, "value " << 1);
+  NEBULA_LOG_STREAM(logger_ptr->error, "value " << 2);
+
+  EXPECT_EQ(logger.messages, std::vector<std::string>{"INFO value 1"});
+  EXPECT_EQ(
+    std::static_pointer_cast<RecordingLogger>(logger_ptr)->messages,
+    std::vector<std::string>{"ERROR value 2"});
 }
 
 }  // namespace nebula::drivers::loggers

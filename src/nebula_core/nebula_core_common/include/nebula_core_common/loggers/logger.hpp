@@ -24,28 +24,53 @@
 #include <string_view>
 #include <utility>
 
-#define NEBULA_LOG_STREAM(log_func, stream_args) \
-  {                                              \
-    std::stringstream ss{};                      \
-    ss << stream_args;                           \
-    log_func(ss.str());                          \
+/// @brief Log a message built with stream operators, e.g.
+/// `NEBULA_LOG_STREAM(logger->warn, "Got " << n << " bytes")`.
+/// @details The message is only built if it is logged. With `Logger::throttled` and
+/// `Logger::once`, `stream_args` is not evaluated for dropped messages.
+#define NEBULA_LOG_STREAM(log_func, stream_args)                     \
+  {                                                                  \
+    log_func(::nebula::drivers::loggers::detail::LazyMessage{[&]() { \
+      std::stringstream ss{};                                        \
+      ss << stream_args;                                             \
+      return ss.str();                                               \
+    }});                                                             \
   }
 
 namespace nebula::drivers::loggers
 {
 
+namespace detail
+{
+
+/// @brief A message that is only built when converted to a string.
+/// @details Used by `NEBULA_LOG_STREAM`. Logging functions that take a string build the message
+/// right away through the implicit conversion. `Logger::Filtered` takes the `LazyMessage` itself
+/// and only builds the message if it is not dropped.
+template <typename MakeMessageT>
+struct LazyMessage
+{
+  MakeMessageT make_message;
+
+  operator std::string() const { return make_message(); }  // NOLINT(runtime/explicit)
+};
+
+template <typename MakeMessageT>
+LazyMessage(MakeMessageT) -> LazyMessage<MakeMessageT>;
+
+}  // namespace detail
+
 class Logger
 {
 public:
   /// @brief A view of a logger that either forwards or drops messages.
-  /// @details Returned by `Logger::throttled` and `Logger::once`. It converts to `true` if messages
-  /// are forwarded, so expensive messages can be skipped entirely:
+  /// @details Returned by `Logger::throttled` and `Logger::once`. With `NEBULA_LOG_STREAM`, dropped
+  /// messages are not built:
   /// ```c++
-  /// if (auto log = logger->throttled(5s)) {
-  ///   NEBULA_LOG_STREAM(log.warn, "Expensive to format: " << value);
-  /// }
+  /// NEBULA_LOG_STREAM(logger->throttled(5s).warn, "Expensive to format: " << value);
   /// ```
-  /// The view must not outlive the logger it was created from.
+  /// The view converts to `true` if messages are forwarded, in case other work depends on it. It
+  /// must not outlive the logger it was created from.
   class Filtered
   {
   public:
@@ -64,6 +89,27 @@ public:
     void error(const std::string & message) const
     {
       if (target_) target_->error(message);
+    }
+
+    template <typename MakeMessageT>
+    void debug(const detail::LazyMessage<MakeMessageT> & message) const
+    {
+      if (target_) target_->debug(message.make_message());
+    }
+    template <typename MakeMessageT>
+    void info(const detail::LazyMessage<MakeMessageT> & message) const
+    {
+      if (target_) target_->info(message.make_message());
+    }
+    template <typename MakeMessageT>
+    void warn(const detail::LazyMessage<MakeMessageT> & message) const
+    {
+      if (target_) target_->warn(message.make_message());
+    }
+    template <typename MakeMessageT>
+    void error(const detail::LazyMessage<MakeMessageT> & message) const
+    {
+      if (target_) target_->error(message.make_message());
     }
 
     /// @brief Whether messages logged through this view are forwarded to the logger.
