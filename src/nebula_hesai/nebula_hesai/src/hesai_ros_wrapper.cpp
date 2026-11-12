@@ -91,11 +91,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDAR64;
 
   if (hw_interface_wrapper_ && !use_udp_only && lidar_range_supported) {
-    auto status =
-      hw_interface_wrapper_->hw_interface()->check_and_set_lidar_range(*calibration_result.value());
-    if (status != Status::OK) {
-      throw std::runtime_error("Could not set sensor FoV: " + util::to_string(status));
-    }
+    hw_interface_wrapper_->configure_lidar_range(calibration_result.value());
   }
 
   decoder_wrapper_.emplace(
@@ -105,10 +101,9 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
   if (launch_hw_) {
-    hw_interface_wrapper_->hw_interface()->register_scan_callback(
-      std::bind(
-        &HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
-        std::placeholders::_2));
+    hw_interface_wrapper_->hw_interface()->register_scan_callback(std::bind(
+      &HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
+      std::placeholders::_2));
     stream_start();
   } else {
     const std::string packets_topic = "pandar_packets";

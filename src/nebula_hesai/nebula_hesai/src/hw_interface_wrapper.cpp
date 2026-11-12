@@ -32,10 +32,9 @@ constexpr int g_hw_config_max_attempts = 5;
 HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   nebula::agnocast_wrapper::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config, bool use_udp_only)
-: hw_interface_(
-    std::make_shared<drivers::HesaiHwInterface>(
-      drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"),
-      make_cie_thread_factory("nebula_hesai_udp_receiver@" + config->frame_id))),
+: hw_interface_(std::make_shared<drivers::HesaiHwInterface>(
+    drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"),
+    make_cie_thread_factory("nebula_hesai_udp_receiver@" + config->frame_id))),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
   use_udp_only_(use_udp_only)
@@ -100,6 +99,9 @@ void HesaiHwInterfaceWrapper::on_config_change(
     // sensor partially reconfigured rather than at either the old or the new configuration.
     try {
       configure_sensor();
+      if (lidar_calibration_) {
+        configure_lidar_range(lidar_calibration_);
+      }
     } catch (const std::exception & e) {
       RCLCPP_ERROR_STREAM(
         logger_,
@@ -133,6 +135,32 @@ void HesaiHwInterfaceWrapper::configure_sensor()
 
   throw std::runtime_error(
     "Could not configure sensor after " + std::to_string(attempts) + " attempt(s)");
+}
+
+void HesaiHwInterfaceWrapper::configure_lidar_range(
+  const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration)
+{
+  lidar_calibration_ = calibration;
+  const int attempts = retry_hw_ ? g_hw_config_max_attempts : 1;
+  for (int attempt = 1; attempt <= attempts; ++attempt) {
+    try {
+      const auto status = hw_interface_->check_and_set_lidar_range(*lidar_calibration_);
+      if (status != Status::OK) {
+        throw std::runtime_error("Could not set sensor FoV: " + util::to_string(status));
+      }
+      return;
+    } catch (const std::exception & e) {
+      RCLCPP_ERROR_STREAM(
+        logger_,
+        "Could not set sensor FoV (attempt " << attempt << "/" << attempts << "): " << e.what());
+    }
+    if (attempt < attempts) {
+      std::this_thread::sleep_for(g_hw_retry_delay);
+    }
+  }
+
+  throw std::runtime_error(
+    "Could not set sensor FoV after " + std::to_string(attempts) + " attempt(s)");
 }
 
 Status HesaiHwInterfaceWrapper::status()

@@ -1230,19 +1230,14 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
 #endif
   //*
   // g_ptc_command_set_lidar_range
-  bool set_flg = false;
-  if (hesai_lidar_range_all.method != 0) {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    logger_->debug(
-      "current hesai_lidar_range_all.method: " + std::to_string(hesai_lidar_range_all.method));
-#endif
-    set_flg = true;
-  } else {
+  // The padded FoV is written once by HesaiHwInterfaceWrapper::configure_lidar_range, which
+  // retries a timeout. Writing the unpadded range here as well makes the sensor ignore the
+  // following padded write.
+  if (hesai_lidar_range_all.method == 0) {
     auto current_cloud_min_angle_ddeg = hesai_lidar_range_all.start;
     if (
       static_cast<int>(sensor_configuration->cloud_min_angle * 10) !=
       current_cloud_min_angle_ddeg.value()) {
-      set_flg = true;
       logger_->info(
         "current lidar range.start: " +
         std::to_string(static_cast<int>(current_cloud_min_angle_ddeg.value())));
@@ -1255,7 +1250,6 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
     if (
       static_cast<int>(sensor_configuration->cloud_max_angle * 10) !=
       current_cloud_max_angle_ddeg.value()) {
-      set_flg = true;
       logger_->info(
         "current lidar range.end: " +
         std::to_string(static_cast<int>(current_cloud_max_angle_ddeg.value())));
@@ -1263,12 +1257,6 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
         "current configuration cloud_max_angle: " +
         std::to_string(sensor_configuration->cloud_max_angle));
     }
-  }
-
-  if (set_flg) {
-    set_lidar_range(
-      static_cast<int>(sensor_configuration->cloud_min_angle * 10),
-      static_cast<int>(sensor_configuration->cloud_max_angle * 10));
   }
 
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
