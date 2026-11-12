@@ -15,8 +15,10 @@
 #include "nebula_sample/sample_ros_wrapper.hpp"
 
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_ros/diagnostics/diagnostic_task.hpp>
 #include <nebula_core_ros/parameter_descriptors.hpp>
 #include <nebula_core_ros/point_cloud_conversions.hpp>
+#include <nebula_core_ros/rclcpp_clock.hpp>
 #include <nebula_sample_common/sample_configuration.hpp>
 #include <nebula_sample_hw_interfaces/sample_hw_interface.hpp>
 #include <rcl_interfaces/msg/parameter_descriptor.hpp>
@@ -286,18 +288,16 @@ void SampleRosWrapper::initialize_diagnostics()
   }
   const auto packet_liveness_timeout = std::chrono::milliseconds(packet_liveness_timeout_ms);
 
+  const auto clock = make_diagnostics_clock(*this);
   diagnostics_.publish_rate.emplace(
-    this, custom_diagnostic_tasks::RateBoundStatusParam{min_ok_hz, max_ok_hz},
-    custom_diagnostic_tasks::RateBoundStatusParam{min_warn_hz, max_warn_hz},
+    clock, diagnostics::RateBoundStatusParam{min_ok_hz, max_ok_hz},
+    diagnostics::RateBoundStatusParam{min_warn_hz, max_warn_hz},
     std::max<size_t>(1, num_frame_transition), false, true, "pointcloud publish rate");
-  diagnostics_.packet_liveness.emplace(
-    "packet_receive", this,
-    rclcpp::Duration::from_seconds(
-      std::chrono::duration<double, std::milli>(packet_liveness_timeout).count() * 1e-3));
+  diagnostics_.packet_liveness.emplace("packet_receive", clock, packet_liveness_timeout);
 
   diagnostics_.updater.setHardwareID(frame_id_);
-  diagnostics_.updater.add(diagnostics_.publish_rate.value());
-  diagnostics_.updater.add(diagnostics_.packet_liveness.value());
+  add_diagnostic_task(diagnostics_.updater, diagnostics_.publish_rate.value());
+  add_diagnostic_task(diagnostics_.updater, diagnostics_.packet_liveness.value());
   diagnostics_.updater.force_update();
 }
 

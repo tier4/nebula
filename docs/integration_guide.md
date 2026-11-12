@@ -224,6 +224,8 @@ those modules still log into ROS 2.
 
 - Diagnostic task helpers used across Nebula (e.g., `RateBoundStatus`, `LivenessMonitor`)
 - Consistent patterns for publish-rate and liveness monitoring
+- Tasks that do not depend on ROS 2: they take an injected clock and are registered with a
+  `diagnostic_updater` via `add_diagnostic_task`
 
 **Usage**:
 
@@ -357,8 +359,8 @@ Order of operations:
 
 Required diagnostic information:
 
-- Publish rate: Use `custom_diagnostic_tasks::RateBoundStatus`
-- Liveness: Use `nebula::ros::LivenessMonitor`
+- Publish rate: Use `nebula::diagnostics::RateBoundStatus`
+- Liveness: Use `nebula::diagnostics::LivenessMonitor`
 - Debug timings: Publish receive/decode/publish durations for profiling
 
 ## Verification

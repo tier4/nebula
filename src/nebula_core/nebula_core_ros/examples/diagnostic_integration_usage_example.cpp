@@ -13,24 +13,29 @@
 // limitations under the License.
 
 // # --8<-- [start:include]
-#include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
-#include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
+#include "nebula_core_ros/diagnostics/diagnostic_task.hpp"
+#include "nebula_core_ros/rclcpp_clock.hpp"
+
+#include <nebula_core_common/diagnostics/liveness_monitor.hpp>
+#include <nebula_core_common/diagnostics/rate_bound_status.hpp>
 // # --8<-- [end:include]
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <rclcpp/duration.hpp>
+#include <nebula_core_common/util/clock.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <memory>
 
 namespace nebula::ros::examples
 {
 
-using custom_diagnostic_tasks::RateBoundStatus;
-using custom_diagnostic_tasks::RateBoundStatusParam;
+using diagnostics::LivenessMonitor;
+using diagnostics::RateBoundStatus;
+using diagnostics::RateBoundStatusParam;
 using std::chrono_literals::operator""ms;
 
 // # --8<-- [start:usage]
@@ -39,8 +44,8 @@ class MyNode : public rclcpp::Node
 public:
   MyNode() : Node("diagnostic_integration_usage_example")
   {
-    updater_.add(publish_rate_diag_);
-    updater_.add(liveness_diag_);
+    add_diagnostic_task(updater_, publish_rate_diag_);
+    add_diagnostic_task(updater_, liveness_diag_);
   }
 
   void on_packet_received(const std::array<uint8_t, 1500> & packet)
@@ -55,9 +60,10 @@ public:
 
 private:
   diagnostic_updater::Updater updater_{this, 0.1};
+  std::shared_ptr<const util::Clock> clock_{make_diagnostics_clock(*this)};
   RateBoundStatus publish_rate_diag_{
-    this, RateBoundStatusParam{9, 11}, RateBoundStatusParam{8, 12}};
-  LivenessMonitor liveness_diag_{"packet_receive", this, 10ms};
+    clock_, RateBoundStatusParam{9, 11}, RateBoundStatusParam{8, 12}};
+  LivenessMonitor liveness_diag_{"packet_receive", clock_, 10ms};
 };
 // # --8<-- [end:usage]
 

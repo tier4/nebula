@@ -14,23 +14,19 @@
 
 #pragma once
 
-#include <diagnostic_updater/diagnostic_status_wrapper.hpp>
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <rclcpp/clock.hpp>
-#include <rclcpp/duration.hpp>
-#include <rclcpp/node.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp/time.hpp>
+#include "nebula_core_common/diagnostics/diagnostic_task.hpp"
+#include "nebula_core_common/util/clock.hpp"
+
 #include <rcpputils/thread_safety_annotations.hpp>
 
-#include <diagnostic_msgs/msg/diagnostic_status.hpp>
-
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 
-namespace nebula::ros
+namespace nebula::diagnostics
 {
 
 /**
@@ -39,7 +35,7 @@ namespace nebula::ros
  * This can be used for getting notified when a certain routine gets stuck, e.g. when packets stop
  * arriving or when pointclouds stop being published.
  */
-class LivenessMonitor : public diagnostic_updater::DiagnosticTask
+class LivenessMonitor : public DiagnosticTask
 {
 public:
   /**
@@ -49,26 +45,14 @@ public:
    * is no call for a length of `timeout`, the routine is declared dead.
    *
    * @param name The name of the task
-   * @param parent_node The node from which clock type and parameters are read.
+   * @param clock The clock that `timeout` is measured on
    * @param timeout The time after the last call to `tick()` where the routine is declared dead
    */
-  template <typename NodeT>
   LivenessMonitor(
-    const std::string & name, const NodeT * parent_node, const rclcpp::Duration & timeout)
-  : DiagnosticTask(name), timeout_(timeout)
+    const std::string & name, std::shared_ptr<const util::Clock> clock,
+    std::chrono::nanoseconds timeout)
+  : DiagnosticTask(name), clock_(std::move(clock)), timeout_(timeout), last_tick_(clock_->now())
   {
-    // select clock according to the use_sim_time paramter set to the parent
-    bool use_sim_time = false;
-    if (parent_node->has_parameter("use_sim_time")) {
-      use_sim_time = parent_node->get_parameter("use_sim_time").as_bool();
-    }
-    if (use_sim_time) {
-      clock_ = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
-    } else {
-      clock_ = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
-    }
-
-    last_tick_ = clock_->now();
   }
 
   /**
@@ -83,16 +67,13 @@ public:
     last_tick_ = clock_->now();
   }
 
-private:
-  void run(diagnostic_updater::DiagnosticStatusWrapper & status) override
+  void run(DiagnosticStatus & status) override
   {
     std::lock_guard lock(mutex_);
 
-    rclcpp::Time now = clock_->now();
-    rclcpp::Duration lateness = now - last_tick_;
-    bool is_live = lateness < timeout_;
+    const std::chrono::nanoseconds lateness = clock_->now() - last_tick_;
+    const bool is_live = lateness < timeout_;
 
-    using diagnostic_msgs::msg::DiagnosticStatus;
     uint8_t severity = DiagnosticStatus::OK;
     std::string message = "Alive";
     std::string value = "true";
@@ -103,17 +84,21 @@ private:
       value = "false";
     }
 
-    status.summary(severity, message);
-    status.add("Is alive", value);
-    status.add("Last tick [s]", std::to_string(last_tick_.seconds()));
-    status.add("Lateness [ms]", std::to_string(lateness.seconds() * 1000));
+    using seconds = std::chrono::duration<double>;
+    using milliseconds = std::chrono::duration<double, std::milli>;
+
+    set_summary(status, severity, message);
+    add_value(status, "Is alive", value);
+    add_value(status, "Last tick [s]", std::to_string(seconds(last_tick_).count()));
+    add_value(status, "Lateness [ms]", std::to_string(milliseconds(lateness).count()));
   }
 
-  rclcpp::Clock::SharedPtr clock_;
-  rclcpp::Duration timeout_;
+private:
+  std::shared_ptr<const util::Clock> clock_;
+  std::chrono::nanoseconds timeout_;
 
   std::mutex mutex_;
-  rclcpp::Time last_tick_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::chrono::nanoseconds last_tick_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 };
 
-}  // namespace nebula::ros
+}  // namespace nebula::diagnostics

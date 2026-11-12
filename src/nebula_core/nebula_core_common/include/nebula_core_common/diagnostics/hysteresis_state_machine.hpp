@@ -14,17 +14,17 @@
 
 // Copied from https://github.com/tier4/ros2_v4l2_camera/pull/37
 
-#ifndef NEBULA_CORE_ROS__DIAGNOSTICS__HYSTERESIS_STATE_MACHINE_HPP_
-#define NEBULA_CORE_ROS__DIAGNOSTICS__HYSTERESIS_STATE_MACHINE_HPP_
-
-#include <tracetools/utils.hpp>
+#ifndef NEBULA_CORE_COMMON__DIAGNOSTICS__HYSTERESIS_STATE_MACHINE_HPP_
+#define NEBULA_CORE_COMMON__DIAGNOSTICS__HYSTERESIS_STATE_MACHINE_HPP_
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
+#include <cstddef>
+#include <stdexcept>
 #include <string>
 #include <variant>
 
-namespace custom_diagnostic_tasks
+namespace nebula::diagnostics
 {
 using DiagnosticStatus_t = unsigned char;
 
@@ -59,7 +59,7 @@ struct Error : public StateBase
 
 using StateHolder = std::variant<Stale, Ok, Warn, Error>;
 
-static inline StateHolder generate_state(const DiagnosticStatus_t & state)
+inline StateHolder generate_state(const DiagnosticStatus_t & state)
 {
   switch (state) {
     case diagnostic_msgs::msg::DiagnosticStatus::STALE:
@@ -75,7 +75,7 @@ static inline StateHolder generate_state(const DiagnosticStatus_t & state)
   }
 }
 
-static std::string get_level_string(DiagnosticStatus_t level)
+inline std::string get_level_string(DiagnosticStatus_t level)
 {
   switch (level) {
     case diagnostic_msgs::msg::DiagnosticStatus::OK:
@@ -91,12 +91,12 @@ static std::string get_level_string(DiagnosticStatus_t level)
   }
 }
 
-static DiagnosticStatus_t get_level(const StateHolder & state)
+inline DiagnosticStatus_t get_level(const StateHolder & state)
 {
   return std::visit([](const auto & s) { return s.level; }, state);
 }
 
-static size_t get_num_observations(const StateHolder & state)
+inline size_t get_num_observations(const StateHolder & state)
 {
   return std::visit([](const auto & s) { return s.num_observations; }, state);
 }
@@ -190,6 +190,6 @@ protected:
   StateHolder current_state_;
 };  // class HysteresisStateMachine
 
-}  // namespace custom_diagnostic_tasks
+}  // namespace nebula::diagnostics
 
-#endif  // NEBULA_CORE_ROS__DIAGNOSTICS__HYSTERESIS_STATE_MACHINE_HPP_
+#endif  // NEBULA_CORE_COMMON__DIAGNOSTICS__HYSTERESIS_STATE_MACHINE_HPP_

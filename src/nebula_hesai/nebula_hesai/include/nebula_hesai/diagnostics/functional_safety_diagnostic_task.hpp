@@ -14,11 +14,10 @@
 
 #pragma once
 
-#include "nebula_core_ros/agnocast_wrapper/node.hpp"
-#include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
-#include "nebula_core_ros/diagnostics/severity_latch.hpp"
-
-#include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_core_common/diagnostics/diagnostic_task.hpp>
+#include <nebula_core_common/diagnostics/liveness_monitor.hpp>
+#include <nebula_core_common/diagnostics/severity_latch.hpp>
+#include <nebula_core_common/util/clock.hpp>
 #include <nebula_hesai_decoders/decoders/functional_safety.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
@@ -105,21 +104,21 @@ public:
     diagnostic_msgs::msg::DiagnosticStatus & inout_status) = 0;
 };
 
-class FunctionalSafetyDiagnosticTask : public diagnostic_updater::CompositeDiagnosticTask
+class FunctionalSafetyDiagnosticTask : public diagnostics::CompositeDiagnosticTask
 {
 public:
   explicit FunctionalSafetyDiagnosticTask(
-    nebula::agnocast_wrapper::Node * const parent_node,
+    const std::shared_ptr<const util::Clock> & clock,
     std::unique_ptr<FunctionalSafetyStatusProcessor> status_processor)
   : CompositeDiagnosticTask("Functional safety status"),
-    liveness_monitor_("Liveness", parent_node, 100ms),
+    liveness_monitor_("Liveness", clock, 100ms),
     status_latch_("Status"),
     stuck_latch_("Sensor functional safety system operation status"),
     status_processor_(std::move(status_processor))
   {
-    addTask(&liveness_monitor_);
-    addTask(&status_latch_);
-    addTask(&stuck_latch_);
+    add_task(liveness_monitor_);
+    add_task(status_latch_);
+    add_task(stuck_latch_);
   }
 
   void on_status(
@@ -149,9 +148,9 @@ public:
   }
 
 private:
-  LivenessMonitor liveness_monitor_;
-  SeverityLatch status_latch_;
-  SeverityLatch stuck_latch_;
+  diagnostics::LivenessMonitor liveness_monitor_;
+  diagnostics::SeverityLatch status_latch_;
+  diagnostics::SeverityLatch stuck_latch_;
   std::unique_ptr<FunctionalSafetyStatusProcessor> status_processor_;
 };
 

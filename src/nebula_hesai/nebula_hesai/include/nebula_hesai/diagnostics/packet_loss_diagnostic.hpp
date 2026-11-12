@@ -14,22 +14,26 @@
 
 #pragma once
 
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_hesai_decoders/decoders/functional_safety.hpp>
+#include <nebula_core_common/diagnostics/diagnostic_task.hpp>
+#include <nebula_core_common/util/clock.hpp>
 #include <rcpputils/thread_safety_annotations.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
+#include <chrono>
+#include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
 #include <utility>
 
 namespace nebula::ros
 {
 
-class PacketLossDiagnosticTask : public diagnostic_updater::DiagnosticTask
+class PacketLossDiagnosticTask : public diagnostics::DiagnosticTask
 {
 public:
-  PacketLossDiagnosticTask(uint64_t error_threshold, rclcpp::Clock::SharedPtr clock)
+  PacketLossDiagnosticTask(uint64_t error_threshold, std::shared_ptr<const util::Clock> clock)
   : DiagnosticTask("Packet loss status"),
     clock_(std::move(clock)),
     last_run_time_(clock_->now()),
@@ -43,7 +47,7 @@ public:
     n_lost_packets_ += n_lost;
   }
 
-  void run(diagnostic_updater::DiagnosticStatusWrapper & status) override
+  void run(diagnostics::DiagnosticStatus & status) override
   {
     std::lock_guard lock(mutex_);
 
@@ -51,24 +55,29 @@ public:
     const auto dt = now - last_run_time_;
     last_run_time_ = now;
 
-    status.add("Lost packets", n_lost_packets_);
-    status.add("Error threshold", error_threshold_);
-    status.add("Time since last update [s]", std::to_string(dt.seconds()));
+    using seconds = std::chrono::duration<double>;
+    diagnostics::add_value(status, "Lost packets", n_lost_packets_);
+    diagnostics::add_value(status, "Error threshold", error_threshold_);
+    diagnostics::add_value(
+      status, "Time since last update [s]", std::to_string(seconds(dt).count()));
 
     if (n_lost_packets_ == 0) {
-      status.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "No packet loss");
+      diagnostics::set_summary(
+        status, diagnostic_msgs::msg::DiagnosticStatus::OK, "No packet loss");
     } else if (n_lost_packets_ < error_threshold_) {
-      status.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Slight packet loss");
+      diagnostics::set_summary(
+        status, diagnostic_msgs::msg::DiagnosticStatus::WARN, "Slight packet loss");
     } else {
-      status.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Severe packet loss");
+      diagnostics::set_summary(
+        status, diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Severe packet loss");
     }
 
     n_lost_packets_ = 0;
   }
 
 private:
-  rclcpp::Clock::SharedPtr clock_;
-  rclcpp::Time last_run_time_;
+  std::shared_ptr<const util::Clock> clock_;
+  std::chrono::nanoseconds last_run_time_;
   uint64_t error_threshold_;
 
   std::mutex mutex_;
