@@ -19,7 +19,7 @@ target_include_directories(
 target_link_libraries(
   nebula_continental_decoders
   PUBLIC nebula_core_common::nebula_core_common
-         nebula_continental_common::nebula_continental_common rclcpp::rclcpp
+         nebula_continental_common::nebula_continental_common
          Boost::headers)
 
 ament_target_dependencies(nebula_continental_decoders PUBLIC continental_msgs
@@ -33,6 +33,6 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_continental_decoders)
 
 ament_export_dependencies(Boost continental_msgs diagnostic_msgs nebula_core_common
-                          nebula_continental_common nebula_msgs rclcpp)
+                          nebula_continental_common nebula_msgs)
 
 ament_package()
