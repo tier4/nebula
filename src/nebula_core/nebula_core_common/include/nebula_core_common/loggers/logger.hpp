@@ -106,11 +106,13 @@ public:
     if (is_first_call) {
       return Filtered(this);
     }
-    if (now_ns - it->second < period_ns) {
+
+    auto & last_passed_ns = it->second;
+    if (now_ns - last_passed_ns < period_ns) {
       return Filtered(nullptr);
     }
 
-    it->second = now_ns;
+    last_passed_ns = now_ns;
     return Filtered(this);
   }
 
