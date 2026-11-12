@@ -620,7 +620,6 @@ inline ReturnMode return_mode_from_string_hesai(
     case SensorModel::HESAI_PANDARXT16:
     case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
-    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
       if (return_mode == "Last") return ReturnMode::LAST;
@@ -662,7 +661,6 @@ inline ReturnMode return_mode_from_int_hesai(
     case SensorModel::HESAI_PANDARXT16:
     case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
-    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
       if (return_mode == 0) return ReturnMode::LAST;
@@ -702,7 +700,6 @@ inline int int_from_return_mode_hesai(
     case SensorModel::HESAI_PANDARXT16:
     case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
-    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
       if (return_mode == ReturnMode::LAST) return 0;
@@ -754,7 +751,6 @@ inline bool supports_lidar_monitor(const SensorModel & sensor_model)
 inline bool supports_functional_safety(const SensorModel & sensor_model)
 {
   switch (sensor_model) {
-    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
       return true;
@@ -774,7 +770,6 @@ inline bool supports_packet_loss_detection(const SensorModel & sensor_model)
     case SensorModel::HESAI_PANDAR40M:
     case SensorModel::HESAI_PANDARQT128:
     case SensorModel::HESAI_PANDARAT128:
-    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
       return true;
     default:

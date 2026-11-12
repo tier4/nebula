@@ -1183,9 +1183,7 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
       g_ptp_sync_interval, g_ptp_log_min_delay_interval);
   }
 
-  if (
-    sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR128_E3X ||
-    sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
+  if (sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
     auto hires_currently_enabled = get_high_resolution_mode();
 
     if (hires_currently_enabled != sensor_configuration->hires_mode) {
@@ -1376,8 +1374,6 @@ int HesaiHwInterface::nebula_model_to_hesai_model_no(nebula::drivers::SensorMode
       return 32;
     case SensorModel::HESAI_PANDARXT32M:
       return 38;
-    case SensorModel::HESAI_PANDAR128_E3X:  // check required
-      return 40;
     case SensorModel::HESAI_PANDAR128_E4X:  // OT128
       return 42;
     case SensorModel::HESAI_PANDARAT128:
