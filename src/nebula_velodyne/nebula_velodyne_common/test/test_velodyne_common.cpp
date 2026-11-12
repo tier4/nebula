@@ -308,9 +308,8 @@ lasers:
 TEST(VelodyneCommonTest, CalibrationConfigurationSaveReportsUnwritableOutputPath)
 {
   const auto input_file = make_temp_file_path("nebula_velodyne_calibration_write_input");
-  const auto missing_directory =
-    std::filesystem::temp_directory_path() /
-    ("nebula_velodyne_missing_dir_" + std::to_string(getpid()));
+  const auto missing_directory = std::filesystem::temp_directory_path() /
+                                 ("nebula_velodyne_missing_dir_" + std::to_string(getpid()));
   const auto output_file = missing_directory / "calibration.yaml";
   const auto * const calibration_yaml = R"(num_lasers: 1
 distance_resolution: 0.004
