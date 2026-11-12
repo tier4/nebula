@@ -18,8 +18,6 @@
 #include <nebula_core_common/loggers/console_logger.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/point_types.hpp>
-#include <png++/gray_pixel.hpp>
-#include <png++/image.hpp>
 
 #include <gtest/gtest.h>
 
@@ -29,6 +27,7 @@
 #include <filesystem>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -45,6 +44,7 @@ TEST(TestDownsampleMask, TestDithering)
 {
   using nebula::drivers::point_filters::g_default_dither_transform;
   using nebula::drivers::point_filters::impl::dither;
+  using nebula::drivers::point_filters::impl::GrayImage;
 
   size_t quantization_levels = 10;
   size_t w = 10;
@@ -56,8 +56,8 @@ TEST(TestDownsampleMask, TestDithering)
     auto image_path = downsample_mask_path() / ("q" + std::to_string(quantile) + ".png");
     ASSERT_TRUE(std::filesystem::is_regular_file(image_path));
 
-    png::image<png::gray_pixel> in{image_path};
-    png::image<png::gray_pixel> out{in.get_width(), in.get_height()};
+    auto in = GrayImage::read(image_path);
+    GrayImage out{in.get_width(), in.get_height()};
     dither(in, out, quantization_levels, g_default_dither_transform);
 
     size_t n_kept = 0;
@@ -132,6 +132,40 @@ TEST(TestDownsampleMask, TestFilter)
   EXPECT_EQ(azi_kept_max, azi_range_mdeg.end - 1);
   EXPECT_EQ(channel_kept_min, 0);
   EXPECT_EQ(channel_kept_max, n_channels - 1);
+}
+
+TEST(TestDownsampleMask, TestImageRoundTrip)
+{
+  using nebula::drivers::point_filters::impl::GrayImage;
+
+  auto path = std::filesystem::temp_directory_path() / "nebula_test_downsample_mask_round_trip.png";
+
+  GrayImage out{3, 2};
+  for (size_t y = 0; y < out.get_height(); ++y) {
+    for (size_t x = 0; x < out.get_width(); ++x) {
+      out.set_pixel(x, y, static_cast<uint8_t>(50 * (y * out.get_width() + x)));
+    }
+  }
+  out.write(path);
+
+  auto in = GrayImage::read(path);
+  std::filesystem::remove(path);
+
+  ASSERT_EQ(in.get_width(), out.get_width());
+  ASSERT_EQ(in.get_height(), out.get_height());
+  for (size_t y = 0; y < out.get_height(); ++y) {
+    for (size_t x = 0; x < out.get_width(); ++x) {
+      EXPECT_EQ(in.get_pixel(x, y), out.get_pixel(x, y));
+    }
+  }
+}
+
+TEST(TestDownsampleMask, TestImageReadFailure)
+{
+  using nebula::drivers::point_filters::impl::GrayImage;
+
+  EXPECT_THROW(GrayImage::read(downsample_mask_path() / "does_not_exist.png"), std::runtime_error);
+  EXPECT_THROW(GrayImage::read(__FILE__), std::runtime_error);
 }
 
 int main(int argc, char ** argv)
