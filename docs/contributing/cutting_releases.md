@@ -2,6 +2,7 @@
 icon: lucide/rocket
 ---
 
+<!-- cspell:ignore rosrpm -->
 <!-- prettier-ignore-start -->
 
 # Cutting Releases
