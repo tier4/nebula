@@ -1,6 +1,6 @@
 // Copyright 2026 TIER IV, Inc.
 
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/can.hpp"
+#include "nebula_core_hw_interfaces/connections/can.hpp"
 
 #include <gtest/gtest.h>
 

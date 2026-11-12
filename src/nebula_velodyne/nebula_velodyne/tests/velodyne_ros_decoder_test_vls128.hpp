@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_VelodyneRosDecoderTestVls128_H
-#define NEBULA_VelodyneRosDecoderTestVls128_H
+#ifndef NEBULA_VELODYNE__NEBULA_VELODYNE__TESTS__VELODYNE_ROS_DECODER_TEST_VLS128_HPP_
+#define NEBULA_VELODYNE__NEBULA_VELODYNE__TESTS__VELODYNE_ROS_DECODER_TEST_VLS128_HPP_
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_core_common/nebula_common.hpp>
@@ -29,12 +29,14 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace nebula::ros
 {
 class VelodyneRosDecoderTest final : public rclcpp::Node
 {
   std::shared_ptr<drivers::VelodyneDriver> driver_ptr_;
+  std::shared_ptr<drivers::VelodyneScanDecoder> decoder_ptr_;
   Status wrapper_status_;
 
   std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_cfg_ptr_;
@@ -62,6 +64,18 @@ public:
   Status get_status();
   void read_bag();
 
+  /// @brief Feed a raw packet to the driver (used for malformed-packet tests)
+  auto parse_cloud_packet(const std::vector<uint8_t> & packet, double packet_seconds)
+  {
+    return driver_ptr_->parse_cloud_packet(packet, packet_seconds);
+  }
+
+  /// @brief Feed a raw packet directly to the decoder (used for malformed-packet tests)
+  drivers::PacketDecodeStatus unpack(const std::vector<uint8_t> & packet, double packet_seconds)
+  {
+    return decoder_ptr_->unpack(packet, packet_seconds);
+  }
+
 private:
   std::string bag_path_;
   std::string storage_id_;
@@ -72,4 +86,4 @@ private:
 
 }  // namespace nebula::ros
 
-#endif  // NEBULA_VelodyneRosDecoderTestVls128_H
+#endif  // NEBULA_VELODYNE__NEBULA_VELODYNE__TESTS__VELODYNE_ROS_DECODER_TEST_VLS128_HPP_

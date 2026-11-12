@@ -1,0 +1,31 @@
+autoware_system_design_format: 0.3.0
+
+name: NebulaArs548.node
+
+package:
+  name: nebula_continental
+  provider: nebula
+
+launch:
+  plugin: nebula::ros::ContinentalARS548RosWrapper
+  executable: continental_ars548_ros_wrapper_node
+  node_output: screen
+
+# interfaces
+subscribers: []
+publishers: []
+
+# parameters
+param_files:
+  - name: config_file
+    default: config/ARS548.param.yaml
+    schema: schema/ARS548.schema.json
+    allow_substs: true
+
+param_values:
+  - name: launch_hw
+    type: bool
+    default: true
+
+# processes
+processes: []

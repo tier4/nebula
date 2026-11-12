@@ -1,0 +1,4037 @@
+header:
+  stamp:
+    sec: 1764575091
+    nanosec: 239386000
+  frame_id: some_object_frame
+stamp_sync_status: 1
+objects:
+  - object_id: 18301
+    age: 20999
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: -0.137640
+      y: 9.25095
+      z: 0.759574
+    position_std:
+      x: 0.176685
+      y: 0.0407807
+      z: 0.126110
+    position_covariance_xy: 0.00169535
+    orientation: 0.0204063
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.00104910
+      y: -0.000530683
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.102000
+      y: 0.0667732
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00139489
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.51423
+      y: 2.50549
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.102000
+      y: 0.0667732
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 3.25641
+    shape_width_edge_mean: 0.0472634
+  - object_id: 21003
+    age: 21300
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: 31.8130
+      y: 25.7616
+      z: 1.61683
+    position_std:
+      x: 0.0565789
+      y: 0.174112
+      z: 0.241474
+    position_covariance_xy: -0.00611471
+    orientation: -1.41240
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00588608
+      y: -0.0135952
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0728680
+      y: 0.0971999
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00223768
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.63940
+      y: 2.65346
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0728680
+      y: 0.0971999
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 3.60046
+    shape_width_edge_mean: 0.228728
+  - object_id: 14400
+    age: 7402
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 3
+    position:
+      x: 38.0664
+      y: 134.544
+      z: 7.83200
+    position_std:
+      x: 0.312117
+      y: 0.142672
+      z: 1.35966
+    position_covariance_xy: -0.0219636
+    orientation: -0.837659
+    orientation_std: 1.12274
+    raw_existence_probability: 1.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 14
+    absolute_velocity:
+      x: -0.0757867
+      y: 0.0660857
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.141436
+      y: 0.0917059
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00328311
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 4.91216
+      y: 2.73570
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.141436
+      y: 0.0917059
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.491209
+    shape_width_edge_mean: 0.484596
+  - object_id: 19504
+    age: 21899
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 36.0481
+      y: 47.2332
+      z: 7.15763
+    position_std:
+      x: 0.177496
+      y: 0.0586282
+      z: 0.271469
+    position_covariance_xy: -4.16820e-05
+    orientation: 0.0901837
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00741738
+      y: -0.00657529
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0976845
+      y: 0.0743959
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00161684
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.90392
+      y: 2.74278
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0976845
+      y: 0.0743959
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 6.19497
+    shape_width_edge_mean: 0.261967
+  - object_id: 12661
+    age: 18802
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 3
+    position:
+      x: 3.60996
+      y: 3.13996
+      z: 0.558626
+    position_std:
+      x: 0.0907027
+      y: 0.0719052
+      z: 0.143806
+    position_covariance_xy: -0.000309585
+    orientation: -0.159566
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.000167212
+      y: 0.000227399
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0922972
+      y: 0.0719652
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.000337901
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.50131
+      y: 2.50001
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0922972
+      y: 0.0719652
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.872646
+    shape_width_edge_mean: 0.349058
+  - object_id: 11105
+    age: 18299
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 13.3239
+      y: 40.9000
+      z: 1.55543
+    position_std:
+      x: 0.102289
+      y: 0.0779551
+      z: 0.320193
+    position_covariance_xy: 0.000753802
+    orientation: 0.947016
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.0201411
+      y: -0.00354982
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0938856
+      y: 0.0731847
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.000582720
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.80754
+      y: 2.52067
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0938856
+      y: 0.0731847
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.519768
+    shape_width_edge_mean: 0.238932
+  - object_id: 19529
+    age: 13102
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: 41.3287
+      y: 148.078
+      z: 14.5159
+    position_std:
+      x: 0.238848
+      y: 0.167432
+      z: 0.794009
+    position_covariance_xy: -0.0115052
+    orientation: -1.52351
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00588925
+      y: 0.0245552
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.126144
+      y: 0.0814819
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00268074
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 5.28509
+      y: 2.77496
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.126144
+      y: 0.0814819
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.789777
+    shape_width_edge_mean: 0.542305
+  - object_id: 2420
+    age: 13403
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 3
+    position:
+      x: -30.4022
+      y: 136.325
+      z: 1.33081
+    position_std:
+      x: 0.296670
+      y: 0.0997522
+      z: 0.595305
+    position_covariance_xy: 0.0206971
+    orientation: -0.396125
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00644440
+      y: -0.000348812
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.135950
+      y: 0.0768605
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00333451
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 4.96491
+      y: 2.71823
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.135950
+      y: 0.0768605
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.222828
+    shape_width_edge_mean: 0.222821
+  - object_id: 1802
+    age: 12299
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 14.9818
+      y: 28.8252
+      z: 1.34317
+    position_std:
+      x: 0.0985946
+      y: 0.0756703
+      z: 0.386040
+    position_covariance_xy: -0.00201330
+    orientation: 0.402099
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.000100846
+      y: 0.000563242
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0931113
+      y: 0.0755850
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00148997
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.65316
+      y: 2.52723
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0931113
+      y: 0.0755850
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.222864
+    shape_width_edge_mean: 0.222863
+  - object_id: 25235
+    age: 15101
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: -13.0180
+      y: 82.3810
+      z: 1.42262
+    position_std:
+      x: 0.275140
+      y: 0.0599127
+      z: 0.520523
+    position_covariance_xy: -0.000411853
+    orientation: -0.0694087
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.0190790
+      y: -0.00412715
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.128682
+      y: 0.0709191
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00126479
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.59559
+      y: 2.56300
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.128682
+      y: 0.0709191
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 2.96855
+    shape_width_edge_mean: 0.160199
+  - object_id: 1811
+    age: 20902
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 29.6737
+      y: 34.9233
+      z: 0.271877
+    position_std:
+      x: 0.119690
+      y: 0.103922
+      z: 0.585227
+    position_covariance_xy: -0.00662663
+    orientation: 1.18000
+    orientation_std: 3.14159
+    raw_existence_probability: 99.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 90
+    raw_classification_unknown: 10
+    absolute_velocity:
+      x: -0.00101933
+      y: -0.00348709
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0959603
+      y: 0.0877137
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00284716
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.72468
+      y: 2.63508
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0959603
+      y: 0.0877137
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.235712
+    shape_width_edge_mean: 0.235711
+  - object_id: 906
+    age: 12202
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 3
+    position:
+      x: -21.4956
+      y: 50.9527
+      z: 0.0479881
+    position_std:
+      x: 0.152324
+      y: 0.0995715
+      z: 0.669210
+    position_covariance_xy: 0.00869311
+    orientation: -0.316203
+    orientation_std: 1.68107
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 96
+    raw_classification_unknown: 4
+    absolute_velocity:
+      x: -0.0352691
+      y: -0.0199138
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.106429
+      y: 0.0827740
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00293039
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.96302
+      y: 2.62077
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.106429
+      y: 0.0827740
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.240459
+    shape_width_edge_mean: 0.240460
+  - object_id: 28537
+    age: 14099
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: -20.7826
+      y: 98.4003
+      z: 1.64669
+    position_std:
+      x: 0.118842
+      y: 0.0851727
+      z: 0.518107
+    position_covariance_xy: 0.00380184
+    orientation: 1.39980
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.00264365
+      y: -0.000635279
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0994417
+      y: 0.0749964
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00147585
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.98377
+      y: 2.61349
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0994417
+      y: 0.0749964
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 1.11249
+    shape_width_edge_mean: 0.527543
+  - object_id: 25210
+    age: 21203
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: 4.97605
+      y: 24.0437
+      z: 1.21081
+    position_std:
+      x: 0.0463113
+      y: 0.134879
+      z: 0.137746
+    position_covariance_xy: -0.00157344
+    orientation: -1.48614
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00260801
+      y: -0.00436097
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0729196
+      y: 0.0761001
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.000318524
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.62812
+      y: 2.50039
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0729196
+      y: 0.0761001
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 4.75042
+    shape_width_edge_mean: 0.415154
+  - object_id: 14713
+    age: 203
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: -3.73620
+      y: 43.8621
+      z: 0.906747
+    position_std:
+      x: 0.229557
+      y: 0.134163
+      z: 1.85157
+    position_covariance_xy: 0.00356052
+    orientation: -1.52767
+    orientation_std: 3.14159
+    raw_existence_probability: 98.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 20
+    raw_classification_unknown: 80
+    absolute_velocity:
+      x: 0.000722625
+      y: 0.00130811
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.422558
+      y: 0.153937
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.0196083
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.84894
+      y: 2.51013
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.422558
+      y: 0.153937
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.230798
+    shape_width_edge_mean: 0.230796
+  - object_id: 24912
+    age: 7301
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 51.9962
+      y: 80.1399
+      z: 13.2810
+    position_std:
+      x: 0.111293
+      y: 0.130273
+      z: 0.430079
+    position_covariance_xy: -0.00371945
+    orientation: 1.46429
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00139636
+      y: -0.0112006
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0953431
+      y: 0.0861582
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00243299
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.55093
+      y: 2.93534
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0953431
+      y: 0.0861582
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 1.10669
+    shape_width_edge_mean: 0.367650
+  - object_id: 9916
+    age: 15701
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 6.65976
+      y: 3.24000
+      z: -0.163765
+    position_std:
+      x: 0.122716
+      y: 0.0481104
+      z: 0.128197
+    position_covariance_xy: -0.000392596
+    orientation: 0.0124474
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00316252
+      y: 0.000139047
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0842923
+      y: 0.0737400
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.000729658
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.50125
+      y: 2.50508
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0842923
+      y: 0.0737400
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 3.53522
+    shape_width_edge_mean: 0.707044
+  - object_id: 718
+    age: 14302
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: -26.1557
+      y: 121.496
+      z: 1.51530
+    position_std:
+      x: 0.272062
+      y: 0.0952221
+      z: 0.764645
+    position_covariance_xy: 0.0169287
+    orientation: -1.19456
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00213697
+      y: -0.00103563
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.131898
+      y: 0.0763884
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00301379
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 4.56578
+      y: 2.66952
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.131898
+      y: 0.0763884
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.232313
+    shape_width_edge_mean: 0.232310
+  - object_id: 19839
+    age: 20602
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: 29.0634
+      y: 38.0040
+      z: 1.94073
+    position_std:
+      x: 0.0510387
+      y: 0.135318
+      z: 0.195872
+    position_covariance_xy: -0.00489005
+    orientation: -1.33274
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.00716571
+      y: 0.0139917
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0700345
+      y: 0.0856038
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00175304
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.81024
+      y: 2.62089
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0700345
+      y: 0.0856038
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 5.75970
+    shape_width_edge_mean: 0.143544
+  - object_id: 9909
+    age: 3700
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 31.3431
+      y: 93.6667
+      z: 1.52975
+    position_std:
+      x: 0.149789
+      y: 0.131625
+      z: 0.738088
+    position_covariance_xy: -0.00817957
+    orientation: 1.48165
+    orientation_std: 0.162027
+    raw_existence_probability: 98.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 84
+    raw_classification_unknown: 16
+    absolute_velocity:
+      x: 0.406308
+      y: -0.124662
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.123743
+      y: 0.0843672
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00318506
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.87360
+      y: 2.65382
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.123743
+      y: 0.0843672
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 1.14187
+    shape_width_edge_mean: 0.774488
+  - object_id: 9308
+    age: 22499
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: 2.15756
+      y: 19.6796
+      z: 1.14002
+    position_std:
+      x: 0.0798965
+      y: 0.128686
+      z: 0.168308
+    position_covariance_xy: -0.00441660
+    orientation: -1.26097
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.00878939
+      y: -0.000345383
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0854700
+      y: 0.0754054
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.000221741
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.58951
+      y: 2.50088
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0854700
+      y: 0.0754054
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 6.63610
+    shape_width_edge_mean: 0.963695
+  - object_id: 1614
+    age: 14399
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: -27.3938
+      y: 127.562
+      z: 3.36827
+    position_std:
+      x: 0.179393
+      y: 0.166387
+      z: 0.547818
+    position_covariance_xy: 0.00386217
+    orientation: -1.44006
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.00943590
+      y: -0.00200098
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.115698
+      y: 0.0796884
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00189081
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 4.74021
+      y: 2.68044
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.115698
+      y: 0.0796884
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 1.70218
+    shape_width_edge_mean: 0.954973
+  - object_id: 28514
+    age: 6899
+    status_measurement: 2
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 75.3358
+      y: 20.5958
+      z: 3.07371
+    position_std:
+      x: 0.114651
+      y: 0.177058
+      z: 0.547412
+    position_covariance_xy: -0.00591397
+    orientation: -0.0775480
+    orientation_std: 0.542634
+    raw_existence_probability: 5.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 5
+    raw_classification_unknown: 52
+    absolute_velocity:
+      x: -0.0579331
+      y: 0.155109
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0951309
+      y: 0.120123
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00164319
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.57584
+      y: 3.38906
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0951309
+      y: 0.120123
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.654364
+    shape_width_edge_mean: 0.631774
+  - object_id: 14417
+    age: 11201
+    status_measurement: 2
+    status_movement: 1
+    position_reference: 3
+    position:
+      x: -8.43137
+      y: 21.3072
+      z: 1.78039
+    position_std:
+      x: 0.0949164
+      y: 0.0860645
+      z: 0.438286
+    position_covariance_xy: 0.00136231
+    orientation: 0.00000
+    orientation_std: 3.14159
+    raw_existence_probability: 89.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 78
+    raw_classification_unknown: 22
+    absolute_velocity:
+      x: -0.00166349
+      y: 0.000985578
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0917362
+      y: 0.0822811
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00139905
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.58389
+      y: 2.52776
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0917362
+      y: 0.0822811
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.238174
+    shape_width_edge_mean: 0.238174
+  - object_id: 13218
+    age: 8801
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 3
+    position:
+      x: -50.0074
+      y: 229.920
+      z: 22.4814
+    position_std:
+      x: 0.553946
+      y: 0.282884
+      z: 2.20929
+    position_covariance_xy: 0.0559263
+    orientation: 0.225020
+    orientation_std: 3.14159
+    raw_existence_probability: 99.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 10
+    absolute_velocity:
+      x: -0.00806913
+      y: -0.00287677
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.167306
+      y: 0.0901495
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00488997
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 7.67020
+      y: 3.01660
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.167306
+      y: 0.0901495
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.227567
+    shape_width_edge_mean: 0.227569
+  - object_id: 29774
+    age: 13901
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: -42.9323
+      y: 198.982
+      z: 2.43891
+    position_std:
+      x: 0.332714
+      y: 0.163132
+      z: 1.26940
+    position_covariance_xy: 0.0241731
+    orientation: -1.54114
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 74
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.0237837
+      y: 0.0138715
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.140944
+      y: 0.0821890
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00335081
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 6.76060
+      y: 2.89771
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.140944
+      y: 0.0821890
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 1.08761
+    shape_width_edge_mean: 0.462693
+  - object_id: 27007
+    age: 899
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 48.8972
+      y: 48.6134
+      z: 4.97273
+    position_std:
+      x: 0.206325
+      y: 0.185847
+      z: 1.30684
+    position_covariance_xy: -0.00758626
+    orientation: 0.606393
+    orientation_std: 0.979620
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.0966672
+      y: -0.0803810
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.269652
+      y: 0.256588
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.0594114
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.92505
+      y: 2.88840
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.269652
+      y: 0.256588
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.652879
+    shape_width_edge_mean: 0.357310
+  - object_id: 7230
+    age: 13702
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: -44.6614
+      y: 201.917
+      z: 12.3046
+    position_std:
+      x: 0.399039
+      y: 0.137328
+      z: 0.828894
+    position_covariance_xy: 0.0356526
+    orientation: -0.579828
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.00215148
+      y: -0.000222470
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.150279
+      y: 0.0808597
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00407586
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 6.83638
+      y: 2.92762
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.150279
+      y: 0.0808597
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.221848
+    shape_width_edge_mean: 0.221838
+  - object_id: 12332
+    age: 20902
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 32.4061
+      y: 46.6021
+      z: 7.58004
+    position_std:
+      x: 0.0806222
+      y: 0.0758529
+      z: 0.365779
+    position_covariance_xy: -0.00122613
+    orientation: 1.46352
+    orientation_std: 2.27689
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.0324954
+      y: 0.00962477
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0861509
+      y: 0.0777517
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00139775
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.89314
+      y: 2.66344
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0861509
+      y: 0.0777517
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.584894
+    shape_width_edge_mean: 0.0673502
+  - object_id: 19815
+    age: 2002
+    status_measurement: 2
+    status_movement: 1
+    position_reference: 3
+    position:
+      x: 30.2358
+      y: 46.2343
+      z: 3.11637
+    position_std:
+      x: 0.188228
+      y: 0.129383
+      z: 0.529482
+    position_covariance_xy: -0.0167429
+    orientation: 0.00000
+    orientation_std: 3.14159
+    raw_existence_probability: 89.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 5
+    raw_classification_unknown: 22
+    absolute_velocity:
+      x: 0.000851487
+      y: -1.48273e-05
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.161900
+      y: 0.114270
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.0115236
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.88566
+      y: 2.64022
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.161900
+      y: 0.114270
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.232763
+    shape_width_edge_mean: 0.232761
+  - object_id: 10521
+    age: 101
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 3
+    position:
+      x: 38.8740
+      y: 51.2849
+      z: 3.30623
+    position_std:
+      x: 0.316295
+      y: 0.252834
+      z: 1.89352
+    position_covariance_xy: -0.0279237
+    orientation: -0.0414419
+    orientation_std: 3.14159
+    raw_existence_probability: 93.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 100
+    absolute_velocity:
+      x: -0.00154211
+      y: 0.00224536
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.380987
+      y: 0.285604
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.0610093
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.96869
+      y: 2.74058
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.380987
+      y: 0.285604
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.249948
+    shape_width_edge_mean: 0.249948
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 4223
+    age: 5602
+    status_measurement: 2
+    status_movement: 1
+    position_reference: 3
+    position:
+      x: 17.7506
+      y: 29.8080
+      z: 1.93550
+    position_std:
+      x: 0.119071
+      y: 0.0941036
+      z: 0.521624
+    position_covariance_xy: -0.00343019
+    orientation: 0.00000
+    orientation_std: 1.31303
+    raw_existence_probability: 58.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 62
+    raw_classification_unknown: 38
+    absolute_velocity:
+      x: 0.0522935
+      y: -0.0288729
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.100526
+      y: 0.0860896
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00173751
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.66475
+      y: 2.54066
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.100526
+      y: 0.0860896
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.242456
+    shape_width_edge_mean: 0.242456
+  - object_id: 319
+    age: 1799
+    status_measurement: 2
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 49.4553
+      y: 74.4381
+      z: 5.78250
+    position_std:
+      x: 0.291275
+      y: 0.198896
+      z: 0.720678
+    position_covariance_xy: -0.0442083
+    orientation: 0.933855
+    orientation_std: 0.195053
+    raw_existence_probability: 89.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 22
+    absolute_velocity:
+      x: -0.365148
+      y: 0.187010
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.245340
+      y: 0.165360
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.0333272
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.42342
+      y: 2.89597
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.245340
+      y: 0.165360
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.256978
+    shape_width_edge_mean: 0.251992
+  - object_id: 3024
+    age: 16300
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 48.4213
+      y: 72.3891
+      z: 12.2762
+    position_std:
+      x: 0.0856283
+      y: 0.163464
+      z: 0.305677
+    position_covariance_xy: 0.00146211
+    orientation: 1.33298
+    orientation_std: 1.76472
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.0404544
+      y: 0.00806191
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0871226
+      y: 0.0849521
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00169936
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.40712
+      y: 2.88371
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0871226
+      y: 0.0849521
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 3.53937
+    shape_width_edge_mean: 0.937657
+  - object_id: 11126
+    age: 4001
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 7
+    position:
+      x: 103.049
+      y: 22.0713
+      z: 1.68629
+    position_std:
+      x: 0.147908
+      y: 0.230625
+      z: 0.218707
+    position_covariance_xy: -0.00585775
+    orientation: 1.42409
+    orientation_std: 0.973539
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00774916
+      y: -0.103746
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0957622
+      y: 0.125263
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00123552
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.58986
+      y: 4.03444
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0957622
+      y: 0.125263
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 1.02411
+    shape_width_edge_mean: 0.858704
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 26441
+    age: 20500
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: 27.2280
+      y: 44.8066
+      z: 2.59276
+    position_std:
+      x: 0.0662517
+      y: 0.140651
+      z: 0.328543
+    position_covariance_xy: -0.00408133
+    orientation: -1.43328
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 59
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.000158869
+      y: 0.000103691
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0807180
+      y: 0.0836038
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00167209
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.88571
+      y: 2.60934
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0807180
+      y: 0.0836038
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 2.81119
+    shape_width_edge_mean: 0.233778
+  - object_id: 6675
+    age: 17201
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: 6.98149
+      y: 39.5233
+      z: 0.948427
+    position_std:
+      x: 0.0967490
+      y: 0.112455
+      z: 0.389376
+    position_covariance_xy: -0.00102539
+    orientation: -1.54295
+    orientation_std: 0.911239
+    raw_existence_probability: 98.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 84
+    raw_classification_unknown: 16
+    absolute_velocity:
+      x: 0.0216212
+      y: -0.0946887
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0986770
+      y: 0.0810052
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.000486836
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.79961
+      y: 2.50260
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0986770
+      y: 0.0810052
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 1.65287
+    shape_width_edge_mean: 0.199607
+  - object_id: 8446
+    age: 20399
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 40.9259
+      y: 64.6734
+      z: 2.56523
+    position_std:
+      x: 0.0801754
+      y: 0.117076
+      z: 0.420369
+    position_covariance_xy: -0.000785835
+    orientation: 1.35550
+    orientation_std: 1.30697
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 62
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.0640536
+      y: 0.00559506
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0877417
+      y: 0.0823654
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00168517
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.22433
+      y: 2.76852
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0877417
+      y: 0.0823654
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 1.28414
+    shape_width_edge_mean: 0.539126
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 1848
+    age: 20100
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 36.7498
+      y: 63.0768
+      z: 6.97727
+    position_std:
+      x: 0.206497
+      y: 0.0699830
+      z: 0.396819
+    position_covariance_xy: -0.00622821
+    orientation: -0.0743910
+    orientation_std: 1.12723
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.0482516
+      y: -0.0341314
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.111287
+      y: 0.0767720
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00265232
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.18031
+      y: 2.73026
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.111287
+      y: 0.0767720
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 3.39428
+    shape_width_edge_mean: 0.639211
+  - object_id: 25249
+    age: 20100
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 39.5787
+      y: 67.9790
+      z: 3.90347
+    position_std:
+      x: 0.0750894
+      y: 0.139723
+      z: 0.368416
+    position_covariance_xy: 0.000960930
+    orientation: 1.40124
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.0117144
+      y: 0.0108609
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0855686
+      y: 0.0820328
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00132995
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.32899
+      y: 2.75601
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0855686
+      y: 0.0820328
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 4.25996
+    shape_width_edge_mean: 0.713521
+  - object_id: 1610
+    age: 14699
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 44.2989
+      y: 66.2863
+      z: 11.8187
+    position_std:
+      x: 0.162078
+      y: 0.129457
+      z: 0.527066
+    position_covariance_xy: -0.00966763
+    orientation: 1.35531
+    orientation_std: 2.13259
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.0266643
+      y: -0.0325255
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.106007
+      y: 0.0883640
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00348839
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.25176
+      y: 2.81575
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.106007
+      y: 0.0883640
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.372000
+    shape_width_edge_mean: 0.243774
+  - object_id: 1856
+    age: 13301
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: -33.3978
+      y: 152.825
+      z: 1.13343
+    position_std:
+      x: 0.227687
+      y: 0.185209
+      z: 0.829056
+    position_covariance_xy: 0.0115137
+    orientation: -1.55831
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.0107095
+      y: 0.00372036
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.124761
+      y: 0.0809579
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00250677
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 5.43862
+      y: 2.75857
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.124761
+      y: 0.0809579
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 1.75905
+    shape_width_edge_mean: 0.299935
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 25552
+    age: 20002
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: 3.74253
+      y: 37.3158
+      z: 2.07914
+    position_std:
+      x: 0.0785549
+      y: 0.160003
+      z: 0.219977
+    position_covariance_xy: -0.00347497
+    orientation: -1.43113
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00163234
+      y: -0.00321410
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0867106
+      y: 0.0763429
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.000267031
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.78489
+      y: 2.50000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0867106
+      y: 0.0763429
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 4.34939
+    shape_width_edge_mean: 0.322414
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 14758
+    age: 13199
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 62.4287
+      y: 73.8081
+      z: 6.67493
+    position_std:
+      x: 0.181676
+      y: 0.157937
+      z: 0.697194
+    position_covariance_xy: -0.0174675
+    orientation: 0.518603
+    orientation_std: 0.927042
+    raw_existence_probability: 95.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 20
+    absolute_velocity:
+      x: 0.0776498
+      y: -0.0396416
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.109713
+      y: 0.100692
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00430097
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.40679
+      y: 3.12447
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.109713
+      y: 0.100692
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 0.522981
+    shape_width_edge_mean: 0.303661
+  - object_id: 7525
+    age: 18202
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: 45.5749
+      y: 60.8056
+      z: 3.83416
+    position_std:
+      x: 0.150502
+      y: 0.140859
+      z: 0.518366
+    position_covariance_xy: 0.00644148
+    orientation: 0.816700
+    orientation_std: 2.35069
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.0204117
+      y: 0.0216856
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0946297
+      y: 0.0845778
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00199979
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.16709
+      y: 2.85400
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0946297
+      y: 0.0845778
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 4.17909
+    shape_width_edge_mean: 0.480027
+  - object_id: 24955
+    age: 19901
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 5
+    position:
+      x: -2.24126
+      y: 15.0811
+      z: 0.862749
+    position_std:
+      x: 0.101408
+      y: 0.140501
+      z: 0.149238
+    position_covariance_xy: 0.00282435
+    orientation: 1.54104
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00160276
+      y: 0.000944248
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0946558
+      y: 0.0802861
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00158043
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 2.55089
+      y: 2.50639
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0946558
+      y: 0.0802861
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 5.08268
+    shape_width_edge_mean: 1.56077
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 12959
+    age: 17902
+    status_measurement: 0
+    status_movement: 1
+    position_reference: 1
+    position:
+      x: 46.1324
+      y: 77.9970
+      z: 3.63479
+    position_std:
+      x: 0.0963289
+      y: 0.167274
+      z: 0.421754
+    position_covariance_xy: -0.00677112
+    orientation: -1.45687
+    orientation_std: 3.14159
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: -0.0218300
+      y: 0.0156625
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.0911100
+      y: 0.0859664
+      z: 0.00000
+    absolute_velocity_covariance_xy: -0.00230220
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 3.55877
+      y: 2.83690
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.0911100
+      y: 0.0859664
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 6.25000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.0519615
+    shape_length_edge_mean: 5.73412
+    shape_width_edge_mean: 0.966240
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
+  - object_id: 0
+    age: 0
+    status_measurement: 255
+    status_movement: 255
+    position_reference: 255
+    position:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    position_covariance_xy: 0.00000
+    orientation: 0.00000
+    orientation_std: 0.00000
+    raw_existence_probability: 0.00000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
+    absolute_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_velocity_covariance_xy: 0.00000
+    relative_velocity:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_velocity_covariance_xy: 0.00000
+    absolute_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    absolute_acceleration_covariance_xy: 0.00000
+    relative_acceleration:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_std:
+      x: 0.00000
+      y: 0.00000
+      z: 0.00000
+    relative_acceleration_covariance_xy: 0.00000
+    orientation_rate_mean: 0.00000
+    orientation_rate_std: 0.00000
+    shape_length_edge_mean: 0.00000
+    shape_width_edge_mean: 0.00000
