@@ -55,32 +55,32 @@ namespace impl
 {
 
 /// An 8-bit grayscale image, stored row by row.
-class GrayImage
+class GrayscaleImage
 {
 public:
-  GrayImage(size_t width, size_t height) : width_(width), height_(height), data_(width * height) {}
+  GrayscaleImage(size_t width, size_t height)
+  : width_(width), height_(height), data_(width * height)
+  {
+  }
 
   /**
    * @brief Load a PNG file, converting it to 8-bit grayscale if it is in another format.
    *
    * @throws std::runtime_error if the file cannot be read or is not a valid PNG.
    */
-  static GrayImage read(const std::filesystem::path & path)
+  static GrayscaleImage read(const std::filesystem::path & path)
   {
-    png_image png{};
-    png.version = PNG_IMAGE_VERSION;
+    PngImage png;
 
-    if (png_image_begin_read_from_file(&png, path.c_str()) == 0) {
-      throw std::runtime_error("Could not read " + path.native() + ": " + png.message);
+    if (png_image_begin_read_from_file(&png.handle, path.c_str()) == 0) {
+      throw std::runtime_error("Could not read " + path.native() + ": " + png.handle.message);
     }
 
-    png.format = PNG_FORMAT_GRAY;
-    GrayImage image(png.width, png.height);
+    png.handle.format = PNG_FORMAT_GRAY;
+    GrayscaleImage image(png.handle.width, png.handle.height);
 
-    if (png_image_finish_read(&png, nullptr, image.data_.data(), 0, nullptr) == 0) {
-      std::string message = png.message;
-      png_image_free(&png);
-      throw std::runtime_error("Could not read " + path.native() + ": " + message);
+    if (png_image_finish_read(&png.handle, nullptr, image.data_.data(), 0, nullptr) == 0) {
+      throw std::runtime_error("Could not read " + path.native() + ": " + png.handle.message);
     }
 
     return image;
@@ -93,14 +93,13 @@ public:
    */
   void write(const std::filesystem::path & path) const
   {
-    png_image png{};
-    png.version = PNG_IMAGE_VERSION;
-    png.width = static_cast<png_uint_32>(width_);
-    png.height = static_cast<png_uint_32>(height_);
-    png.format = PNG_FORMAT_GRAY;
+    PngImage png;
+    png.handle.width = static_cast<png_uint_32>(width_);
+    png.handle.height = static_cast<png_uint_32>(height_);
+    png.handle.format = PNG_FORMAT_GRAY;
 
-    if (png_image_write_to_file(&png, path.c_str(), 0, data_.data(), 0, nullptr) == 0) {
-      throw std::runtime_error("Could not write " + path.native() + ": " + png.message);
+    if (png_image_write_to_file(&png.handle, path.c_str(), 0, data_.data(), 0, nullptr) == 0) {
+      throw std::runtime_error("Could not write " + path.native() + ": " + png.handle.message);
     }
   }
 
@@ -111,13 +110,27 @@ public:
   void set_pixel(size_t x, size_t y, uint8_t value) { data_[y * width_ + x] = value; }
 
 private:
+  /// Owns the resources libpng attaches to a `png_image`, releasing them on scope exit.
+  struct PngImage
+  {
+    PngImage() { handle.version = PNG_IMAGE_VERSION; }
+    ~PngImage() { png_image_free(&handle); }
+
+    PngImage(const PngImage &) = delete;
+    PngImage & operator=(const PngImage &) = delete;
+    PngImage(PngImage &&) = delete;
+    PngImage & operator=(PngImage &&) = delete;
+
+    png_image handle{};
+  };
+
   size_t width_;
   size_t height_;
   std::vector<uint8_t> data_;
 };
 
 inline void dither(
-  const GrayImage & in, GrayImage & out, uint8_t quantization_levels,
+  const GrayscaleImage & in, GrayscaleImage & out, uint8_t quantization_levels,
   const DitherTransform & transform)
 {
   if (in.get_width() != out.get_width() || in.get_height() != out.get_height()) {
@@ -176,12 +189,12 @@ public:
       throw std::invalid_argument("n_channels must be positive");
     }
 
-    auto factors = impl::GrayImage::read(filename);
+    auto factors = impl::GrayscaleImage::read(filename);
 
     size_t mask_cols = azimuth_range_mdeg.extent() / azimuth_peak_resolution_mdeg;
     size_t mask_rows = n_channels;
 
-    impl::GrayImage dithered(mask_cols, mask_rows);
+    impl::GrayscaleImage dithered(mask_cols, mask_rows);
     impl::dither(factors, dithered, g_quantization_levels, dither_transform);
 
     mask_ = Eigen::MatrixX<uint8_t>(mask_rows, mask_cols);
