@@ -2,6 +2,28 @@
 Changelog for package nebula_velodyne_hw_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (2026-11-11)
+------------------
+
+1.3.1 (2026-10-15)
+------------------
+
+1.3.0 (2026-09-29)
+------------------
+
+1.2.0 (2026-07-30)
+------------------
+* chore: sync files (`#74 <https://github.com/tier4/nebula/issues/74>`_)
+  * chore: sync files
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: github-actions <github-actions@github.com>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* Contributors: tier4-nebula-app[bot]
+
+1.1.1 (2026-06-03)
+------------------
+
 1.0.0 (2026-04-06)
 ------------------
 * refactor(nebula_core_hw_interfaces): flatten obsolete include path (`#430 <https://github.com/tier4/nebula/issues/430>`_)

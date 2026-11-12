@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_WS_HESAI_SCAN_DECODER_HPP
-#define NEBULA_WS_HESAI_SCAN_DECODER_HPP
+#ifndef NEBULA_HESAI_DECODERS__DECODERS__HESAI_SCAN_DECODER_HPP_
+#define NEBULA_HESAI_DECODERS__DECODERS__HESAI_SCAN_DECODER_HPP_
 
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_common/util/expected.hpp>
@@ -29,6 +29,7 @@ enum class DecodeError : uint8_t {
   PACKET_PARSE_FAILED,  ///< Failed to parse packet structure
   DRIVER_NOT_OK,        ///< Driver status is not OK
   INVALID_PACKET_SIZE,  ///< Packet size is invalid
+  PACKET_IGNORED,       ///< Valid packet without point cloud data (e.g. IMU or fault message)
 };
 
 /// @brief Metadata for a decoded packet
@@ -79,4 +80,4 @@ public:
 };
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_WS_HESAI_SCAN_DECODER_HPP
+#endif  // NEBULA_HESAI_DECODERS__DECODERS__HESAI_SCAN_DECODER_HPP_

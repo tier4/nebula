@@ -52,8 +52,9 @@ public:
    * @param parent_node The node from which clock type and parameters are read.
    * @param timeout The time after the last call to `tick()` where the routine is declared dead
    */
+  template <typename NodeT>
   LivenessMonitor(
-    const std::string & name, const rclcpp::Node * parent_node, const rclcpp::Duration & timeout)
+    const std::string & name, const NodeT * parent_node, const rclcpp::Duration & timeout)
   : DiagnosticTask(name), timeout_(timeout)
   {
     // select clock according to the use_sim_time paramter set to the parent

@@ -20,6 +20,7 @@ from rich import print  # noqa: A004
 from rich.syntax import Syntax
 from rich.table import Table
 
+GET_INVENTORY_INFO_COMMAND = 0x07
 GET_CONFIG_INFO_COMMAND = 0x08
 GET_LIDAR_STATUS_COMMAND = 0x09
 GET_PTP_CONFIG_COMMAND = 0x26
@@ -59,6 +60,232 @@ RETURN_MODE_MAP = {
     4: "Last + First",
     5: "First + Strongest",
 }
+
+INVENTORY_BASE_SIZE = 104
+INVENTORY_XT_SIZE = 120
+INVENTORY_QT128_SIZE = 144
+INVENTORY_OT128_SIZE = 162
+INVENTORY_AT128_SIZE = 184
+
+PRODUCT_MODEL_OFFSET_XT_QT_OT = 106
+PRODUCT_MODEL_OFFSET_AT128 = 170
+
+OT128_PRODUCT_MODEL = 42
+AT128_PRODUCT_MODELS = frozenset({40, 48})
+QT128_PRODUCT_MODEL = 32
+XT_PRODUCT_MODELS = frozenset({0, 2, 3, 15, 17, 20, 25, 26, 38})
+
+MODEL_MAP = {
+    0: "Pandar40P",
+    2: "Pandar64",
+    3: "Pandar128",
+    15: "PandarQT64",
+    17: "Pandar40M",
+    25: "PandarXT32",
+    26: "PandarXT16",
+    32: "QT128C2X",
+    38: "PandarXT32M",
+    40: "PandarAT128",
+    42: "OT128",
+    48: "PandarAT128",
+}
+
+MOTOR_TYPE_MAP = {
+    0: "unidirectional",
+    1: "bidirectional",
+}
+
+
+def decode_c_string(data: bytes) -> str:
+    return data.split(b"\x00", 1)[0].decode("ascii", errors="replace")
+
+
+def format_mac(mac: bytes) -> str:
+    return ":".join(f"{byte:02x}" for byte in mac)
+
+
+def get_str_model(model: int) -> str:
+    return MODEL_MAP.get(model, f"Unknown({model})")
+
+
+def get_motor_type(motor_type: int) -> str:
+    return MOTOR_TYPE_MAP.get(motor_type, "unknown")
+
+
+def detect_inventory_variant(payload: bytes) -> str:
+    payload_len = len(payload)
+    if payload_len < INVENTORY_XT_SIZE:
+        return "base_only"
+
+    model_at_106 = payload[PRODUCT_MODEL_OFFSET_XT_QT_OT]
+    model_at_170 = (
+        payload[PRODUCT_MODEL_OFFSET_AT128] if payload_len > PRODUCT_MODEL_OFFSET_AT128 else None
+    )
+
+    # OT128 before AT128: padded OT responses can exceed 184 bytes.
+    if payload_len >= INVENTORY_OT128_SIZE and model_at_106 == OT128_PRODUCT_MODEL:
+        return "OT128"
+    if payload_len >= INVENTORY_AT128_SIZE and model_at_170 in AT128_PRODUCT_MODELS:
+        return "AT128"
+    if payload_len >= INVENTORY_QT128_SIZE and model_at_106 == QT128_PRODUCT_MODEL:
+        return "QT128"
+    if payload_len >= INVENTORY_XT_SIZE and model_at_106 in XT_PRODUCT_MODELS:
+        return "XT16_32_40P"
+
+    if payload_len >= INVENTORY_OT128_SIZE and payload_len < INVENTORY_AT128_SIZE:
+        return "OT128"
+    if payload_len >= INVENTORY_QT128_SIZE and payload_len < INVENTORY_OT128_SIZE:
+        return "QT128"
+    if payload_len >= INVENTORY_XT_SIZE and payload_len < INVENTORY_QT128_SIZE:
+        return "XT16_32_40P"
+    if payload_len >= INVENTORY_AT128_SIZE:
+        return "AT128"
+
+    return "base_only"
+
+
+def parse_inventory(payload: bytes) -> dict[str, str]:
+    if len(payload) < INVENTORY_BASE_SIZE:
+        msg = f"Inventory payload too short: {len(payload)} bytes (expected at least {INVENTORY_BASE_SIZE})"
+        raise ValueError(msg)
+
+    (
+        sn,
+        date_of_manufacture,
+        mac,
+        sw_ver,
+        hw_ver,
+        control_fw_ver,
+        sensor_fw_ver,
+    ) = struct.unpack("18s 16s 6s 16s 16s 16s 16s", payload[:INVENTORY_BASE_SIZE])
+
+    result = {
+        "sn": decode_c_string(sn),
+        "date_of_manufacture": decode_c_string(date_of_manufacture),
+        "mac": format_mac(mac),
+        "sw_ver": decode_c_string(sw_ver),
+        "hw_ver": decode_c_string(hw_ver),
+        "control_fw_ver": decode_c_string(control_fw_ver),
+        "sensor_fw_ver": decode_c_string(sensor_fw_ver),
+    }
+
+    variant = detect_inventory_variant(payload)
+
+    if variant == "AT128":
+        (
+            fpga_para_ver,
+            fpga_cfg_ver,
+            fpga_para_sha,
+            fpga_cfg_sha,
+            unused_angle_offset,
+            product_model,
+            motor_type,
+            num_of_lines,
+            motor_correction_flag,
+            encoder_disk_correction_flag,
+            _reserved,
+        ) = struct.unpack(
+            "!16s 16s 16s 16s H B B B B B 9s",
+            payload[INVENTORY_BASE_SIZE:INVENTORY_AT128_SIZE],
+        )
+        result.update(
+            {
+                "variant": "AT128",
+                "fpga_para_ver": decode_c_string(fpga_para_ver),
+                "fpga_cfg_ver": decode_c_string(fpga_cfg_ver),
+                "fpga_para_sha": decode_c_string(fpga_para_sha),
+                "fpga_cfg_sha": decode_c_string(fpga_cfg_sha),
+                "zero_angle_offset": str(unused_angle_offset),
+                "model": get_str_model(product_model),
+                "motor_type": get_motor_type(motor_type),
+                "num_of_lines": str(num_of_lines),
+                "motor_correction_flag": "finished" if motor_correction_flag else "not finished",
+                "encoder_disk_correction_flag": (
+                    "finished" if encoder_disk_correction_flag else "not finished"
+                ),
+            }
+        )
+    elif variant == "OT128":
+        (
+            zero_angle_offset,
+            product_model,
+            motor_type,
+            num_of_lines,
+            pn,
+            customer_pn_enable,
+            customer_pn,
+        ) = struct.unpack(
+            "!H B B B 32s B 20s",
+            payload[INVENTORY_BASE_SIZE:INVENTORY_OT128_SIZE],
+        )
+        result.update(
+            {
+                "variant": "OT128",
+                "zero_angle_offset": str(zero_angle_offset),
+                "model": get_str_model(product_model),
+                "motor_type": get_motor_type(motor_type),
+                "num_of_lines": str(num_of_lines),
+                "pn": decode_c_string(pn),
+            }
+        )
+        if customer_pn_enable:
+            result["customer_pn"] = decode_c_string(customer_pn)
+    elif variant == "QT128":
+        (
+            zero_angle_offset,
+            angle_offset_cc,
+            product_model,
+            motor_type,
+            num_of_lines,
+            pn,
+            _reserved,
+        ) = struct.unpack(
+            "!H H B B B 32s B",
+            payload[INVENTORY_BASE_SIZE:INVENTORY_QT128_SIZE],
+        )
+        result.update(
+            {
+                "variant": "QT128",
+                "zero_angle_offset": str(zero_angle_offset),
+                "zero_angle_offset_cc": str(angle_offset_cc),
+                "model": get_str_model(product_model),
+                "motor_type": get_motor_type(motor_type),
+                "num_of_lines": str(num_of_lines),
+                "pn": decode_c_string(pn),
+            }
+        )
+    elif variant == "XT16_32_40P":
+        (
+            zero_angle_offset,
+            product_model,
+            motor_type,
+            num_of_lines,
+            _reserved,
+        ) = struct.unpack(
+            "!H B B B 11s",
+            payload[INVENTORY_BASE_SIZE:INVENTORY_XT_SIZE],
+        )
+        result.update(
+            {
+                "variant": "XT16_32_40P",
+                "zero_angle_offset": str(zero_angle_offset),
+                "model": get_str_model(product_model),
+                "motor_type": get_motor_type(motor_type),
+                "num_of_lines": str(num_of_lines),
+            }
+        )
+    else:
+        result["variant"] = "base_only"
+
+    return result
+
+
+@dataclass
+class PtcCommandGetInventory(PtcCommandBase):
+    fields: dict[str, str]
+
+    def parse(self) -> dict[str, str]:
+        return self.fields
 
 
 @dataclass
@@ -120,45 +347,61 @@ PTP_STATUS_MAP = {
     3: "frozen",
 }
 
+# Wire values from Hesai PTC. QT128/AT128/XT use 0x02 for automotive.
+# OT128 uses 0x03 for the same automotive profile.
+PTP_PROFILE_MAP = {
+    0: "IEEE 1588v2",
+    1: "IEEE 802.1AS",
+    2: "IEEE 802.1AS Automotive",
+    3: "IEEE 802.1AS AUTOSAR",
+}
+
+PTP_NETWORK_MAP = {
+    0: "UDP/IP",
+    1: "L2",
+}
+
+# QT128 and AT128 report 9 temperatures and do not include humidity.
+LIDAR_STATUS_9_TEMP_VARIANTS = frozenset({"QT128", "AT128"})
+
+
+def get_str_ptp_profile(profile: int, variant: str) -> str:
+    if variant == "OT128" and profile == 3:
+        return "IEEE 802.1AS Automotive"
+    return PTP_PROFILE_MAP.get(profile, f"Unknown({profile})")
+
 
 @dataclass
 class PtcCommandGetLidarStatus(PtcCommandBase):
     system_uptime: bytes
     motor_speed: bytes
-    temperature_0: bytes
-    temperature_1: bytes
-    temperature_2: bytes
-    temperature_3: bytes
-    temperature_4: bytes
-    temperature_5: bytes
-    temperature_6: bytes
-    temperature_7: bytes
-    gps_pps_lock: bytes
-    gps_gprmc_status: bytes
+    temperatures: list[bytes]
     startup_times: bytes
     total_operation_time: bytes
     ptp_status: bytes
-    humidity: bytes
+    gps_pps_lock: bytes | None = None
+    gps_gprmc_status: bytes | None = None
+    humidity: bytes | None = None
 
     def parse(self) -> dict[str, str]:
-        return {
+        result = {
             "system_uptime": f'{unpack("!I", self.system_uptime)} s',
             "motor_speed": f'{unpack("!H", self.motor_speed)} RPM',
-            "temperature_0": f'{unpack("!i", self.temperature_0) * 0.01:.1f} deg C',
-            "temperature_1": f'{unpack("!i", self.temperature_1) * 0.01:.1f} deg C',
-            "temperature_2": f'{unpack("!i", self.temperature_2) * 0.01:.1f} deg C',
-            "temperature_3": f'{unpack("!i", self.temperature_3) * 0.01:.1f} deg C',
-            "temperature_4": f'{unpack("!i", self.temperature_4) * 0.01:.1f} deg C',
-            "temperature_5": f'{unpack("!i", self.temperature_5) * 0.01:.1f} deg C',
-            "temperature_6": f'{unpack("!i", self.temperature_6) * 0.01:.1f} deg C',
-            "temperature_7": f'{unpack("!i", self.temperature_7) * 0.01:.1f} deg C',
-            "gps_pps_lock": unpack("!B", self.gps_pps_lock),
-            "gps_gprmc_status": unpack("!B", self.gps_gprmc_status),
-            "startup_times": unpack("!I", self.startup_times),
-            "total_operation_time": unpack("!I", self.total_operation_time),
-            "ptp_status": PTP_STATUS_MAP[unpack("!B", self.ptp_status)],
-            "humidity": f'{unpack("!I", self.humidity) * 0.1:.1f} %',
         }
+        for index, temperature in enumerate(self.temperatures):
+            result[f"temperature_{index}"] = f'{unpack("!i", temperature) * 0.01:.1f} deg C'
+        if self.gps_pps_lock is not None:
+            result["gps_pps_lock"] = unpack("!B", self.gps_pps_lock)
+        if self.gps_gprmc_status is not None:
+            result["gps_gprmc_status"] = unpack("!B", self.gps_gprmc_status)
+        result["startup_times"] = unpack("!I", self.startup_times)
+        result["total_operation_time"] = f'{unpack("!I", self.total_operation_time)} min'
+        result["ptp_status"] = PTP_STATUS_MAP.get(
+            unpack("!B", self.ptp_status), f"unknown({unpack('!B', self.ptp_status)})"
+        )
+        if self.humidity is not None:
+            result["humidity"] = f'{unpack("!I", self.humidity) * 0.1:.1f} %'
+        return result
 
 
 @dataclass
@@ -167,16 +410,26 @@ class PtcCommandGetPtpConfig(PtcCommandBase):
     profile: bytes
     domain: bytes
     network: bytes
-    tsn_switch: bytes
+    extra: bytes
+    variant: str
 
     def parse(self) -> dict[str, str]:
-        return {
+        profile = unpack("!B", self.profile)
+        network = unpack("!B", self.network)
+        result = {
             "status": "Enabled" if unpack("!B", self.status) else "Disabled",
-            "profile": "802.1AS (AutoSAR)" if unpack("!B", self.profile) == 3 else "Unknown",
+            "profile": get_str_ptp_profile(profile, self.variant),
             "domain": unpack("!B", self.domain),
-            "network": "L2" if unpack("!B", self.network) == 1 else "Unknown",
-            "tsn_switch": "TSN" if unpack("!B", self.tsn_switch) else "Non-TSN",
+            "network": PTP_NETWORK_MAP.get(network, f"Unknown({network})"),
         }
+        if profile == 0 and len(self.extra) >= 3:
+            log_announce, log_sync, log_min_delay = struct.unpack("!bbb", self.extra[:3])
+            result["log_announce_interval"] = log_announce
+            result["log_sync_interval"] = log_sync
+            result["log_min_delay_req_interval"] = log_min_delay
+        elif profile in (2, 3) and self.extra:
+            result["tsn_switch"] = "TSN" if self.extra[0] == 1 else "Non-TSN"
+        return result
 
 
 def compose_packet(command: str, payload_length: int = 0, payload: bytes = b"") -> bytes:
@@ -197,28 +450,100 @@ def get_config_info(sock: socket.socket):
     return PtcCommandGetConfigInfo(*fields)
 
 
-def get_lidar_status(sock: socket.socket):
+def parse_lidar_status(payload: bytes, variant: str) -> PtcCommandGetLidarStatus:
+    # QT128/AT128: 9 temperatures, then unused GPS bytes, no humidity.
+    # OT128/XT and unknown: 8 temperatures. XT has no humidity field.
+    if variant in LIDAR_STATUS_9_TEMP_VARIANTS:
+        if len(payload) < 53:
+            msg = (
+                f"Lidar status payload too short for {variant}: "
+                f"{len(payload)} bytes (expected at least 53)"
+            )
+            raise ValueError(msg)
+        (
+            system_uptime,
+            motor_speed,
+            temperature_blob,
+            startup_times,
+            total_operation_time,
+            ptp_status,
+        ) = struct.unpack("4s 2s 36s 2x 4s 4s s", payload[:53])
+        temperatures = [temperature_blob[index : index + 4] for index in range(0, 36, 4)]
+        return PtcCommandGetLidarStatus(
+            system_uptime,
+            motor_speed,
+            temperatures,
+            startup_times,
+            total_operation_time,
+            ptp_status,
+        )
+
+    if len(payload) < 49:
+        msg = f"Lidar status payload too short: {len(payload)} bytes (expected at least 49)"
+        raise ValueError(msg)
+
+    (
+        system_uptime,
+        motor_speed,
+        temperature_blob,
+        gps_pps_lock,
+        gps_gprmc_status,
+        startup_times,
+        total_operation_time,
+        ptp_status,
+    ) = struct.unpack("4s 2s 32s s s 4s 4s s", payload[:49])
+    temperatures = [temperature_blob[index : index + 4] for index in range(0, 32, 4)]
+    humidity = payload[49:53] if variant != "XT16_32_40P" and len(payload) >= 53 else None
+    return PtcCommandGetLidarStatus(
+        system_uptime,
+        motor_speed,
+        temperatures,
+        startup_times,
+        total_operation_time,
+        ptp_status,
+        gps_pps_lock,
+        gps_gprmc_status,
+        humidity,
+    )
+
+
+def get_lidar_status(sock: socket.socket, variant: str):
     sock.sendall(compose_packet(GET_LIDAR_STATUS_COMMAND))
 
     response = list(sock.recv(8))
     payload_length = sum(response[4:])
     payload = sock.recv(payload_length)
 
-    fields = struct.unpack("4s 2s 4s 4s 4s 4s 4s 4s 4s 4s s s 4s 4s s 4s", payload[:53])
-
-    return PtcCommandGetLidarStatus(*fields)
+    return parse_lidar_status(payload, variant)
 
 
-def get_ptp_config(sock: socket.socket):
+def parse_ptp_config(payload: bytes, variant: str) -> PtcCommandGetPtpConfig:
+    if len(payload) < 4:
+        msg = f"PTP config payload too short: {len(payload)} bytes (expected at least 4)"
+        raise ValueError(msg)
+
+    status, profile, domain, network = struct.unpack("s s s s", payload[:4])
+    return PtcCommandGetPtpConfig(status, profile, domain, network, payload[4:], variant)
+
+
+def get_ptp_config(sock: socket.socket, variant: str):
     sock.sendall(compose_packet(GET_PTP_CONFIG_COMMAND))
 
     response = list(sock.recv(8))
     payload_length = sum(response[4:])
     payload = sock.recv(payload_length)
 
-    fields = struct.unpack("s s s s s", payload[:5])
+    return parse_ptp_config(payload, variant)
 
-    return PtcCommandGetPtpConfig(*fields)
+
+def get_inventory(sock: socket.socket):
+    sock.sendall(compose_packet(GET_INVENTORY_INFO_COMMAND))
+
+    response = list(sock.recv(8))
+    payload_length = sum(response[4:])
+    payload = sock.recv(payload_length)
+
+    return PtcCommandGetInventory(parse_inventory(payload))
 
 
 def is_valid_ip(ip: str | None) -> bool:
@@ -345,17 +670,23 @@ if __name__ == "__main__":
     sock.connect((args.sensor_ip, 9347))
 
     try:
+        inventory = get_inventory(sock)
+        inventory.print(title="Inventory Info (0x07)")
+        variant = inventory.parse().get("variant", "base_only")
+
+        print()
+
         config_info = get_config_info(sock)
         config_info.print(title="Config Info (0x08)")
 
         print()
 
-        lidar_status = get_lidar_status(sock)
+        lidar_status = get_lidar_status(sock, variant)
         lidar_status.print(title="Lidar Status (0x09)")
 
         print()
 
-        ptp_config = get_ptp_config(sock)
+        ptp_config = get_ptp_config(sock, variant)
         ptp_config.print(title="PTP Config (0x26)")
 
         print()

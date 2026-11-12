@@ -1,0 +1,42 @@
+autoware_system_design_format: 0.3.0
+
+name: NebulaVelodyneVLP16_offline.node
+
+base: NebulaVelodyneVLP16.node
+
+override:
+  subscribers:
+    - name: velodyne_packets
+      message_type: velodyne_msgs/msg/VelodyneScan
+      remap_target: velodyne_packets
+  publishers:
+    - name: velodyne_points
+      message_type: sensor_msgs/msg/PointCloud2
+      remap_target: velodyne_points
+      qos:
+        depth: 10
+        reliability: best_effort
+    - name: aw_points
+      message_type: sensor_msgs/msg/PointCloud2
+      remap_target: aw_points
+      qos:
+        depth: 10
+        reliability: best_effort
+    - name: aw_points_ex
+      message_type: sensor_msgs/msg/PointCloud2
+      remap_target: aw_points_ex
+      qos:
+        depth: 10
+        reliability: best_effort
+  param_values:
+    - name: launch_hw
+      type: bool
+      default: false
+  processes:
+    - name: decoder
+      trigger_conditions:
+        - and:
+            - on_input: velodyne_packets
+            - periodic: 10 # Hz
+      outcomes:
+        - to_output: velodyne_points
