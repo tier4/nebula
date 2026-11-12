@@ -37,7 +37,6 @@ class AngleCorrectorCorrectionBased : public AngleCorrector<HesaiCorrection, Cha
 private:
   static constexpr size_t max_azimuth = 360 * AngleUnit;
   std::shared_ptr<const HesaiCorrection> correction_;
-  rclcpp::Logger logger_;
 
   std::array<float, max_azimuth> cos_{};
   std::array<float, max_azimuth> sin_{};
@@ -102,14 +101,12 @@ private:
 public:
   explicit AngleCorrectorCorrectionBased(
     const std::shared_ptr<const HesaiCorrection> & sensor_correction)
-  : correction_(sensor_correction), logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased"))
+  : correction_(sensor_correction)
   {
     if (sensor_correction == nullptr) {
       throw std::runtime_error(
         "Cannot instantiate AngleCorrectorCorrectionBased without correction data");
     }
-
-    logger_.set_level(rclcpp::Logger::Level::Debug);
 
     // ////////////////////////////////////////
     // Trigonometry lookup tables
