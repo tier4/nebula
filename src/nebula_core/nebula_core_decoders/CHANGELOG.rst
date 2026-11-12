@@ -2,6 +2,32 @@
 Changelog for package nebula_core_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (2026-11-11)
+------------------
+
+1.3.1 (2026-10-15)
+------------------
+
+1.3.0 (2026-09-29)
+------------------
+* fix(nebula_hesai_decoders): drop scans whose timestamp was never set (`#493 <https://github.com/tier4/nebula/issues/493>`_)
+  Adds a blockage mask plugin entry point that resets the mask without invoking the callback, so a
+  dropped scan can clear its state; BlockageMask::reset() is private to BlockageMaskPlugin.
+* Contributors: lei.gu
+
+1.2.0 (2026-07-30)
+------------------
+* chore: sync files (`#74 <https://github.com/tier4/nebula/issues/74>`_)
+  * chore: sync files
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: github-actions <github-actions@github.com>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* Contributors: tier4-nebula-app[bot]
+
+1.1.1 (2026-06-03)
+------------------
+
 1.0.0 (2026-04-06)
 ------------------
 

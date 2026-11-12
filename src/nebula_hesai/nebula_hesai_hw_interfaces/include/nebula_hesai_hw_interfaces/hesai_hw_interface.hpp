@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_HESAI_HW_INTERFACE_H
-#define NEBULA_HESAI_HW_INTERFACE_H
+#ifndef NEBULA_HESAI_HW_INTERFACES__HESAI_HW_INTERFACE_HPP_
+#define NEBULA_HESAI_HW_INTERFACES__HESAI_HW_INTERFACE_HPP_
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
@@ -34,6 +34,7 @@
 
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_common/util/thread_factory.hpp>
 #include <nebula_core_hw_interfaces/connections/http_client.hpp>
 #include <nebula_core_hw_interfaces/connections/tcp.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
@@ -132,6 +133,7 @@ private:
   std::unique_ptr<connections::HttpClient> http_client_;
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
   connections::UdpSocket::callback_t cloud_packet_callback_;
+  connections::UdpSocket::thread_factory_t udp_thread_factory_;
 
   std::mutex mtx_inflight_tcp_request_;
 
@@ -167,7 +169,12 @@ private:
 
 public:
   /// @brief Constructor
-  explicit HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger);
+  /// @param logger Logger
+  /// @param udp_thread_factory Factory used to spawn the UDP receive thread. Must not be null;
+  /// defaults to spawning plain std::threads.
+  explicit HesaiHwInterface(
+    const std::shared_ptr<loggers::Logger> & logger,
+    connections::UdpSocket::thread_factory_t udp_thread_factory = util::StdThreadFactory{});
   /// @brief Destructor
   ~HesaiHwInterface();
   /// @brief Initializing tcp_socket for TCP communication
@@ -432,4 +439,4 @@ public:
 };
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_HESAI_HW_INTERFACE_H
+#endif  // NEBULA_HESAI_HW_INTERFACES__HESAI_HW_INTERFACE_HPP_

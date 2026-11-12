@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>nebula_core_ros</name>
-  <version>1.0.0</version>
+  <version>1.4.0</version>
   <description>Nebula ROS Base Libraries</description>
   <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
   <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
@@ -13,9 +13,11 @@
   <buildtool_depend>autoware_cmake</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
   <buildtool_depend>ros_testing</buildtool_depend>
+  <depend condition="$ENABLE_AGNOCAST == 1" version_gte="2.4.0">agnocastlib</depend>
   <depend>boost</depend>
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
+  <depend condition="$ENABLE_AGNOCAST == 1">libgoogle-glog-dev</depend>
   <depend>nebula_core_common</depend>
   <depend>rclcpp</depend>
   <depend>rosbag2_storage</depend>

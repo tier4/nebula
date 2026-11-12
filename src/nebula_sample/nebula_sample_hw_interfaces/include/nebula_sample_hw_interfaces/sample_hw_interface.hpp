@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_SAMPLE_HW_INTERFACE_HPP
-#define NEBULA_SAMPLE_HW_INTERFACE_HPP
+#ifndef NEBULA_SAMPLE_HW_INTERFACES__SAMPLE_HW_INTERFACE_HPP_
+#define NEBULA_SAMPLE_HW_INTERFACES__SAMPLE_HW_INTERFACE_HPP_
 
 #include <nebula_core_common/util/expected.hpp>
 #include <nebula_core_hw_interfaces/connections/udp.hpp>
@@ -80,4 +80,4 @@ private:
 
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_SAMPLE_HW_INTERFACE_HPP
+#endif  // NEBULA_SAMPLE_HW_INTERFACES__SAMPLE_HW_INTERFACE_HPP_

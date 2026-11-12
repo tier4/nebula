@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_CORE_HW_INTERFACES__NEBULA_HW_INTERFACES_COMMON__CONNECTIONS__HTTP_CLIENT_HPP_
-#define NEBULA_CORE_HW_INTERFACES__NEBULA_HW_INTERFACES_COMMON__CONNECTIONS__HTTP_CLIENT_HPP_
+#ifndef NEBULA_CORE_HW_INTERFACES__CONNECTIONS__HTTP_CLIENT_HPP_
+#define NEBULA_CORE_HW_INTERFACES__CONNECTIONS__HTTP_CLIENT_HPP_
 
 #include "nebula_core_hw_interfaces/connections/tcp.hpp"
 
@@ -218,4 +218,4 @@ private:
 };
 }  // namespace nebula::drivers::connections
 
-#endif  // NEBULA_CORE_HW_INTERFACES__NEBULA_HW_INTERFACES_COMMON__CONNECTIONS__HTTP_CLIENT_HPP_
+#endif  // NEBULA_CORE_HW_INTERFACES__CONNECTIONS__HTTP_CLIENT_HPP_
