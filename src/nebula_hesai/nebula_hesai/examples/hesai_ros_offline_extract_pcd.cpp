@@ -73,7 +73,8 @@ Status HesaiRosOfflineExtractSample::initialize_driver(
 {
   // driver should be initialized here with proper decoder
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
-    std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
+    drivers::make_decoder_configuration(
+      *std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration)),
     calibration_configuration, std::make_shared<drivers::loggers::RclcppLogger>(get_logger()),
     nullptr);
   return driver_ptr_->get_status();

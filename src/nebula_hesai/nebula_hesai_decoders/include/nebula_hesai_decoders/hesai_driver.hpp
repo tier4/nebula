@@ -23,6 +23,7 @@
 #include "nebula_hesai_decoders/decoders/hesai_packet.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_scan_decoder.hpp"
 #include "nebula_hesai_decoders/decoders/packet_loss_detector.hpp"
+#include "nebula_hesai_decoders/hesai_decoder_configuration.hpp"
 
 #include <nebula_core_common/loggers/logger.hpp>
 
@@ -47,7 +48,7 @@ private:
 
   template <typename SensorT>
   std::shared_ptr<HesaiScanDecoder> initialize_decoder(
-    const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
+    const HesaiDecoderConfiguration & decoder_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration,
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
@@ -107,11 +108,11 @@ private:
 public:
   HesaiDriver() = delete;
   /// @brief Constructor
-  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @param decoder_configuration Settings for the decoder of this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver (either
   /// HesaiCalibrationConfiguration for sensors other than AT128 or HesaiCorrection for AT128)
   HesaiDriver(
-    const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
+    const HesaiDecoderConfiguration & decoder_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration,
     const std::shared_ptr<loggers::Logger> & logger,
