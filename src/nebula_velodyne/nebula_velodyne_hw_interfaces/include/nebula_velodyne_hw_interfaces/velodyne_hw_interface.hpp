@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_VELODYNE_HW_INTERFACE_H
-#define NEBULA_VELODYNE_HW_INTERFACE_H
+#ifndef NEBULA_VELODYNE_HW_INTERFACES__VELODYNE_HW_INTERFACE_HPP_
+#define NEBULA_VELODYNE_HW_INTERFACES__VELODYNE_HW_INTERFACE_HPP_
 
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
@@ -31,8 +31,8 @@
 #include "nebula_core_common/util/expected.hpp"
 
 #include <nebula_core_common/loggers/logger.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp>
+#include <nebula_core_hw_interfaces/connections/http_client.hpp>
+#include <nebula_core_hw_interfaces/connections/udp.hpp>
 #include <nebula_velodyne_common/velodyne_common.hpp>
 #include <nebula_velodyne_common/velodyne_status.hpp>
 
@@ -238,4 +238,4 @@ public:
 };
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_VELODYNE_HW_INTERFACE_H
+#endif  // NEBULA_VELODYNE_HW_INTERFACES__VELODYNE_HW_INTERFACE_HPP_

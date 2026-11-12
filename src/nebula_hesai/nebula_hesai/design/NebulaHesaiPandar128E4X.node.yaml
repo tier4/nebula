@@ -1,0 +1,34 @@
+autoware_system_design_format: 0.3.0
+
+name: NebulaHesaiPandar128E4X.node
+
+package:
+  name: nebula_hesai
+  provider: nebula
+
+launch:
+  plugin: HesaiRosWrapper
+  executable: hesai_ros_wrapper_node
+  node_output: screen
+
+# interfaces
+subscribers: []
+publishers: []
+
+# parameters
+param_files:
+  - name: config_file
+    default: config/Pandar128E4X.param.yaml
+    schema: schema/Pandar128E4X.schema.json
+    allow_substs: true
+
+param_values:
+  - name: launch_hw
+    type: bool
+    default: true
+  - name: point_filters.downsample_mask.path
+    type: string
+    default: ""
+
+# processes
+processes: []
