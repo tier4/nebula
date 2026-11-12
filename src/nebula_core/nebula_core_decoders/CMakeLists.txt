@@ -17,7 +17,7 @@ target_include_directories(
 target_link_libraries(nebula_core_decoders INTERFACE PNG::PNG Eigen3::Eigen
                                                    Boost::headers)
 ament_target_dependencies(nebula_core_decoders INTERFACE nebula_core_common
-                          sensor_msgs)
+                          rcpputils)
 
 install(TARGETS nebula_core_decoders EXPORT export_nebula_core_decoders)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
@@ -46,6 +46,6 @@ if(BUILD_TESTING)
 endif()
 
 ament_export_targets(export_nebula_core_decoders)
-ament_export_dependencies(Boost nebula_core_common sensor_msgs PNG Eigen3)
+ament_export_dependencies(Boost nebula_core_common rcpputils PNG Eigen3)
 
 ament_package()
