@@ -12,6 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// VENDORED from diagnostic_updater, to keep rclcpp out of the non-ROS packages.
+//
+//   Upstream repo : https://github.com/ros/diagnostics
+//   Upstream ref  : 4.0.6 (commit 08dc9bc)
+//   Upstream files: diagnostic_updater/include/diagnostic_updater/
+//     diagnostic_updater.hpp         L72-98   DiagnosticTask
+//                                    L152-196 CompositeDiagnosticTask
+//     diagnostic_status_wrapper.hpp  L90-94   summary()      -> set_summary()
+//                                    L116-129 mergeSummary() -> merge_summary()
+//                                    L222-230 add()          -> add_value()
+//   Upstream license: BSD-3-Clause, Copyright (c) 2008, Willow Garage, Inc.
+//
+// Modifications:
+//   1. tasks write into a plain diagnostic_msgs::msg::DiagnosticStatus, the wrapper's member
+//      functions became free functions;
+//   2. names follow Nebula's snake_case style, tasks are non-copyable;
+//   3. CompositeDiagnosticTask takes children by reference.
+
 #pragma once
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
