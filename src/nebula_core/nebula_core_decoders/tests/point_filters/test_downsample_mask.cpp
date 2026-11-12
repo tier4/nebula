@@ -20,6 +20,7 @@
 #include <nebula_core_common/point_types.hpp>
 
 #include <gtest/gtest.h>
+#include <png.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -169,6 +170,43 @@ TEST(TestDownsampleMask, TestImageReadFailure)
   EXPECT_THROW(
     GrayscaleImage::read(downsample_mask_path() / "does_not_exist.png"), std::runtime_error);
   EXPECT_THROW(GrayscaleImage::read(__FILE__), std::runtime_error);
+}
+
+TEST(TestDownsampleMask, TestImageReadRgb)
+{
+  using nebula::drivers::point_filters::impl::GrayscaleImage;
+
+  auto path = std::filesystem::temp_directory_path() / "nebula_test_downsample_mask_rgb.png";
+
+  // One row of RGB pixels: four neutral ones, then pure red, green and blue
+  const std::vector<uint8_t> rgb = {0,  0,   0, 255, 255, 255, 128, 128, 128, 37, 37,
+                                    37, 255, 0, 0,   0,   255, 0,   0,   0,   255};
+  const size_t width = rgb.size() / 3;
+
+  png_image png{};
+  png.version = PNG_IMAGE_VERSION;
+  png.width = static_cast<png_uint_32>(width);
+  png.height = 1;
+  png.format = PNG_FORMAT_RGB;
+  ASSERT_NE(png_image_write_to_file(&png, path.c_str(), 0, rgb.data(), 0, nullptr), 0);
+
+  auto in = GrayscaleImage::read(path);
+  std::filesystem::remove(path);
+
+  ASSERT_EQ(in.get_width(), width);
+  ASSERT_EQ(in.get_height(), 1);
+
+  // Neutral pixels keep their value, so a grayscale mask saved as RGB behaves like a grayscale one
+  EXPECT_EQ(in.get_pixel(0, 0), 0);
+  EXPECT_EQ(in.get_pixel(1, 0), 255);
+  EXPECT_EQ(in.get_pixel(2, 0), 128);
+  EXPECT_EQ(in.get_pixel(3, 0), 37);
+
+  // Colors are reduced to their perceived brightness (Rec. 709 luminance, computed in linear
+  // light): green counts the most, blue the least, and they do not simply average to 85
+  EXPECT_NEAR(in.get_pixel(4, 0), 127, 2);
+  EXPECT_NEAR(in.get_pixel(5, 0), 220, 2);
+  EXPECT_NEAR(in.get_pixel(6, 0), 76, 2);
 }
 
 TEST(TestDownsampleMask, TestImageReadOversized)
