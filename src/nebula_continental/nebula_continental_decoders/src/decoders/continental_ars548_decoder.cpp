@@ -15,7 +15,6 @@
 #include "nebula_continental_decoders/decoders/continental_ars548_decoder.hpp"
 
 #include <nebula_continental_common/continental_ars548.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
@@ -30,9 +29,10 @@ namespace nebula::drivers::continental_ars548
 {
 ContinentalARS548Decoder::ContinentalARS548Decoder(
   const std::shared_ptr<const continental_ars548::ContinentalARS548SensorConfiguration> &
-    sensor_configuration)
+    sensor_configuration,
+  const std::shared_ptr<loggers::Logger> & logger)
+: config_ptr_(sensor_configuration), logger_(logger)
 {
-  config_ptr_ = sensor_configuration;
 }
 
 Status ContinentalARS548Decoder::get_status()
@@ -115,7 +115,7 @@ bool ContinentalARS548Decoder::process_packet(
     parse_detections_list_packet(*packet_msg);
   } else if (header.method_id.value() == object_list_method_id) {
     if (
-      data.size() == object_list_udp_payload_common ||
+      data.size() == object_list_udp_payload_common &&
       header.length.value() == object_list_pdu_length_common) {
       parse_objects_list_packet(*packet_msg, max_objects_common);
     } else if (
@@ -270,13 +270,18 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
 {
   if (nebula::drivers::continental_ars548::is_corner_radar(radar_status_.yaw)) {
     if (radar_status_.sw_version_minor != sw_version_minor_corner_radar) {
-      RCLCPP_WARN_ONCE(
-        rclcpp::get_logger("ContinentalARS548Decoder"),
-        "Tried to parse an object list packet from a corner radar, but the required software "
-        "version is X.%d.Z. The connected radar firmware version is %d.%d.%d. The object list will "
-        "be skipped.",
-        sw_version_minor_corner_radar, radar_status_.sw_version_major,
-        radar_status_.sw_version_minor, radar_status_.sw_version_patch);
+      if (!corner_radar_firmware_warned_) {
+        corner_radar_firmware_warned_ = true;
+        NEBULA_LOG_STREAM(
+          logger_->warn,
+          "Tried to parse an object list packet from a corner radar, but the required software "
+          "version is X."
+            << sw_version_minor_corner_radar << ".Z. The connected radar firmware version is "
+            << static_cast<int>(radar_status_.sw_version_major) << "."
+            << static_cast<int>(radar_status_.sw_version_minor) << "."
+            << static_cast<int>(radar_status_.sw_version_patch)
+            << ". The object list will be skipped.");
+      }
       return true;
     }
   }
@@ -286,8 +291,20 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
 
   ObjectListPacket object_list;
 
-  // Header part
   const size_t header_part_size = offsetof(ObjectListPacket, objects);
+  const size_t required_size = header_part_size + max_objects * sizeof(ObjectPacket);
+  if (packet_msg.data.size() < required_size) {
+    if (!short_object_list_warned_) {
+      short_object_list_warned_ = true;
+      NEBULA_LOG_STREAM(
+        logger_->error, "Object list packet too short: got "
+                          << packet_msg.data.size() << " bytes, need at least " << required_size
+                          << " bytes. Skipping.");
+    }
+    return false;
+  }
+
+  // Header part
   std::memcpy(reinterpret_cast<void *>(&object_list), packet_msg.data.data(), header_part_size);
 
   // Objects list part

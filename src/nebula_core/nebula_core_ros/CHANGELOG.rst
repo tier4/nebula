@@ -2,6 +2,9 @@
 Changelog for package nebula_core_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (2026-11-11)
+------------------
+
 1.3.1 (2026-10-15)
 ------------------
 * ci(pre-commit): autofix (`#500 <https://github.com/tier4/nebula/issues/500>`_)

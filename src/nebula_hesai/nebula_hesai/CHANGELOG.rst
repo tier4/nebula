@@ -2,6 +2,14 @@
 Changelog for package nebula_hesai
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (2026-11-11)
+------------------
+* fix(hesai_decoder): add handling for fault message packets and corresponding tests (`#521 <https://github.com/tier4/nebula/issues/521>`_)
+  Some sensors (e.g. the AT128P) send fault message packets (SOP 0xCDDC) to the data port, which
+  the decoder reported as truncated point cloud packets about 200 times per second. unpack() now
+  returns the new DecodeError::PACKET_IGNORED for them without logging.
+* Contributors: Autumn60
+
 1.3.1 (2026-10-15)
 ------------------
 * fix(nebula_hesai): register the UDP receiver thread with the CIE thread configurator again (`#498 <https://github.com/tier4/nebula/issues/498>`_)
