@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "nebula_core_ros/agnocast_wrapper/diagnostic_updater.hpp"
+#include "nebula_core_ros/agnocast_wrapper/node.hpp"
 #include "nebula_core_ros/single_consumer_processor.hpp"
 #include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 
@@ -41,7 +43,8 @@ class HesaiHwMonitorWrapper
 {
 public:
   HesaiHwMonitorWrapper(
-    rclcpp::Node * parent_node, diagnostic_updater::Updater & diagnostic_updater,
+    nebula::agnocast_wrapper::Node * parent_node,
+    nebula::agnocast_wrapper::diagnostic_updater::Updater & diagnostic_updater,
     const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
     const std::shared_ptr<SyncToolingWorker> & sync_tooling_worker);
@@ -59,7 +62,8 @@ private:
     diagnostic_updater::DiagnosticStatusWrapper & diagnostics, const std::string & key,
     const json & value);
 
-  void initialize_hesai_diagnostics(diagnostic_updater::Updater & diagnostic_updater);
+  void initialize_hesai_diagnostics(
+    nebula::agnocast_wrapper::diagnostic_updater::Updater & diagnostic_updater);
 
   static std::string get_ptree_value(boost::property_tree::ptree * pt, const std::string & key);
 
@@ -95,12 +99,12 @@ private:
   nebula::Status status_;
 
   const std::shared_ptr<nebula::drivers::HesaiHwInterface> hw_interface_;
-  rclcpp::Node * const parent_node_;
+  nebula::agnocast_wrapper::Node * const parent_node_;
 
   uint16_t diag_span_ms_;
   bool monitor_enabled_;
 
-  rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_;
+  NEBULA_TIMER_PTR fetch_diagnostics_timer_;
 
   std::shared_ptr<HesaiLidarStatusBase> current_status_;
   std::shared_ptr<HesaiLidarMonitor> current_monitor_;

@@ -23,7 +23,7 @@
 
 #include <nebula_core_common/util/errno.hpp>
 #include <nebula_core_common/util/expected.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/socket_utils.hpp>
+#include <nebula_core_hw_interfaces/connections/socket_utils.hpp>
 
 #include <linux/can.h>
 #include <linux/can/raw.h>

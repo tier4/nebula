@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_ContinentalRosDecoderTestsrr520_H
-#define NEBULA_ContinentalRosDecoderTestsrr520_H
+#ifndef NEBULA_CONTINENTAL__NEBULA_CONTINENTAL__TESTS__CONTINENTAL_ROS_DECODER_TEST_SRR520_HPP_
+#define NEBULA_CONTINENTAL__NEBULA_CONTINENTAL__TESTS__CONTINENTAL_ROS_DECODER_TEST_SRR520_HPP_
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_continental_decoders/decoders/continental_srr520_decoder.hpp>
@@ -30,6 +30,8 @@
 
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace nebula::ros
 {
@@ -79,6 +81,14 @@ public:
   Status get_status();
   void read_bag();
 
+  /// @brief Feed a raw packet to the decoder (used for malformed-packet tests)
+  bool process_packet(std::vector<uint8_t> data)
+  {
+    auto packet_msg = std::make_unique<nebula_msgs::msg::NebulaPacket>();
+    packet_msg->data = std::move(data);
+    return driver_ptr_->process_packet(std::move(packet_msg));
+  }
+
 private:
   std::string bag_path_{};
   std::string storage_id_{};
@@ -91,4 +101,4 @@ private:
 
 }  // namespace nebula::ros
 
-#endif  // NEBULA_ContinentalRosDecoderTestsrr520_H
+#endif  // NEBULA_CONTINENTAL__NEBULA_CONTINENTAL__TESTS__CONTINENTAL_ROS_DECODER_TEST_SRR520_HPP_

@@ -96,6 +96,13 @@ private:
 
   std::array<DecodeFrame, 2> frame_buffers_{initialize_frame(), initialize_frame()};
 
+  /// @brief Whether the packet is a fault message (SOP 0xCDDC). Some sensors (e.g. the AT128P)
+  /// send these to the data port alongside point cloud packets.
+  static bool is_fault_message(const std::vector<uint8_t> & packet)
+  {
+    return packet.size() >= 2 && packet[0] == 0xCD && packet[1] == 0xDC;
+  }
+
   /// @brief Validates and parse PandarPacket. Checks size and, if present, CRC checksums.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
@@ -281,6 +288,17 @@ private:
     did_scan_complete_ = true;
 
     auto & completed_frame = frame_buffers_[buffer_index];
+
+    // A scan initialised outside the FoV never gets its timestamp set, yet is still emitted at
+    // the next cut. Drop it: the stamp is known to be wrong and downstream nodes copy it verbatim.
+    if (completed_frame.scan_timestamp_ns == 0) {
+      completed_frame.pointcloud->clear();
+      if (blockage_mask_plugin_ && completed_frame.blockage_mask) {
+        blockage_mask_plugin_->reset(completed_frame.blockage_mask.value());
+      }
+      return;
+    }
+
     constexpr uint64_t nanoseconds_per_second = 1'000'000'000ULL;
     double scan_timestamp_s =
       static_cast<double>(completed_frame.scan_timestamp_ns / nanoseconds_per_second) +
@@ -354,6 +372,10 @@ public:
     util::Stopwatch decode_watch;
     callback_time_ns_ = 0;
     did_scan_complete_ = false;
+
+    if (is_fault_message(packet)) {
+      return {PerformanceCounters{decode_watch.elapsed_ns()}, DecodeError::PACKET_IGNORED};
+    }
 
     if (!parse_packet(packet)) {
       return {PerformanceCounters{decode_watch.elapsed_ns()}, DecodeError::PACKET_PARSE_FAILED};

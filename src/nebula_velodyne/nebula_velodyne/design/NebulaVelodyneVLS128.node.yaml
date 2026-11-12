@@ -1,0 +1,31 @@
+autoware_system_design_format: 0.3.0
+
+name: NebulaVelodyneVLS128.node
+
+package:
+  name: nebula_velodyne
+  provider: nebula
+
+launch:
+  plugin: VelodyneRosWrapper
+  executable: velodyne_ros_wrapper_node
+  node_output: screen
+
+# interfaces
+subscribers: []
+publishers: []
+
+# parameters
+param_files:
+  - name: config_file
+    default: config/VLS128.param.yaml
+    schema: schema/VLS128.schema.json
+    allow_substs: true
+
+param_values:
+  - name: launch_hw
+    type: bool
+    default: true
+
+# processes
+processes: []

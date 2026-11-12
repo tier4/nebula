@@ -4,6 +4,7 @@
 
 #include <nebula_core_common/io/pcd.hpp>
 #include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
+#include <nebula_velodyne_decoders/decoders/vls128_decoder.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <rcpputils/filesystem_helper.hpp>
@@ -59,6 +60,8 @@ Status VelodyneRosDecoderTest::initialize_driver(
   // driver should be initialized here with proper decoder
   driver_ptr_ =
     std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
+  decoder_ptr_ = std::make_shared<drivers::vls128::Vls128Decoder>(
+    sensor_configuration, calibration_configuration);
   return driver_ptr_->get_status();
 }
 
