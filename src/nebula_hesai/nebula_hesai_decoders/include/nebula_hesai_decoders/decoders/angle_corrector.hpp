@@ -15,7 +15,6 @@
 #pragma once
 
 #include <nebula_core_decoders/scan_cutter.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 #include <cstdint>
 

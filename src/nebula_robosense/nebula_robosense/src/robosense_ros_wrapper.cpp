@@ -5,6 +5,7 @@
 #include "nebula_core_ros/parameter_descriptors.hpp"
 
 #include <nebula_core_common/util/string_conversions.hpp>
+#include <nebula_core_ros/rclcpp_logger.hpp>
 #include <rclcpp/qos.hpp>
 
 #include <robosense_msgs/msg/detail/robosense_info_packet__struct.hpp>
@@ -38,7 +39,9 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
-  info_driver_.emplace(sensor_cfg_ptr_);
+  info_driver_.emplace(
+    sensor_cfg_ptr_,
+    std::make_shared<drivers::loggers::RclcppLogger>(get_logger().get_child("InfoDriver")));
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
 

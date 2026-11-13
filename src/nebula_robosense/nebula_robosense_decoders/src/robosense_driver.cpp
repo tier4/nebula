@@ -16,8 +16,11 @@ namespace nebula::drivers
 
 RobosenseDriver::RobosenseDriver(
   const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_configuration,
+  const std::shared_ptr<loggers::Logger> & logger)
+: logger_(logger)
 {
+  auto decoder_logger = logger_->child("Decoder");
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
   switch (sensor_configuration->sensor_model) {
@@ -25,16 +28,16 @@ RobosenseDriver::RobosenseDriver(
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
       break;
     case SensorModel::ROBOSENSE_BPEARL_V3:
-      scan_decoder_.reset(
-        new RobosenseDecoder<BpearlV3>(sensor_configuration, calibration_configuration));
+      scan_decoder_.reset(new RobosenseDecoder<BpearlV3>(
+        sensor_configuration, calibration_configuration, decoder_logger));
       break;
     case SensorModel::ROBOSENSE_BPEARL_V4:
-      scan_decoder_.reset(
-        new RobosenseDecoder<BpearlV4>(sensor_configuration, calibration_configuration));
+      scan_decoder_.reset(new RobosenseDecoder<BpearlV4>(
+        sensor_configuration, calibration_configuration, decoder_logger));
       break;
     case SensorModel::ROBOSENSE_HELIOS:
-      scan_decoder_.reset(
-        new RobosenseDecoder<Helios>(sensor_configuration, calibration_configuration));
+      scan_decoder_.reset(new RobosenseDecoder<Helios>(
+        sensor_configuration, calibration_configuration, decoder_logger));
       break;
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;
@@ -59,10 +62,9 @@ std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::parse_cloud_pa
   const std::vector<uint8_t> & packet)
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
-  auto logger = rclcpp::get_logger("RobosenseDriver");
 
   if (driver_status_ != nebula::Status::OK) {
-    RCLCPP_ERROR(logger, "Driver not OK.");
+    logger_->error("Driver not OK.");
     return pointcloud;
   }
 
