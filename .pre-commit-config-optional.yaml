@@ -14,3 +14,5 @@ repos:
     hooks:
       - id: markdown-link-check
         args: [--quiet, --config=.markdown-link-check.json]
+
+exclude: vendor/

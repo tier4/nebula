@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!--
+  Full hardware launch for Nebula Ouster (component container + parameters).
+-->
+<launch>
+    <arg name="launch_hw" default="true" description="Bind UDP and receive live packets"/>
+    <arg name="config_file" default="$(find-pkg-share nebula_ouster)/config/ouster_sensor.param.yaml"/>
+
+    <node pkg="nebula_ouster" exec="ouster_ros_wrapper_node" name="ouster_ros_wrapper_node" output="screen">
+        <param from="$(var config_file)" allow_substs="true"/>
+        <param name="launch_hw" value="$(var launch_hw)"/>
+    </node>
+</launch>
