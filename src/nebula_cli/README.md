@@ -36,3 +36,18 @@ Input topic types: `PandarScan`, `VelodyneScan`, `RobosenseScan`, `NebulaPackets
 - Calibration files default to those shipped with the vendor `_decoders` package.
   For PandarAT128 pass the correction file with `-p correction_file:=<path>`.
 - Continental radars are not supported (they do not produce point clouds).
+
+## Output point fields
+
+The fields of each output `PointCloud2` depend on `--point-format` (per sensor):
+
+| Format             | Fields (type)                                                                                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `full` (default)   | `x`, `y`, `z` (f32), `intensity` (u8), `return_type` (u8), `channel` (u16), `azimuth` (f32), `elevation` (f32), `distance` (f32), `time_stamp` (u32)           |
+| `xyzir`            | `x`, `y`, `z` (f32), `intensity` (f32), `ring` (u16)                                                                                                           |
+| `xyziradt`         | `x`, `y`, `z` (f32), `intensity` (f32), `ring` (u16), `azimuth` (f32), `distance` (f32), `return_type` (u8), `time_stamp` (f64)                                |
+
+- `full` is the native Nebula point type (`PointXYZIRCAEDT`); its `time_stamp` is the offset in
+  nanoseconds from the cloud header stamp.
+- In `xyziradt`, `time_stamp` is absolute time in seconds (header stamp plus the point offset).
+- Header: `stamp` is the cloud timestamp, `frame_id` is the `--frame-id` / `frame_id` param (default `lidar`).
