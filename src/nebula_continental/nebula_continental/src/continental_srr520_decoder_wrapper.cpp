@@ -31,7 +31,7 @@ ContinentalSRR520DecoderWrapper::ContinentalSRR520DecoderWrapper(
   std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface> hw_interface_ptr)
 : parent_node_(parent_node),
   status_(nebula::Status::NOT_INITIALIZED),
-  logger_(parent_node->get_logger().get_child("ContinentalSRR520Decoder")),
+  logger_(parent_node->get_logger().get_child("DecoderWrapper")),
   sensor_cfg_(config),
   hw_interface_ptr_(hw_interface_ptr)
 {
@@ -106,8 +106,7 @@ Status ContinentalSRR520DecoderWrapper::initialize_driver(
 {
   driver_ptr_.reset();
   driver_ptr_ = std::make_shared<drivers::continental_srr520::ContinentalSRR520Decoder>(
-    config, std::make_shared<drivers::loggers::RclcppLogger>(
-              parent_node_->get_logger().get_child("Driver")));
+    config, std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Decoder")));
 
   driver_ptr_->register_near_detection_list_callback(
     std::bind(

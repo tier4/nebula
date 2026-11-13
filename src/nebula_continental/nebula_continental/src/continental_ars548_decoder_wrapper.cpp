@@ -51,7 +51,7 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   detections_diagnostics_updater_(parent_node),
   liveness_diagnostics_updater_(parent_node),
   status_(nebula::Status::NOT_INITIALIZED),
-  logger_(parent_node->get_logger().get_child("ContinentalARS548Decoder")),
+  logger_(parent_node->get_logger().get_child("DecoderWrapper")),
   parent_node_(parent_node),
   config_ptr_(config_ptr)
 {
@@ -133,7 +133,7 @@ Status ContinentalARS548DecoderWrapper::initialize_driver(
 {
   driver_ptr_.reset();
   driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(
-    config, std::make_shared<drivers::loggers::RclcppLogger>(logger_));
+    config, std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Decoder")));
 
   driver_ptr_->register_detection_list_callback(
     std::bind(
