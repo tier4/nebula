@@ -170,7 +170,7 @@ public:
     calib->calibration_file = path;
 
     driver_ = std::make_shared<drivers::VelodyneDriver>(
-      std::make_shared<const drivers::VelodyneSensorConfiguration>(cfg), calib);
+      std::make_shared<const drivers::VelodyneSensorConfiguration>(cfg), calib, make_logger());
     if (driver_->get_status() != Status::OK) {
       throw std::runtime_error(
         "Velodyne driver init failed: " + status_message(driver_->get_status()));
@@ -200,7 +200,7 @@ public:
     cfg.scan_phase = p.get_double("scan_phase", 0.0);
     cfg.dual_return_distance_threshold = p.get_double("dual_return_distance_threshold", 0.1);
     cfg_ = std::make_shared<drivers::RobosenseSensorConfiguration>(cfg);
-    info_driver_.emplace(cfg_);
+    info_driver_.emplace(cfg_, make_logger());
   }
 
   /// Robosense sensors send their calibration and return mode in info (DIFOP) packets.
@@ -217,7 +217,8 @@ public:
     calib.create_corrected_channels();
     driver_ = std::make_shared<drivers::RobosenseDriver>(
       std::make_shared<const drivers::RobosenseSensorConfiguration>(cfg),
-      std::make_shared<const drivers::RobosenseCalibrationConfiguration>(std::move(calib)));
+      std::make_shared<const drivers::RobosenseCalibrationConfiguration>(std::move(calib)),
+      make_logger());
     if (driver_->get_status() != Status::OK) {
       throw std::runtime_error(
         "Robosense driver init failed: " + status_message(driver_->get_status()));
