@@ -56,5 +56,4 @@ override:
         - to_output: scan_raw
         - to_output: objects_raw
         - to_output: marker_array
-        - to_output: diagnostics
         - to_output: radar_info
