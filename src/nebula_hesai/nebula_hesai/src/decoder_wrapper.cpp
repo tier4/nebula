@@ -44,7 +44,9 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   parent_node_(*parent_node),
   sensor_cfg_(config),
   calibration_cfg_ptr_(calibration),
-  publish_diagnostic_(make_rate_bound_status(sensor_cfg_->rotation_speed, *parent_node)),
+  diagnostics_clock_(make_diagnostics_clock(*parent_node)),
+  publish_diagnostic_(
+    make_rate_bound_status(sensor_cfg_->rotation_speed, *parent_node, diagnostics_clock_)),
   debug_publisher_(parent_node, "nebula")
 {
   if (!sensor_cfg_) {
@@ -97,7 +99,7 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
 
-  diagnostic_updater.add(publish_diagnostic_);
+  add_diagnostic_task(diagnostic_updater, publish_diagnostic_);
 }
 
 void HesaiDecoderWrapper::on_config_change(
@@ -253,17 +255,18 @@ void HesaiDecoderWrapper::initialize_functional_safety(
   }
 
   if (!fs_config) {
-    functional_safety_diagnostic_.emplace(&parent_node_, std::make_unique<FunctionalSafetyBasic>());
-    diagnostic_updater.add(functional_safety_diagnostic_.value());
+    functional_safety_diagnostic_.emplace(
+      diagnostics_clock_, std::make_unique<FunctionalSafetyBasic>());
+    add_diagnostic_task(diagnostic_updater, functional_safety_diagnostic_.value());
     return;
   }
 
   auto error_definitions = read_error_definitions_from_csv(fs_config->error_definitions_path);
   functional_safety_diagnostic_.emplace(
-    &parent_node_,
+    diagnostics_clock_,
     std::make_unique<FunctionalSafetyAdvanced>(error_definitions, fs_config->ignored_error_codes));
 
-  diagnostic_updater.add(functional_safety_diagnostic_.value());
+  add_diagnostic_task(diagnostic_updater, functional_safety_diagnostic_.value());
 }
 
 void HesaiDecoderWrapper::initialize_packet_loss_diagnostic(
@@ -275,8 +278,9 @@ void HesaiDecoderWrapper::initialize_packet_loss_diagnostic(
 
   uint64_t error_threshold =
     parent_node_.declare_parameter<uint16_t>("diagnostics.packet_loss.error_threshold");
-  packet_loss_diagnostic_.emplace(error_threshold, parent_node_.get_clock());
-  diagnostic_updater.add(packet_loss_diagnostic_.value());
+  packet_loss_diagnostic_.emplace(
+    error_threshold, std::make_shared<RclcppClock>(parent_node_.get_clock()));
+  add_diagnostic_task(diagnostic_updater, packet_loss_diagnostic_.value());
 }
 
 std::pair<

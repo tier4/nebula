@@ -16,16 +16,19 @@
 
 #include "nebula_core_ros/agnocast_wrapper/diagnostic_updater.hpp"
 #include "nebula_core_ros/agnocast_wrapper/node.hpp"
-#include "nebula_core_ros/diagnostics/hysteresis_state_machine.hpp"
-#include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
-#include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
+#include "nebula_core_ros/diagnostics/diagnostic_task.hpp"
 #include "nebula_core_ros/parameter_descriptors.hpp"
+#include "nebula_core_ros/rclcpp_clock.hpp"
 #include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_continental_common/continental_ars548.hpp>
 #include <nebula_continental_decoders/decoders/continental_ars548_decoder.hpp>
+#include <nebula_core_common/diagnostics/hysteresis_state_machine.hpp>
+#include <nebula_core_common/diagnostics/liveness_monitor.hpp>
+#include <nebula_core_common/diagnostics/rate_bound_status.hpp>
 #include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/util/clock.hpp>
 #include <nebula_core_common/util/expected.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rcpputils/thread_safety_annotations.hpp>
@@ -175,10 +178,12 @@ private:
 
   /// @brief Make a RateBoundStatus object from the node parameters
   /// @param node The node to read the parameters from
+  /// @param clock The clock to measure the rate on
   /// @param name The name of the rate bound status
   /// @return RateBoundStatus for OK and WARN diagnostics
-  static custom_diagnostic_tasks::RateBoundStatus make_rate_bound_status(
-    nebula::agnocast_wrapper::Node * const node, const std::string & name)
+  static diagnostics::RateBoundStatus make_rate_bound_status(
+    nebula::agnocast_wrapper::Node * const node, const std::shared_ptr<const util::Clock> & clock,
+    const std::string & name)
   {
     static constexpr bool immediate_error_report = false;
     static constexpr bool immediate_relax_state = true;
@@ -202,10 +207,10 @@ private:
     auto num_frame_transition =
       static_cast<size_t>(read_int_param("diagnostics.rate_bound_status.num_frame_transition"));
 
-    custom_diagnostic_tasks::RateBoundStatusParam ok_params(min_ok_hz);
-    custom_diagnostic_tasks::RateBoundStatusParam warn_params(min_warn_hz);
+    diagnostics::RateBoundStatusParam ok_params(min_ok_hz);
+    diagnostics::RateBoundStatusParam warn_params(min_warn_hz);
 
-    return {node,
+    return {clock,
             ok_params,
             warn_params,
             num_frame_transition,
@@ -218,7 +223,7 @@ private:
   /// @param node The node to read the parameters from
   /// @param diagnostics_ns The diagnostics namespace for parameter
   /// @return HysteresisStateMachine for internal diagnostics
-  static custom_diagnostic_tasks::HysteresisStateMachine make_hysteresis_status(
+  static diagnostics::HysteresisStateMachine make_hysteresis_status(
     nebula::agnocast_wrapper::Node * const node, const std::string & diagnostics_ns)
   {
     static constexpr bool immediate_error_report = false;
@@ -234,15 +239,16 @@ private:
     auto num_frame_transition = static_cast<size_t>(
       read_int_param("diagnostics." + diagnostics_ns + ".num_frame_transition"));
 
-    return custom_diagnostic_tasks::HysteresisStateMachine(
+    return diagnostics::HysteresisStateMachine(
       num_frame_transition, immediate_error_report, immediate_relax_state);
   }
 
-  custom_diagnostic_tasks::RateBoundStatus objects_rate_bound_status_;
-  custom_diagnostic_tasks::RateBoundStatus detections_rate_bound_status_;
-  custom_diagnostic_tasks::HysteresisStateMachine blockage_status_;
-  custom_diagnostic_tasks::HysteresisStateMachine internal_status_;
-  nebula::ros::LivenessMonitor liveness_monitor_;
+  std::shared_ptr<const util::Clock> diagnostics_clock_;
+  diagnostics::RateBoundStatus objects_rate_bound_status_;
+  diagnostics::RateBoundStatus detections_rate_bound_status_;
+  diagnostics::HysteresisStateMachine blockage_status_;
+  diagnostics::HysteresisStateMachine internal_status_;
+  diagnostics::LivenessMonitor liveness_monitor_;
   nebula::agnocast_wrapper::diagnostic_updater::Updater objects_diagnostics_updater_;
   nebula::agnocast_wrapper::diagnostic_updater::Updater detections_diagnostics_updater_;
   nebula::agnocast_wrapper::diagnostic_updater::Updater liveness_diagnostics_updater_;

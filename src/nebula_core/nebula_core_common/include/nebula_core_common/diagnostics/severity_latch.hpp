@@ -14,41 +14,45 @@
 
 #pragma once
 
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <rcpputils/thread_safety_annotations.hpp>
+#include "nebula_core_common/diagnostics/diagnostic_task.hpp"
 
-#include <diagnostic_msgs/msg/diagnostic_status.hpp>
+#include <rcpputils/thread_safety_annotations.hpp>
 
 #include <mutex>
 #include <optional>
 #include <string>
 
-namespace nebula::ros
+namespace nebula::diagnostics
 {
 
-class SeverityLatch : public diagnostic_updater::DiagnosticTask
+/**
+ * @brief Reports the most severe status submitted since the last `run()`.
+ *
+ * If nothing was submitted since then, the last submitted status is reported again.
+ */
+class SeverityLatch : public DiagnosticTask
 {
 public:
-  explicit SeverityLatch(const std::string & name) : diagnostic_updater::DiagnosticTask(name) {}
+  using DiagnosticTask::DiagnosticTask;
 
-  void run(diagnostic_updater::DiagnosticStatusWrapper & status) override
+  void run(DiagnosticStatus & status) override
   {
     std::lock_guard lock(mutex_);
 
     if (!current_status_) {
-      status.summary(diagnostic_msgs::msg::DiagnosticStatus::STALE, "No status available");
+      set_summary(status, DiagnosticStatus::STALE, "No status available");
       return;
     }
 
     status.values.insert(
       status.values.end(), current_status_->values.begin(), current_status_->values.end());
-    status.summary(current_status_->level, current_status_->message);
+    set_summary(status, current_status_->level, current_status_->message);
 
     // Reported the status, allow it to be reset in the next `submit()`.
     should_reset_ = true;
   }
 
-  void submit(diagnostic_msgs::msg::DiagnosticStatus status)
+  void submit(const DiagnosticStatus & status)
   {
     std::lock_guard lock(mutex_);
 
@@ -72,8 +76,7 @@ private:
   //! have something to report in the next `run()` the status is kept until the next one is
   //! `submit()`-ed. This member signals that the status has been reported and can be reset.
   bool should_reset_ RCPPUTILS_TSA_GUARDED_BY(mutex_) = false;
-  std::optional<diagnostic_msgs::msg::DiagnosticStatus> current_status_
-    RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::optional<DiagnosticStatus> current_status_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 };
 
-}  // namespace nebula::ros
+}  // namespace nebula::diagnostics

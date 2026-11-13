@@ -41,12 +41,14 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     config_ptr,
   bool launch_hw)
-: objects_rate_bound_status_(make_rate_bound_status(parent_node, "Objects rate bound status")),
+: diagnostics_clock_(make_diagnostics_clock(*parent_node)),
+  objects_rate_bound_status_(
+    make_rate_bound_status(parent_node, diagnostics_clock_, "Objects rate bound status")),
   detections_rate_bound_status_(
-    make_rate_bound_status(parent_node, "Detections rate bound status")),
+    make_rate_bound_status(parent_node, diagnostics_clock_, "Detections rate bound status")),
   blockage_status_(make_hysteresis_status(parent_node, "blockage")),
   internal_status_(make_hysteresis_status(parent_node, "internal")),
-  liveness_monitor_("Liveness", parent_node, 100ms),
+  liveness_monitor_("Liveness", diagnostics_clock_, 100ms),
   objects_diagnostics_updater_(parent_node),
   detections_diagnostics_updater_(parent_node),
   liveness_diagnostics_updater_(parent_node),
@@ -111,9 +113,9 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
 
   // Set up diagnostics
-  objects_diagnostics_updater_.add(objects_rate_bound_status_);
-  detections_diagnostics_updater_.add(detections_rate_bound_status_);
-  liveness_diagnostics_updater_.add(liveness_monitor_);
+  add_diagnostic_task(objects_diagnostics_updater_, objects_rate_bound_status_);
+  add_diagnostic_task(detections_diagnostics_updater_, detections_rate_bound_status_);
+  add_diagnostic_task(liveness_diagnostics_updater_, liveness_monitor_);
   objects_diagnostics_updater_.setHardwareID(config_ptr_->frame_id);
   detections_diagnostics_updater_.setHardwareID(config_ptr_->frame_id);
   liveness_diagnostics_updater_.setHardwareID(config_ptr_->frame_id);
@@ -351,10 +353,10 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
     internal_diagnostic_status, "Temperature status", sensor_status.temperature_status);
   add_diagnostic(
     internal_diagnostic_status, "Effective internal status",
-    custom_diagnostic_tasks::get_level_string(internal_status_.get_current_state_level()));
+    diagnostics::get_level_string(internal_status_.get_current_state_level()));
   add_diagnostic(
     internal_diagnostic_status, "Candidate internal status",
-    custom_diagnostic_tasks::get_level_string(internal_status_.get_candidate_level()));
+    diagnostics::get_level_string(internal_status_.get_candidate_level()));
   add_diagnostic(
     internal_diagnostic_status, "Candidate status observed frames",
     std::to_string(internal_status_.get_candidate_num_observation()));
@@ -378,10 +380,10 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   add_diagnostic(blockage_diagnostic_status, "Blockage status", sensor_status.blockage_status);
   add_diagnostic(
     blockage_diagnostic_status, "Effective blockage status",
-    custom_diagnostic_tasks::get_level_string(blockage_status_.get_current_state_level()));
+    diagnostics::get_level_string(blockage_status_.get_current_state_level()));
   add_diagnostic(
     blockage_diagnostic_status, "Candidate blockage status",
-    custom_diagnostic_tasks::get_level_string(blockage_status_.get_candidate_level()));
+    diagnostics::get_level_string(blockage_status_.get_candidate_level()));
   add_diagnostic(
     blockage_diagnostic_status, "Candidate status observed frames",
     std::to_string(blockage_status_.get_candidate_num_observation()));
