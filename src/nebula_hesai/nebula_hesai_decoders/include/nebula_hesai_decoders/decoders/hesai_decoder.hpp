@@ -28,8 +28,6 @@
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_common/util/stopwatch.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
-#include <rclcpp/logging.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 #include <array>
 #include <cmath>
