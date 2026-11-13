@@ -204,17 +204,11 @@ static bool read_rejects_format(png_uint_32 format, const std::vector<SampleT> &
 
 TEST(TestDownsampleMask, TestImageReadRejectsNonGrayscale)
 {
-  // Sanity check: the helper's output is accepted when it is 8-bit grayscale
   EXPECT_FALSE(read_rejects_format<uint8_t>(PNG_FORMAT_GRAY, {0, 128, 255}));
 
-  // Color, even if all pixels are neutral
   EXPECT_TRUE(read_rejects_format<uint8_t>(PNG_FORMAT_RGB, {0, 0, 0, 128, 128, 128}));
   EXPECT_TRUE(read_rejects_format<uint8_t>(PNG_FORMAT_RGBA, {0, 0, 0, 255, 128, 128, 128, 255}));
-
-  // Alpha channel, even if all pixels are opaque
   EXPECT_TRUE(read_rejects_format<uint8_t>(PNG_FORMAT_GA, {0, 255, 128, 255}));
-
-  // 16-bit samples
   EXPECT_TRUE(read_rejects_format<uint16_t>(PNG_FORMAT_LINEAR_Y, {0, 32768, 65535}));
 }
 
