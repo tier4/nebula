@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_core_common/loggers/logger.hpp"
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_core_common/point_types.hpp"
@@ -37,16 +38,20 @@ private:
   /// @brief Decoder according to the model
   std::shared_ptr<RobosenseScanDecoder> scan_decoder_;
 
+  std::shared_ptr<loggers::Logger> logger_;
+
 public:
   RobosenseDriver() = delete;
 
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver
-  explicit RobosenseDriver(
+  /// @param logger Logger used by this driver and its decoder
+  RobosenseDriver(
     const std::shared_ptr<const drivers::RobosenseSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::RobosenseCalibrationConfiguration> &
-      calibration_configuration);
+      calibration_configuration,
+    const std::shared_ptr<loggers::Logger> & logger);
 
   /// @brief Get current status of this driver
   /// @return Current status
