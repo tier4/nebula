@@ -208,7 +208,6 @@ TEST(HesaiCommonTest, SupportPredicatesReflectVendorCapabilities)
   EXPECT_FALSE(nebula::drivers::supports_lidar_monitor(SensorModel::HESAI_PANDAR40P));
   EXPECT_TRUE(nebula::drivers::supports_lidar_monitor(SensorModel::HESAI_PANDARXT32));
 
-  EXPECT_TRUE(nebula::drivers::supports_functional_safety(SensorModel::HESAI_PANDAR128_E3X));
   EXPECT_TRUE(nebula::drivers::supports_functional_safety(SensorModel::HESAI_PANDAR128_E4X));
   EXPECT_TRUE(nebula::drivers::supports_functional_safety(SensorModel::HESAI_PANDARQT128));
   EXPECT_FALSE(nebula::drivers::supports_functional_safety(SensorModel::HESAI_PANDARXT32));
@@ -218,7 +217,7 @@ TEST(HesaiCommonTest, SupportPredicatesReflectVendorCapabilities)
   EXPECT_FALSE(nebula::drivers::supports_packet_loss_detection(SensorModel::HESAI_PANDARXT16));
 
   EXPECT_TRUE(nebula::drivers::supports_blockage_mask(SensorModel::HESAI_PANDAR128_E4X));
-  EXPECT_FALSE(nebula::drivers::supports_blockage_mask(SensorModel::HESAI_PANDAR128_E3X));
+  EXPECT_FALSE(nebula::drivers::supports_blockage_mask(SensorModel::HESAI_PANDARQT128));
 }
 
 TEST(HesaiCommonTest, AdvancedFunctionalSafetyConfigurationStreamingReflectsConfiguredValues)

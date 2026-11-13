@@ -189,9 +189,7 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
   config.packet_mtu_size = declare_parameter<uint16_t>("packet_mtu_size", param_read_only());
 
   config.hires_mode = false;
-  if (
-    config.sensor_model == drivers::SensorModel::HESAI_PANDAR128_E4X ||
-    config.sensor_model == drivers::SensorModel::HESAI_PANDAR128_E3X) {
+  if (config.sensor_model == drivers::SensorModel::HESAI_PANDAR128_E4X) {
     config.hires_mode = this->declare_parameter<bool>("hires_mode", param_read_write());
   }
 
