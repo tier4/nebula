@@ -17,6 +17,7 @@
 #include <nebula_core_common/io/pcd.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
+#include <nebula_core_ros/rclcpp_logger.hpp>
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writers/sequential_writer.hpp>
 
@@ -60,8 +61,9 @@ Status VelodyneRosOfflineExtractBag::initialize_driver(
   std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
-  driver_ptr_ =
-    std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
+  driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(
+    sensor_configuration, calibration_configuration,
+    std::make_shared<drivers::loggers::RclcppLogger>(get_logger()));
   return driver_ptr_->get_status();
 }
 

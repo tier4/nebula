@@ -18,7 +18,6 @@
   <depend>nebula_core_common</depend>
   <depend>nebula_core_decoders</depend>
   <depend>nebula_velodyne_common</depend>
-  <depend>rclcpp</depend>
   <depend>velodyne_msgs</depend>
 
   <export>
