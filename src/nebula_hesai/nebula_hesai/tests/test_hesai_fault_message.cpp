@@ -27,7 +27,7 @@ using nebula::Status;
 using nebula::drivers::DecodeError;
 using nebula::drivers::HesaiCorrection;
 using nebula::drivers::HesaiDecoder;
-using nebula::drivers::HesaiSensorConfiguration;
+using nebula::drivers::HesaiDecoderConfiguration;
 using nebula::drivers::PandarAT128;
 
 namespace
@@ -50,16 +50,15 @@ public:
   size_t n_errors{0};
 };
 
-std::shared_ptr<HesaiSensorConfiguration> make_config()
+HesaiDecoderConfiguration make_config()
 {
-  auto config = std::make_shared<HesaiSensorConfiguration>();
-  config->sensor_model = nebula::drivers::SensorModel::HESAI_PANDARAT128;
-  config->return_mode = nebula::drivers::ReturnMode::DUAL_LAST_STRONGEST;
-  config->min_range = 0.3;
-  config->max_range = 300;
-  config->cloud_min_angle = 30;
-  config->cloud_max_angle = 150;
-  config->cut_angle = 150;
+  HesaiDecoderConfiguration config;
+  config.sensor_model = nebula::drivers::SensorModel::HESAI_PANDARAT128;
+  config.min_range = 0.3;
+  config.max_range = 300;
+  config.cloud_min_angle = 30;
+  config.cloud_max_angle = 150;
+  config.cut_angle = 150;
   return config;
 }
 

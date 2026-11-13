@@ -22,6 +22,7 @@
 #include "nebula_hesai_decoders/decoders/hesai_packet.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_scan_decoder.hpp"
 #include "nebula_hesai_decoders/decoders/packet_loss_detector.hpp"
+#include "nebula_hesai_decoders/hesai_decoder_configuration.hpp"
 
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/nebula_common.hpp>
@@ -52,7 +53,7 @@ private:
   };
 
   /// @brief Configuration for this decoder
-  const std::shared_ptr<const drivers::HesaiSensorConfiguration> sensor_configuration_;
+  const HesaiDecoderConfiguration decoder_configuration_;
 
   /// @brief The sensor definition, used for return mode and time offset handling
   SensorT sensor_{};
@@ -160,8 +161,8 @@ private:
 
         if (
           distance < SensorT::min_range || SensorT::max_range < distance ||
-          distance < sensor_configuration_->min_range ||
-          sensor_configuration_->max_range < distance) {
+          distance < decoder_configuration_.min_range ||
+          decoder_configuration_.max_range < distance) {
           point_is_valid = false;
         }
 
@@ -185,7 +186,7 @@ private:
 
             if (
               fabsf(get_distance(*return_units[return_idx]) - distance) <
-              sensor_configuration_->dual_return_distance_threshold) {
+              decoder_configuration_.dual_return_distance_threshold) {
               is_below_multi_return_threshold = true;
               break;
             }
@@ -327,10 +328,10 @@ private:
 
 public:
   /// @brief Constructor
-  /// @param sensor_configuration SensorConfiguration for this decoder
+  /// @param decoder_configuration Settings for this decoder
   /// @param correction_data Calibration data for this decoder
   explicit HesaiDecoder(
-    const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
+    const HesaiDecoderConfiguration & decoder_configuration,
     const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
       correction_data,
     const std::shared_ptr<loggers::Logger> & logger,
@@ -339,12 +340,12 @@ public:
     const std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>> &
       packet_loss_detector,
     std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
-  : sensor_configuration_(sensor_configuration),
+  : decoder_configuration_(decoder_configuration),
     angle_corrector_(correction_data),
     scan_cutter_(
-      2 * M_PIf, deg2rad(sensor_configuration_->cut_angle),
-      deg2rad(sensor_configuration_->cloud_min_angle),
-      deg2rad(sensor_configuration_->cloud_max_angle),
+      2 * M_PIf, deg2rad(decoder_configuration_.cut_angle),
+      deg2rad(decoder_configuration_.cloud_min_angle),
+      deg2rad(decoder_configuration_.cloud_max_angle),
       [this](uint8_t buffer_index) { on_scan_complete(buffer_index); },
       [this](uint8_t buffer_index) { on_set_timestamp(buffer_index); }),
     functional_safety_decoder_(functional_safety_decoder),
@@ -352,9 +353,9 @@ public:
     logger_(logger),
     blockage_mask_plugin_(std::move(blockage_mask_plugin))
   {
-    if (sensor_configuration->downsample_mask_path) {
+    if (decoder_configuration_.downsample_mask_path) {
       mask_filter_ = point_filters::DownsampleMaskFilter(
-        sensor_configuration->downsample_mask_path.value(), SensorT::fov_mdeg.azimuth,
+        decoder_configuration_.downsample_mask_path.value(), SensorT::fov_mdeg.azimuth,
         SensorT::peak_resolution_mdeg.azimuth, SensorT::packet_t::n_channels,
         logger_->child("Downsample Mask"), true, sensor_.get_dither_transform());
     }

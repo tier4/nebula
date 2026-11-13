@@ -343,9 +343,10 @@ std::shared_ptr<drivers::HesaiDriver> HesaiDecoderWrapper::initialize_driver(
   }
 
   return std::make_shared<drivers::HesaiDriver>(
-    config, calibration, std::make_shared<drivers::loggers::RclcppLogger>(logger_),
-    std::move(pointcloud_cb), std::move(alive_cb), std::move(stuck_cb), std::move(status_cb),
-    std::move(lost_cb), std::move(blockage_mask_plugin));
+    drivers::make_decoder_configuration(*config), calibration,
+    std::make_shared<drivers::loggers::RclcppLogger>(logger_), std::move(pointcloud_cb),
+    std::move(alive_cb), std::move(stuck_cb), std::move(status_cb), std::move(lost_cb),
+    std::move(blockage_mask_plugin));
 }
 
 nebula::Status HesaiDecoderWrapper::status()

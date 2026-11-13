@@ -10,6 +10,7 @@
 #include <nebula_core_common/util/string_conversions.hpp>
 #include <nebula_core_decoders/angles.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
+#include <nebula_hesai_decoders/hesai_decoder_configuration.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -356,31 +357,11 @@ Status HesaiRosWrapper::validate_and_set_config(
     RCLCPP_ERROR(get_logger(), "Invalid PTP Switch Type Provided. Please use 'tsn' or 'non_tsn'");
     return Status::SENSOR_CONFIG_ERROR;
   }
-  if (!drivers::angle_is_between<double>(
-        new_config->cloud_min_angle, new_config->cloud_max_angle, new_config->cut_angle)) {
-    RCLCPP_ERROR(get_logger(), "Cannot cut scan outside of the FoV.");
-    return Status::SENSOR_CONFIG_ERROR;
-  }
 
-  bool fov_is_360 = new_config->cloud_min_angle == 0 && new_config->cloud_max_angle == 360;
-  if (!fov_is_360 && new_config->cut_angle == new_config->cloud_min_angle) {
-    RCLCPP_ERROR(
-      get_logger(), "Cannot cut scan right at the start of the FoV. Cut at the end instead.");
-    return Status::SENSOR_CONFIG_ERROR;
-  }
-
-  // Handling cutting at 360deg (as opposed to 0deg) for a full 360deg FoV requires a special case
-  // in the cutting logic. Thus, require the user to cut at 0deg.
-  if (fov_is_360 && new_config->cut_angle == 360) {
-    RCLCPP_ERROR(get_logger(), "Cannot cut a 360deg FoV at 360deg. Cut at 0deg instead.");
-    return Status::SENSOR_CONFIG_ERROR;
-  }
-
-  if (
-    new_config->downsample_mask_path &&
-    !std::filesystem::exists(new_config->downsample_mask_path.value())) {
-    RCLCPP_ERROR_STREAM(
-      get_logger(), "Downsample mask not found: " << new_config->downsample_mask_path.value());
+  const auto decoder_config_validation =
+    drivers::validate(drivers::make_decoder_configuration(*new_config));
+  if (!decoder_config_validation.has_value()) {
+    RCLCPP_ERROR_STREAM(get_logger(), decoder_config_validation.error());
     return Status::SENSOR_CONFIG_ERROR;
   }
 
