@@ -18,17 +18,19 @@
 #include <nebula_core_common/loggers/console_logger.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/point_types.hpp>
-#include <png++/gray_pixel.hpp>
-#include <png++/image.hpp>
 
 #include <gtest/gtest.h>
+#include <png.h>
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
+#include <ios>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -45,6 +47,7 @@ TEST(TestDownsampleMask, TestDithering)
 {
   using nebula::drivers::point_filters::g_default_dither_transform;
   using nebula::drivers::point_filters::impl::dither;
+  using nebula::drivers::point_filters::impl::GrayscaleImage;
 
   size_t quantization_levels = 10;
   size_t w = 10;
@@ -56,8 +59,8 @@ TEST(TestDownsampleMask, TestDithering)
     auto image_path = downsample_mask_path() / ("q" + std::to_string(quantile) + ".png");
     ASSERT_TRUE(std::filesystem::is_regular_file(image_path));
 
-    png::image<png::gray_pixel> in{image_path};
-    png::image<png::gray_pixel> out{in.get_width(), in.get_height()};
+    auto in = GrayscaleImage::read(image_path);
+    GrayscaleImage out{in.get_width(), in.get_height()};
     dither(in, out, quantization_levels, g_default_dither_transform);
 
     size_t n_kept = 0;
@@ -132,6 +135,103 @@ TEST(TestDownsampleMask, TestFilter)
   EXPECT_EQ(azi_kept_max, azi_range_mdeg.end - 1);
   EXPECT_EQ(channel_kept_min, 0);
   EXPECT_EQ(channel_kept_max, n_channels - 1);
+}
+
+TEST(TestDownsampleMask, TestImageRoundTrip)
+{
+  using nebula::drivers::point_filters::impl::GrayscaleImage;
+
+  auto path = std::filesystem::temp_directory_path() / "nebula_test_downsample_mask_round_trip.png";
+
+  GrayscaleImage out{3, 2};
+  for (size_t y = 0; y < out.get_height(); ++y) {
+    for (size_t x = 0; x < out.get_width(); ++x) {
+      out.set_pixel(x, y, static_cast<uint8_t>(50 * (y * out.get_width() + x)));
+    }
+  }
+  out.write(path);
+
+  auto in = GrayscaleImage::read(path);
+  std::filesystem::remove(path);
+
+  ASSERT_EQ(in.get_width(), out.get_width());
+  ASSERT_EQ(in.get_height(), out.get_height());
+  for (size_t y = 0; y < out.get_height(); ++y) {
+    for (size_t x = 0; x < out.get_width(); ++x) {
+      EXPECT_EQ(in.get_pixel(x, y), out.get_pixel(x, y));
+    }
+  }
+}
+
+TEST(TestDownsampleMask, TestImageReadFailure)
+{
+  using nebula::drivers::point_filters::impl::GrayscaleImage;
+
+  EXPECT_THROW(
+    GrayscaleImage::read(downsample_mask_path() / "does_not_exist.png"), std::runtime_error);
+  EXPECT_THROW(GrayscaleImage::read(__FILE__), std::runtime_error);
+}
+
+/// Write `pixels` as a single-row PNG of the given libpng format and return whether
+/// `GrayscaleImage::read` rejects it.
+template <typename SampleT>
+static bool read_rejects_format(png_uint_32 format, const std::vector<SampleT> & pixels)
+{
+  using nebula::drivers::point_filters::impl::GrayscaleImage;
+
+  auto path = std::filesystem::temp_directory_path() / "nebula_test_downsample_mask_format.png";
+
+  png_image png{};
+  png.version = PNG_IMAGE_VERSION;
+  png.width = static_cast<png_uint_32>(pixels.size() / PNG_IMAGE_SAMPLE_CHANNELS(format));
+  png.height = 1;
+  png.format = format;
+  if (png_image_write_to_file(&png, path.c_str(), 0, pixels.data(), 0, nullptr) == 0) {
+    ADD_FAILURE() << "Could not write " << path << ": " << png.message;
+    return false;
+  }
+
+  bool rejected = false;
+  try {
+    GrayscaleImage::read(path);
+  } catch (const std::runtime_error &) {
+    rejected = true;
+  }
+
+  std::filesystem::remove(path);
+  return rejected;
+}
+
+TEST(TestDownsampleMask, TestImageReadRejectsNonGrayscale)
+{
+  EXPECT_FALSE(read_rejects_format<uint8_t>(PNG_FORMAT_GRAY, {0, 128, 255}));
+
+  EXPECT_TRUE(read_rejects_format<uint8_t>(PNG_FORMAT_RGB, {0, 0, 0, 128, 128, 128}));
+  EXPECT_TRUE(read_rejects_format<uint8_t>(PNG_FORMAT_RGBA, {0, 0, 0, 255, 128, 128, 128, 255}));
+  EXPECT_TRUE(read_rejects_format<uint8_t>(PNG_FORMAT_GA, {0, 255, 128, 255}));
+  EXPECT_TRUE(read_rejects_format<uint16_t>(PNG_FORMAT_LINEAR_Y, {0, 32768, 65535}));
+}
+
+TEST(TestDownsampleMask, TestImageReadOversized)
+{
+  using nebula::drivers::point_filters::impl::GrayscaleImage;
+
+  // A PNG whose header claims 2147483647 x 2147483647 pixels, followed by an empty IDAT chunk
+  const std::vector<uint8_t> png = {
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44,
+    0x52, 0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0x08, 0x00, 0x00, 0x00, 0x00, 0x31,
+    0xa2, 0x54, 0xba, 0x00, 0x00, 0x00, 0x00, 0x49, 0x44, 0x41, 0x54, 0x35, 0xaf, 0x06, 0x1e};
+
+  auto path = std::filesystem::temp_directory_path() / "nebula_test_downsample_mask_oversized.png";
+  {
+    std::ofstream file{path, std::ios::binary};
+    for (uint8_t byte : png) {
+      file.put(static_cast<char>(byte));
+    }
+  }
+
+  EXPECT_THROW(GrayscaleImage::read(path), std::exception);
+  std::filesystem::remove(path);
 }
 
 int main(int argc, char ** argv)
