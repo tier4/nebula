@@ -748,6 +748,29 @@ inline bool supports_lidar_monitor(const SensorModel & sensor_model)
   }
 }
 
+/// @brief Get the number of scans the sensor outputs per motor rotation
+/// @param sensor_model Sensor model
+/// @return The number of scans per rotation
+inline uint8_t get_scans_per_rotation(const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
+    // The AT128 rotates a three-sided polygon mirror and outputs one scan per mirror face
+    case SensorModel::HESAI_PANDARAT128:
+      return 3;
+    default:
+      return 1;
+  }
+}
+
+/// @brief Get the nominal scan rate of the sensor
+/// @param sensor_model Sensor model
+/// @param rotation_speed_rpm The motor rotation speed in RPM
+/// @return The scan rate in Hz
+inline double get_scan_rate_hz(const SensorModel & sensor_model, uint16_t rotation_speed_rpm)
+{
+  return rpm2hz(rotation_speed_rpm) * get_scans_per_rotation(sensor_model);
+}
+
 /// @brief Whether the given sensor model supports functional safety
 /// @param sensor_model Sensor model
 /// @return True if the sensor model supports functional safety, false otherwise

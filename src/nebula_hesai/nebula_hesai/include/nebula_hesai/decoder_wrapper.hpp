@@ -94,9 +94,9 @@ private:
   }
 
   static custom_diagnostic_tasks::RateBoundStatus make_rate_bound_status(
-    uint16_t rpm, nebula::agnocast_wrapper::Node & node)
+    drivers::SensorModel sensor_model, uint16_t rpm, nebula::agnocast_wrapper::Node & node)
   {
-    double nominal_rate_hz = drivers::rpm2hz(rpm);
+    double nominal_rate_hz = drivers::get_scan_rate_hz(sensor_model, rpm);
 
     double min_ok_hz =
       node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_ok.min_hz");
