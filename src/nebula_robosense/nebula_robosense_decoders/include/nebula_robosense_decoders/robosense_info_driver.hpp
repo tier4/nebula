@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_core_common/loggers/logger.hpp"
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_robosense_common/robosense_common.hpp"
@@ -43,8 +44,10 @@ public:
 
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this driver
-  explicit RobosenseInfoDriver(
-    const std::shared_ptr<const drivers::RobosenseSensorConfiguration> & sensor_configuration);
+  /// @param logger Logger used by this driver's decoder
+  RobosenseInfoDriver(
+    const std::shared_ptr<const drivers::RobosenseSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<loggers::Logger> & logger);
 
   /// @brief Get current status of this driver
   /// @return Current status

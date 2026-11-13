@@ -16,6 +16,7 @@
 
 #include <nebula_core_common/util/string_conversions.hpp>
 #include <nebula_core_ros/point_cloud_conversions.hpp>
+#include <nebula_core_ros/rclcpp_logger.hpp>
 
 #include <memory>
 #include <unordered_set>
@@ -104,7 +105,9 @@ Status ContinentalSRR520DecoderWrapper::initialize_driver(
     const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration> & config)
 {
   driver_ptr_.reset();
-  driver_ptr_ = std::make_shared<drivers::continental_srr520::ContinentalSRR520Decoder>(config);
+  driver_ptr_ = std::make_shared<drivers::continental_srr520::ContinentalSRR520Decoder>(
+    config, std::make_shared<drivers::loggers::RclcppLogger>(
+              parent_node_->get_logger().get_child("Driver")));
 
   driver_ptr_->register_near_detection_list_callback(
     std::bind(
@@ -124,9 +127,6 @@ Status ContinentalSRR520DecoderWrapper::initialize_driver(
     driver_ptr_->register_packets_callback(
       std::bind(&ContinentalSRR520DecoderWrapper::packets_callback, this, std::placeholders::_1));
   }
-
-  driver_ptr_->set_logger(
-    std::make_shared<rclcpp::Logger>(parent_node_->get_logger().get_child("Driver")));
 
   return Status::OK;
 }

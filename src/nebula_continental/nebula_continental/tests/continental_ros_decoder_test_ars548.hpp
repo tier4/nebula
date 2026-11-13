@@ -30,6 +30,8 @@
 
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace nebula::ros
 {
@@ -72,7 +74,30 @@ public:
   Status get_status();
   void read_bag();
 
+  /// @brief Feed a raw packet to the decoder (used for malformed-packet tests)
+  bool process_packet(std::vector<uint8_t> data)
+  {
+    auto packet_msg = std::make_unique<nebula_msgs::msg::NebulaPacket>();
+    packet_msg->data = std::move(data);
+    return driver_ptr_->process_packet(std::move(packet_msg));
+  }
+
+  /// @brief Disable ground-truth comparison for synthetic packets that are not in the test bag
+  void set_compare_with_ground_truth(bool enabled) { compare_with_ground_truth_ = enabled; }
+  size_t get_object_list_callback_count() const { return object_list_callback_count_; }
+  size_t get_detection_list_callback_count() const { return detection_list_callback_count_; }
+
+  /// @brief Point the fixture at a different ground-truth bag and packet topic
+  void set_bag(const std::string & bag_path, const std::string & target_topic)
+  {
+    bag_path_ = bag_path;
+    target_topic_ = target_topic;
+  }
+
 private:
+  bool compare_with_ground_truth_{true};
+  size_t object_list_callback_count_{0};
+  size_t detection_list_callback_count_{0};
   std::string bag_path_{};
   std::string storage_id_{};
   std::string format_{};

@@ -20,7 +20,6 @@
 #include <boost/algorithm/string/join.hpp>
 
 #include <cmath>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,7 +29,9 @@ namespace nebula::drivers::continental_srr520
 {
 ContinentalSRR520Decoder::ContinentalSRR520Decoder(
   const std::shared_ptr<const continental_srr520::ContinentalSRR520SensorConfiguration> &
-    sensor_configuration)
+    sensor_configuration,
+  const std::shared_ptr<loggers::Logger> & logger)
+: logger_(logger)
 {
   sensor_configuration_ = sensor_configuration;
 
@@ -99,6 +100,11 @@ Status ContinentalSRR520Decoder::register_packets_callback(
 bool ContinentalSRR520Decoder::process_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
+  if (packet_msg->data.size() < 4) {
+    logger_->error("Packet too short to contain a CAN message ID");
+    return false;
+  }
+
   const uint32_t can_message_id = (static_cast<uint32_t>(packet_msg->data[0]) << 24) |
                                   (static_cast<uint32_t>(packet_msg->data[1]) << 16) |
                                   (static_cast<uint32_t>(packet_msg->data[2]) << 8) |
@@ -108,67 +114,67 @@ bool ContinentalSRR520Decoder::process_packet(
 
   if (can_message_id == rdi_near_header_can_message_id) {
     if (payload_size != rdi_near_header_packet_size) {
-      print_error("rdi_near_header_can_message_id message with invalid size");
+      logger_->error("rdi_near_header_can_message_id message with invalid size");
       return false;
     }
     process_near_header_packet(std::move(packet_msg));
   } else if (can_message_id == rdi_near_element_can_message_id) {
     if (payload_size != rdi_near_element_packet_size) {
-      print_error("rdi_near_element_can_message_id message with invalid size");
+      logger_->error("rdi_near_element_can_message_id message with invalid size");
       return false;
     }
 
     process_near_element_packet(std::move(packet_msg));
   } else if (can_message_id == rdi_hrr_header_can_message_id) {
     if (payload_size != rdi_hrr_header_packet_size) {
-      print_error("rdi_hrr_header_can_message_id message with invalid size");
+      logger_->error("rdi_hrr_header_can_message_id message with invalid size");
       return false;
     }
     process_hrr_header_packet(std::move(packet_msg));
   } else if (can_message_id == rdi_hrr_element_can_message_id) {
     if (payload_size != rdi_hrr_element_packet_size) {
-      print_error("rdi_hrr_element_can_message_id message with invalid size");
+      logger_->error("rdi_hrr_element_can_message_id message with invalid size");
       return false;
     }
 
     process_hrr_element_packet(std::move(packet_msg));
   } else if (can_message_id == object_header_can_message_id) {
     if (payload_size != object_header_packet_size) {
-      print_error("object_header_can_message_id message with invalid size");
+      logger_->error("object_header_can_message_id message with invalid size");
       return false;
     }
     process_object_header_packet(std::move(packet_msg));
   } else if (can_message_id == object_can_message_id) {
     if (payload_size != object_packet_size) {
-      print_error("object_element_can_message_id message with invalid size");
+      logger_->error("object_element_can_message_id message with invalid size");
       return false;
     }
 
     process_object_element_packet(std::move(packet_msg));
   } else if (can_message_id == crc_list_can_message_id) {
     if (payload_size != crc_list_packet_size) {
-      print_error("crc_list_can_message_id message with invalid size");
+      logger_->error("crc_list_can_message_id message with invalid size");
       return false;
     }
 
     process_crc_list_packet(std::move(packet_msg));
   } else if (can_message_id == status_can_message_id) {
     if (payload_size != status_packet_size) {
-      print_error("crc_list_can_message_id message with invalid size");
+      logger_->error("crc_list_can_message_id message with invalid size");
       return false;
     }
 
     process_sensor_status_packet(std::move(packet_msg));
   } else if (can_message_id == sync_follow_up_can_message_id) {
     if (payload_size != sync_follow_up_can_packet_size) {
-      print_error("sync_follow_up_can_message_id message with invalid size");
+      logger_->error("sync_follow_up_can_message_id message with invalid size");
       return false;
     }
 
     process_sync_follow_up_packet(std::move(packet_msg));
   } else if (
     can_message_id != veh_dyn_can_message_id && can_message_id != sensor_config_can_message_id) {
-    print_error("Unrecognized message ID=" + std::to_string(can_message_id));
+    logger_->error("Unrecognized message ID=" + std::to_string(can_message_id));
     return false;
   }
 
@@ -243,7 +249,7 @@ void ContinentalSRR520Decoder::process_near_element_packet(
 
   if (rdi_near_packets_ptr_->packets.size() == 0) {
     if (!first_rdi_near_packet_) {
-      print_error("Near element before header. This can happen during the first iteration");
+      logger_->error("Near element before header. This can happen during the first iteration");
     }
     return;
   }
@@ -378,7 +384,7 @@ void ContinentalSRR520Decoder::process_hrr_element_packet(
 
   if (rdi_hrr_packets_ptr_->packets.size() == 0) {
     if (!first_rdi_hrr_packet_) {
-      print_error("HRR element before header. This can happen during the first iteration");
+      logger_->error("HRR element before header. This can happen during the first iteration");
     }
     return;
   }
@@ -517,7 +523,7 @@ void ContinentalSRR520Decoder::process_object_element_packet(
 
   if (object_packets_ptr_->packets.size() == 0) {
     if (!first_object_packet_) {
-      print_error("Object element before header. This can happen during the first iteration");
+      logger_->error("Object element before header. This can happen during the first iteration");
     }
     return;
   }
@@ -657,7 +663,7 @@ void ContinentalSRR520Decoder::process_crc_list_packet(
   } else if (crc_id == object_crc_id) {
     process_object_crc_list_packet(std::move(packet_msg));
   } else {
-    print_error(std::string("Unrecognized CRC id=") + std::to_string(crc_id));
+    logger_->error(std::string("Unrecognized CRC id=") + std::to_string(crc_id));
   }
 }
 
@@ -666,7 +672,7 @@ void ContinentalSRR520Decoder::process_near_crc_list_packet(
 {
   if (rdi_near_packets_ptr_->packets.size() != rdi_near_packet_num + 1) {
     if (!first_rdi_near_packet_) {
-      print_error("Incorrect number of RDI Near elements before CRC list");
+      logger_->error("Incorrect number of RDI Near elements before CRC list");
     }
 
     rdi_near_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -681,7 +687,7 @@ void ContinentalSRR520Decoder::process_near_crc_list_packet(
     crc16_packets(rdi_near_packets_ptr_->packets.begin(), rdi_near_packets_ptr_->packets.end(), 4);
 
   if (transmitted_crc != computed_crc) {
-    print_error(
+    logger_->error(
       "RDI Near: Transmitted CRC list does not coincide with the computed one. Ignoring packet");
 
     rdi_near_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -710,7 +716,7 @@ void ContinentalSRR520Decoder::process_hrrcrc_list_packet(
 {
   if (rdi_hrr_packets_ptr_->packets.size() != rdi_hrr_packet_num + 1) {
     if (!first_rdi_hrr_packet_) {
-      print_error("Incorrect number of RDI HRR elements before CRC list");
+      logger_->error("Incorrect number of RDI HRR elements before CRC list");
     }
 
     rdi_hrr_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -725,7 +731,7 @@ void ContinentalSRR520Decoder::process_hrrcrc_list_packet(
     crc16_packets(rdi_hrr_packets_ptr_->packets.begin(), rdi_hrr_packets_ptr_->packets.end(), 4);
 
   if (transmitted_crc != computed_crc) {
-    print_error(
+    logger_->error(
       "RDI HRR: Transmitted CRC list does not coincide with the computed one. Ignoring packet");
     rdi_hrr_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
     hrr_detection_list_ptr_ =
@@ -753,7 +759,7 @@ void ContinentalSRR520Decoder::process_object_crc_list_packet(
 {
   if (object_packets_ptr_->packets.size() != object_packet_num + 1) {
     if (!first_object_packet_) {
-      print_error("Incorrect number of object packages before CRC list");
+      logger_->error("Incorrect number of object packages before CRC list");
     }
 
     object_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -767,7 +773,7 @@ void ContinentalSRR520Decoder::process_object_crc_list_packet(
     crc16_packets(object_packets_ptr_->packets.begin(), object_packets_ptr_->packets.end(), 4);
 
   if (transmitted_crc != computed_crc) {
-    print_error(
+    logger_->error(
       "Object: Transmitted CRC list does not coincide with the computed one. Ignoring packet");
 
     object_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -1170,38 +1176,6 @@ void ContinentalSRR520Decoder::process_sync_follow_up_packet(
 
   if (nebula_packets_callback_) {
     nebula_packets_callback_(std::move(nebula_packets));
-  }
-}
-
-void ContinentalSRR520Decoder::set_logger(std::shared_ptr<rclcpp::Logger> logger)
-{
-  parent_node_logger_ptr_ = logger;
-}
-
-void ContinentalSRR520Decoder::print_info(std::string info)
-{
-  if (parent_node_logger_ptr_) {
-    RCLCPP_INFO_STREAM((*parent_node_logger_ptr_), info);
-  } else {
-    std::cout << info << std::endl;
-  }
-}
-
-void ContinentalSRR520Decoder::print_error(std::string error)
-{
-  if (parent_node_logger_ptr_) {
-    RCLCPP_ERROR_STREAM((*parent_node_logger_ptr_), error);
-  } else {
-    std::cerr << error << std::endl;
-  }
-}
-
-void ContinentalSRR520Decoder::print_debug(std::string debug)
-{
-  if (parent_node_logger_ptr_) {
-    RCLCPP_DEBUG_STREAM((*parent_node_logger_ptr_), debug);
-  } else {
-    std::cout << debug << std::endl;
   }
 }
 

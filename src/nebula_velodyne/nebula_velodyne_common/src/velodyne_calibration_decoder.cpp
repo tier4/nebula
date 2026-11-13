@@ -168,25 +168,46 @@ YAML::Emitter & operator<<(YAML::Emitter & out, const VelodyneCalibration & cali
   return out;
 }
 
-void VelodyneCalibration::read(const std::string & calibration_file)
+nebula::Status VelodyneCalibration::read(const std::string & calibration_file)
 {
-  initialized = true;
   try {
     YAML::Node doc = YAML::LoadFile(calibration_file);
-    doc >> *this;
-  } catch (YAML::Exception & e) {
+    VelodyneCalibration parsed;
+    doc >> parsed;
+    parsed.initialized = true;
+    *this = std::move(parsed);
+    return Status::OK;
+  } catch (const YAML::Exception & e) {
     std::cerr << "YAML Exception: " << e.what() << std::endl;
-    initialized = false;
+    *this = VelodyneCalibration{};
+    return Status::INVALID_CALIBRATION_FILE;
   }
 }
 
-void VelodyneCalibration::write(const std::string & calibration_file)
+nebula::Status VelodyneCalibration::write(const std::string & calibration_file)
 {
   std::ofstream fout(calibration_file.c_str());
+  if (!fout) {
+    return Status::CANNOT_SAVE_FILE;
+  }
+
   YAML::Emitter out;
   out << *this;
+  if (!out.good()) {
+    return Status::CANNOT_SAVE_FILE;
+  }
+
   fout << out.c_str();
+  if (!fout.good()) {
+    return Status::CANNOT_SAVE_FILE;
+  }
+
   fout.close();
+  if (!fout) {
+    return Status::CANNOT_SAVE_FILE;
+  }
+
+  return Status::OK;
 }
 
 }  // namespace nebula::drivers
