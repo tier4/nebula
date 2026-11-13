@@ -115,12 +115,22 @@ public:
   {
     // In Strongest+First mode, the AT128P stores the strongest return in the first block and the
     // first return in the second block (AT128P user manual, section 3.1.2.3). The base class
-    // expects the opposite order, so swap the returns before classifying them.
+    // expects the opposite order, so classify the returns here.
     if (
       return_mode == hesai_packet::return_mode::DUAL_FIRST_STRONGEST && return_units.size() == 2) {
-      const std::vector<const packet_t::body_t::block_t::unit_t *> first_then_strongest{
-        return_units[1], return_units[0]};
-      return PandarAT128::get_return_type(return_mode, 1 - return_idx, first_then_strongest);
+      const auto & unit = *return_units[return_idx];
+      const auto & other = *return_units[1 - return_idx];
+
+      if (unit.distance == other.distance && unit.reflectivity == other.reflectivity) {
+        return ReturnType::IDENTICAL;
+      }
+
+      const bool is_strongest = unit.reflectivity >= other.reflectivity;
+      if (return_idx == 0) {
+        // If the first return is also the strongest, the first block holds the second strongest
+        return is_strongest ? ReturnType::STRONGEST : ReturnType::SECONDSTRONGEST;
+      }
+      return is_strongest ? ReturnType::FIRST_STRONGEST : ReturnType::FIRST;
     }
 
     return PandarAT128::get_return_type(return_mode, return_idx, return_units);
