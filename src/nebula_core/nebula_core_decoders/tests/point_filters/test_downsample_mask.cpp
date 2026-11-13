@@ -172,41 +172,50 @@ TEST(TestDownsampleMask, TestImageReadFailure)
   EXPECT_THROW(GrayscaleImage::read(__FILE__), std::runtime_error);
 }
 
-TEST(TestDownsampleMask, TestImageReadRgb)
+/// Write `pixels` as a single-row PNG of the given libpng format and return whether
+/// `GrayscaleImage::read` rejects it.
+template <typename SampleT>
+static bool read_rejects_format(png_uint_32 format, const std::vector<SampleT> & pixels)
 {
   using nebula::drivers::point_filters::impl::GrayscaleImage;
 
-  auto path = std::filesystem::temp_directory_path() / "nebula_test_downsample_mask_rgb.png";
-
-  // One row of RGB pixels: four neutral ones, then pure red, green and blue
-  const std::vector<uint8_t> rgb = {0,  0,   0, 255, 255, 255, 128, 128, 128, 37, 37,
-                                    37, 255, 0, 0,   0,   255, 0,   0,   0,   255};
-  const size_t width = rgb.size() / 3;
+  auto path = std::filesystem::temp_directory_path() / "nebula_test_downsample_mask_format.png";
 
   png_image png{};
   png.version = PNG_IMAGE_VERSION;
-  png.width = static_cast<png_uint_32>(width);
+  png.width = static_cast<png_uint_32>(pixels.size() / PNG_IMAGE_SAMPLE_CHANNELS(format));
   png.height = 1;
-  png.format = PNG_FORMAT_RGB;
-  ASSERT_NE(png_image_write_to_file(&png, path.c_str(), 0, rgb.data(), 0, nullptr), 0);
+  png.format = format;
+  if (png_image_write_to_file(&png, path.c_str(), 0, pixels.data(), 0, nullptr) == 0) {
+    ADD_FAILURE() << "Could not write " << path << ": " << png.message;
+    return false;
+  }
 
-  auto in = GrayscaleImage::read(path);
+  bool rejected = false;
+  try {
+    GrayscaleImage::read(path);
+  } catch (const std::runtime_error &) {
+    rejected = true;
+  }
+
   std::filesystem::remove(path);
+  return rejected;
+}
 
-  ASSERT_EQ(in.get_width(), width);
-  ASSERT_EQ(in.get_height(), 1);
+TEST(TestDownsampleMask, TestImageReadRejectsNonGrayscale)
+{
+  // Sanity check: the helper's output is accepted when it is 8-bit grayscale
+  EXPECT_FALSE(read_rejects_format<uint8_t>(PNG_FORMAT_GRAY, {0, 128, 255}));
 
-  // Neutral pixels keep their value, so a grayscale mask saved as RGB behaves like a grayscale one
-  EXPECT_EQ(in.get_pixel(0, 0), 0);
-  EXPECT_EQ(in.get_pixel(1, 0), 255);
-  EXPECT_EQ(in.get_pixel(2, 0), 128);
-  EXPECT_EQ(in.get_pixel(3, 0), 37);
+  // Color, even if all pixels are neutral
+  EXPECT_TRUE(read_rejects_format<uint8_t>(PNG_FORMAT_RGB, {0, 0, 0, 128, 128, 128}));
+  EXPECT_TRUE(read_rejects_format<uint8_t>(PNG_FORMAT_RGBA, {0, 0, 0, 255, 128, 128, 128, 255}));
 
-  // Colors are reduced to their perceived brightness (Rec. 709 luminance, computed in linear
-  // light): green counts the most, blue the least, and they do not simply average to 85
-  EXPECT_NEAR(in.get_pixel(4, 0), 127, 2);
-  EXPECT_NEAR(in.get_pixel(5, 0), 220, 2);
-  EXPECT_NEAR(in.get_pixel(6, 0), 76, 2);
+  // Alpha channel, even if all pixels are opaque
+  EXPECT_TRUE(read_rejects_format<uint8_t>(PNG_FORMAT_GA, {0, 255, 128, 255}));
+
+  // 16-bit samples
+  EXPECT_TRUE(read_rejects_format<uint16_t>(PNG_FORMAT_LINEAR_Y, {0, 32768, 65535}));
 }
 
 TEST(TestDownsampleMask, TestImageReadOversized)

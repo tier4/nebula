@@ -64,9 +64,14 @@ public:
   }
 
   /**
-   * @brief Load a PNG file, converting it to 8-bit grayscale if it is in another format.
+   * @brief Load a grayscale PNG file.
    *
-   * @throws std::runtime_error if the file cannot be read or is not a valid PNG.
+   * Only grayscale PNGs of at most 8 bits per pixel, without alpha channel or transparency, are
+   * accepted. Other formats are rejected instead of being converted, since the conversion could
+   * silently change which points the mask keeps.
+   *
+   * @throws std::runtime_error if the file cannot be read, is not a valid PNG, or is in an
+   * unsupported format.
    */
   static GrayscaleImage read(const std::filesystem::path & path)
   {
@@ -76,7 +81,13 @@ public:
       throw std::runtime_error("Could not read " + path.native() + ": " + png.handle.message);
     }
 
-    png.handle.format = PNG_FORMAT_GRAY;
+    // libpng reports the format it would decode the file to without loss. Anything other than
+    // plain 8-bit grayscale means the file has color, alpha/transparency or 16-bit samples.
+    if (png.handle.format != PNG_FORMAT_GRAY) {
+      throw std::runtime_error(
+        "Could not read " + path.native() + ": expected an 8-bit grayscale PNG without alpha");
+    }
+
     GrayscaleImage image(png.handle.width, png.handle.height);
 
     if (png_image_finish_read(&png.handle, nullptr, image.data_.data(), 0, nullptr) == 0) {
