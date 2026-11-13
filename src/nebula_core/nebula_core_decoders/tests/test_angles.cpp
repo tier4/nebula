@@ -19,7 +19,7 @@
 namespace nebula::drivers
 {
 
-constexpr float two_pi = 2.0F * M_PIf;
+constexpr float two_pi = 2.0F * pi_f;
 
 TEST(AngleIsBetweenTest, BasicTest)
 {
