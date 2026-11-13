@@ -114,7 +114,7 @@ public:
     // ////////////////////////////////////////
 
     for (size_t i = 0; i < max_azimuth; ++i) {
-      float rad = 2.f * i * static_cast<float>(M_PI) / max_azimuth;
+      float rad = 2.f * i * pi_f / max_azimuth;
       cos_[i] = cosf(rad);
       sin_[i] = sinf(rad);
     }

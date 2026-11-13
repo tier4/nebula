@@ -94,19 +94,17 @@ TEST_P(ScanCuttingTest, PointsNearFovBoundaries)
         has_points_near_start.emplace(p.channel, false);
       }
       auto threshold_angle =
-        drivers::normalize_angle(fov_min_rad + near_threshold_rad, 2 * static_cast<float>(M_PI));
+        drivers::normalize_angle(fov_min_rad + near_threshold_rad, 2 * drivers::pi_f);
       has_points_near_start[p.channel] |= drivers::angle_is_between(
-        drivers::normalize_angle(fov_min_rad, 2 * static_cast<float>(M_PI)), threshold_angle,
-        p.azimuth);
+        drivers::normalize_angle(fov_min_rad, 2 * drivers::pi_f), threshold_angle, p.azimuth);
 
       if (has_points_near_end.find(p.channel) == has_points_near_end.end()) {
         has_points_near_end.emplace(p.channel, false);
       }
       threshold_angle =
-        drivers::normalize_angle(fov_max_rad - near_threshold_rad, 2 * static_cast<float>(M_PI));
+        drivers::normalize_angle(fov_max_rad - near_threshold_rad, 2 * drivers::pi_f);
       has_points_near_end[p.channel] |= drivers::angle_is_between(
-        threshold_angle, drivers::normalize_angle(fov_max_rad, 2 * static_cast<float>(M_PI)),
-        p.azimuth);
+        threshold_angle, drivers::normalize_angle(fov_max_rad, 2 * drivers::pi_f), p.azimuth);
     }
 
     bool is_at128 = drivers::sensor_model_from_string(hesai_driver_->params_.sensor_model) ==
