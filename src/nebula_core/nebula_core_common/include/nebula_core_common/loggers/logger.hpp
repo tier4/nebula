@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -173,7 +174,7 @@ public:
   Filtered once(const char * file = __builtin_FILE(), uint32_t line = __builtin_LINE())
   {
     std::lock_guard lock(filter_mutex_);
-    const bool is_first_call = once_passed_.try_emplace(CallSite{file, line}, true).second;
+    const bool is_first_call = once_passed_.emplace(file, line).second;
     return Filtered(is_first_call ? this : nullptr);
   }
 
@@ -191,7 +192,7 @@ private:
 
   std::mutex filter_mutex_;
   std::map<CallSite, uint64_t> throttle_last_passed_ns_;
-  std::map<CallSite, bool> once_passed_;
+  std::set<CallSite> once_passed_;
 };
 
 }  // namespace nebula::drivers::loggers
