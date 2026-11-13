@@ -28,7 +28,7 @@ RobosenseDecoderWrapper::RobosenseDecoderWrapper(
   calibration_cfg_ptr_(calibration),
   driver_ptr_(new drivers::RobosenseDriver(
     config, calibration,
-    std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Driver"))))
+    std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Decoder"))))
 {
   status_ = driver_ptr_->get_status();
 
@@ -144,7 +144,7 @@ void RobosenseDecoderWrapper::on_config_change(
   std::lock_guard lock(mtx_driver_ptr_);
   auto new_driver = std::make_shared<drivers::RobosenseDriver>(
     new_config, calibration_cfg_ptr_,
-    std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Driver")));
+    std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Decoder")));
   driver_ptr_ = new_driver;
   sensor_cfg_ = new_config;
 }
