@@ -19,6 +19,7 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -90,6 +91,14 @@ TEST(Logger, ThrottledLetsMessageThroughExactlyAfterPeriod)
   }
 
   EXPECT_EQ(logger.messages.size(), 3U);
+}
+
+TEST(Logger, ThrottledRejectsNegativePeriod)
+{
+  RecordingLogger logger;
+
+  EXPECT_THROW(logger.throttled(-1s), std::invalid_argument);
+  EXPECT_NO_THROW(logger.throttled(0s));
 }
 
 TEST(Logger, ThrottledKeepsStatePerCallSite)
