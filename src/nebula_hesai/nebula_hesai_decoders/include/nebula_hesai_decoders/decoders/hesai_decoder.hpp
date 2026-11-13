@@ -342,7 +342,7 @@ public:
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(correction_data),
     scan_cutter_(
-      2 * M_PIf, deg2rad(sensor_configuration_->cut_angle),
+      2 * static_cast<float>(M_PI), deg2rad(sensor_configuration_->cut_angle),
       deg2rad(sensor_configuration_->cloud_min_angle),
       deg2rad(sensor_configuration_->cloud_max_angle),
       [this](uint8_t buffer_index) { on_scan_complete(buffer_index); },

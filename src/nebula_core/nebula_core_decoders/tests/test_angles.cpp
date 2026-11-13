@@ -16,10 +16,12 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
+
 namespace nebula::drivers
 {
 
-constexpr float two_pi = 2.0F * M_PIf;
+constexpr float two_pi = 2.0F * static_cast<float>(M_PI);
 
 TEST(AngleIsBetweenTest, BasicTest)
 {
