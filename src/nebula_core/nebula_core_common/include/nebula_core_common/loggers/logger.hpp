@@ -14,23 +14,114 @@
 
 #pragma once
 
+#include <chrono>
+#include <cstdint>
+#include <map>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
+#include <string_view>
+#include <utility>
 
-#define NEBULA_LOG_STREAM(log_func, stream_args) \
-  {                                              \
-    std::stringstream ss{};                      \
-    ss << stream_args;                           \
-    log_func(ss.str());                          \
+/// @brief Log a message built with stream operators, e.g.
+/// `NEBULA_LOG_STREAM(logger->warn, "Got " << n << " bytes")`.
+/// @details The message is only built if it is logged. With `Logger::throttled` and
+/// `Logger::once`, `stream_args` is not evaluated for dropped messages.
+#define NEBULA_LOG_STREAM(log_func, stream_args)                     \
+  {                                                                  \
+    log_func(::nebula::drivers::loggers::detail::LazyMessage{[&]() { \
+      std::stringstream ss{};                                        \
+      ss << stream_args;                                             \
+      return ss.str();                                               \
+    }});                                                             \
   }
 
 namespace nebula::drivers::loggers
 {
 
+namespace detail
+{
+
+/// @brief A message that is only built when converted to a string.
+/// @details Used by `NEBULA_LOG_STREAM`. Logging functions that take a string build the message
+/// right away through the implicit conversion. `Logger::Filtered` takes the `LazyMessage` itself
+/// and only builds the message if it is not dropped.
+template <typename MakeMessageT>
+struct LazyMessage
+{
+  MakeMessageT make_message;
+
+  operator std::string() const { return make_message(); }  // NOLINT(runtime/explicit)
+};
+
+template <typename MakeMessageT>
+LazyMessage(MakeMessageT) -> LazyMessage<MakeMessageT>;
+
+}  // namespace detail
+
 class Logger
 {
 public:
+  /// @brief A view of a logger that either forwards or drops messages.
+  /// @details Returned by `Logger::throttled` and `Logger::once`. With `NEBULA_LOG_STREAM`, dropped
+  /// messages are not built:
+  /// ```c++
+  /// NEBULA_LOG_STREAM(logger->throttled(5s).warn, "Expensive to format: " << value);
+  /// ```
+  /// The view converts to `true` if messages are forwarded, in case other work depends on it. It
+  /// must not outlive the logger it was created from.
+  class Filtered
+  {
+  public:
+    void debug(const std::string & message) const
+    {
+      if (target_) target_->debug(message);
+    }
+    void info(const std::string & message) const
+    {
+      if (target_) target_->info(message);
+    }
+    void warn(const std::string & message) const
+    {
+      if (target_) target_->warn(message);
+    }
+    void error(const std::string & message) const
+    {
+      if (target_) target_->error(message);
+    }
+
+    template <typename MakeMessageT>
+    void debug(const detail::LazyMessage<MakeMessageT> & message) const
+    {
+      if (target_) target_->debug(message.make_message());
+    }
+    template <typename MakeMessageT>
+    void info(const detail::LazyMessage<MakeMessageT> & message) const
+    {
+      if (target_) target_->info(message.make_message());
+    }
+    template <typename MakeMessageT>
+    void warn(const detail::LazyMessage<MakeMessageT> & message) const
+    {
+      if (target_) target_->warn(message.make_message());
+    }
+    template <typename MakeMessageT>
+    void error(const detail::LazyMessage<MakeMessageT> & message) const
+    {
+      if (target_) target_->error(message.make_message());
+    }
+
+    /// @brief Whether messages logged through this view are forwarded to the logger.
+    explicit operator bool() const { return target_ != nullptr; }
+
+  private:
+    friend class Logger;
+    explicit Filtered(Logger * target) : target_(target) {}
+
+    Logger * target_;
+  };
+
   virtual ~Logger() = default;
 
   virtual void debug(const std::string & message) = 0;
@@ -39,6 +130,68 @@ public:
   virtual void error(const std::string & message) = 0;
 
   virtual std::shared_ptr<Logger> child(const std::string & name) = 0;
+
+  /// @brief Log at most once per `period` from the calling line of code.
+  /// @details The first call passes. The state is kept per logger instance and per call site
+  /// (file and line), so two objects with their own loggers are throttled independently. Do not
+  /// pass `file` and `line`, they identify the call site.
+  /// ```c++
+  /// logger->throttled(5s).warn("Dropping malformed packet");
+  /// ```
+  /// @param period The minimum time between two messages that are let through
+  /// @return A view that forwards messages if this call passed the throttle, and drops them if not
+  Filtered throttled(
+    std::chrono::nanoseconds period, const char * file = __builtin_FILE(),
+    uint32_t line = __builtin_LINE())
+  {
+    const uint64_t period_ns = static_cast<uint64_t>(period.count());
+    const uint64_t now_ns = steady_now_ns();
+
+    std::lock_guard lock(filter_mutex_);
+    auto [it, is_first_call] = throttle_last_passed_ns_.try_emplace(CallSite{file, line}, now_ns);
+    if (is_first_call) {
+      return Filtered(this);
+    }
+
+    auto & last_passed_ns = it->second;
+    if (now_ns - last_passed_ns < period_ns) {
+      return Filtered(nullptr);
+    }
+
+    last_passed_ns = now_ns;
+    return Filtered(this);
+  }
+
+  /// @brief Log only the first time the calling line of code is reached.
+  /// @details The state is kept per logger instance and per call site (file and line), so two
+  /// objects with their own loggers each log once. Do not pass `file` and `line`, they identify
+  /// the call site.
+  /// ```c++
+  /// logger->once().warn("Unsupported firmware, skipping object lists");
+  /// ```
+  /// @return A view that forwards messages on the first call, and drops them afterwards
+  Filtered once(const char * file = __builtin_FILE(), uint32_t line = __builtin_LINE())
+  {
+    std::lock_guard lock(filter_mutex_);
+    const bool is_first_call = once_passed_.try_emplace(CallSite{file, line}, true).second;
+    return Filtered(is_first_call ? this : nullptr);
+  }
+
+protected:
+  /// @brief The time used for throttling, in nanoseconds since an arbitrary, fixed point in time.
+  virtual uint64_t steady_now_ns() const
+  {
+    return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                   std::chrono::steady_clock::now().time_since_epoch())
+                                   .count());
+  }
+
+private:
+  using CallSite = std::pair<std::string_view, uint32_t>;
+
+  std::mutex filter_mutex_;
+  std::map<CallSite, uint64_t> throttle_last_passed_ns_;
+  std::map<CallSite, bool> once_passed_;
 };
 
 }  // namespace nebula::drivers::loggers

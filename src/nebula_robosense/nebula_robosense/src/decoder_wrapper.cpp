@@ -3,6 +3,7 @@
 #include "nebula_robosense/decoder_wrapper.hpp"
 
 #include <nebula_core_ros/point_cloud_conversions.hpp>
+#include <nebula_core_ros/rclcpp_logger.hpp>
 
 #include <algorithm>
 #include <cstdio>
@@ -25,7 +26,9 @@ RobosenseDecoderWrapper::RobosenseDecoderWrapper(
   hw_interface_(hw_interface),
   sensor_cfg_(config),
   calibration_cfg_ptr_(calibration),
-  driver_ptr_(new drivers::RobosenseDriver(config, calibration))
+  driver_ptr_(new drivers::RobosenseDriver(
+    config, calibration,
+    std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Driver"))))
 {
   status_ = driver_ptr_->get_status();
 
@@ -139,7 +142,9 @@ void RobosenseDecoderWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & new_config)
 {
   std::lock_guard lock(mtx_driver_ptr_);
-  auto new_driver = std::make_shared<drivers::RobosenseDriver>(new_config, calibration_cfg_ptr_);
+  auto new_driver = std::make_shared<drivers::RobosenseDriver>(
+    new_config, calibration_cfg_ptr_,
+    std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Driver")));
   driver_ptr_ = new_driver;
   sensor_cfg_ = new_config;
 }

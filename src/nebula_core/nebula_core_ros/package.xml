@@ -21,6 +21,7 @@
   <depend>nebula_core_common</depend>
   <depend>rclcpp</depend>
   <depend>rosbag2_storage</depend>
+  <depend>sensor_msgs</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>

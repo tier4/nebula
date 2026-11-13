@@ -27,6 +27,7 @@
   <depend>nebula_velodyne_hw_interfaces</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>sensor_msgs</depend>
   <depend>velodyne_msgs</depend>
   <depend>yaml-cpp</depend>
 
