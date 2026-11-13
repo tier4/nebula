@@ -6,7 +6,7 @@ autoware_package()
 
 add_executable(
   nebula_cli src/main.cpp src/args.cpp src/convert.cpp src/converters.cpp src/params.cpp src/model_detect.cpp
-             src/unpack.cpp)
+             src/unpack.cpp src/progress.cpp)
 target_include_directories(nebula_cli PRIVATE src)
 target_link_libraries(
   nebula_cli
@@ -44,6 +44,9 @@ if(BUILD_TESTING)
                         nebula_hesai_common::nebula_hesai_common
                         nebula_hesai_decoders::nebula_hesai_decoders)
 
+  ament_add_gtest(test_progress test/test_progress.cpp src/progress.cpp)
+  target_include_directories(test_progress PRIVATE src)
+
   ament_add_gtest(test_args test/test_args.cpp src/args.cpp)
   target_include_directories(test_args PRIVATE src)
 
@@ -74,7 +77,7 @@ if(BUILD_TESTING)
 
   ament_add_gtest(
     test_convert test/test_convert.cpp src/convert.cpp src/converters.cpp src/params.cpp
-    src/model_detect.cpp src/unpack.cpp)
+    src/model_detect.cpp src/unpack.cpp src/progress.cpp)
   target_include_directories(test_convert PRIVATE src)
   target_link_libraries(
     test_convert

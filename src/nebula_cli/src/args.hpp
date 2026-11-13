@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -35,6 +36,7 @@ struct Args
   std::string input, output, output_storage{"sqlite3"};
   std::vector<SensorArgs> sensors;
   uint64_t max_clouds{0};
+  size_t threads{4};  // decoding threads; effectively capped at the number of sensors
   bool copy_other{true};
 };
 

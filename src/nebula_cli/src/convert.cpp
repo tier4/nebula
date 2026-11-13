@@ -17,6 +17,7 @@
 #include "converters.hpp"
 #include "model_detect.hpp"
 #include "params.hpp"
+#include "progress.hpp"
 #include "unpack.hpp"
 
 #include <nebula_core_common/nebula_common.hpp>
@@ -38,6 +39,13 @@
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <algorithm>
+#include <atomic>
+#include <condition_variable>
+#include <deque>
+#include <exception>
+#include <mutex>
+#include <optional>
+#include <thread>
 #include <cinttypes>
 #include <cstdio>
 #include <map>
@@ -57,8 +65,75 @@ struct Sensor
 {
   const SensorArgs * args;
   std::unique_ptr<nebula::cli::Converter> converter;
-  uint64_t packets{0};
-  uint64_t clouds{0};
+  uint64_t packets{0};  // only touched by the sensor's worker thread
+  std::atomic<uint64_t> clouds{0};
+  int64_t bag_time_ns{0};  // record time of the bag message being decoded, set by the worker
+  size_t progress_idx[2]{0, 0};  // progress bar of the scan / info topic
+};
+
+using BagMessage = std::shared_ptr<rosbag2_storage::SerializedBagMessage>;
+
+struct Work
+{
+  Sensor * sensor;
+  bool is_info;
+  BagMessage msg;
+};
+
+/// Blocking queue with a capacity, so the reader cannot run far ahead of slow decoders
+class WorkQueue
+{
+public:
+  explicit WorkQueue(size_t capacity) : capacity_(capacity) {}
+
+  /// Returns false if the queue was closed (the item is dropped)
+  bool push(Work w)
+  {
+    std::unique_lock<std::mutex> lock(m_);
+    not_full_.wait(lock, [&] { return q_.size() < capacity_ || closed_; });
+    if (closed_) return false;
+    q_.push_back(std::move(w));
+    not_empty_.notify_one();
+    return true;
+  }
+
+  /// Blocks; returns nullopt once the queue is closed and drained
+  std::optional<Work> pop()
+  {
+    std::unique_lock<std::mutex> lock(m_);
+    not_empty_.wait(lock, [&] { return !q_.empty() || closed_; });
+    if (q_.empty()) return std::nullopt;
+    Work w = std::move(q_.front());
+    q_.pop_front();
+    not_full_.notify_one();
+    return w;
+  }
+
+  /// No more pushes; consumers drain what is left
+  void close()
+  {
+    std::lock_guard<std::mutex> lock(m_);
+    closed_ = true;
+    not_empty_.notify_all();
+    not_full_.notify_all();
+  }
+
+  /// Close and discard what is queued
+  void abort()
+  {
+    std::lock_guard<std::mutex> lock(m_);
+    q_.clear();
+    closed_ = true;
+    not_empty_.notify_all();
+    not_full_.notify_all();
+  }
+
+private:
+  size_t capacity_;
+  std::deque<Work> q_;
+  bool closed_{false};
+  std::mutex m_;
+  std::condition_variable not_empty_, not_full_;
 };
 
 }  // namespace
@@ -66,7 +141,7 @@ struct Sensor
 int convert(const Args & args)
 {
   rosbag2_cpp::Writer writer;
-  int64_t bag_time_ns = 0;  // record time of the bag message currently being decoded
+  std::mutex writer_mutex;  // the writer is shared by the reader (copied topics) and all workers
 
   std::vector<Sensor> sensors(args.sensors.size());
   std::vector<nebula::cli::Params> all_params(sensors.size());
@@ -187,8 +262,10 @@ int convert(const Args & args)
     Sensor & sensor = sensors[n];
     const auto & params = all_params[n];
     const std::string frame_id = params.get_string("frame_id", "lidar");
-    auto write_cloud = [&writer, &bag_time_ns, &sensor, frame_id](
+    auto write_cloud = [&writer, &writer_mutex, &sensor, frame_id, max_clouds = args.max_clouds](
                          const nebula::drivers::NebulaPointCloudPtr & cloud, double timestamp_s) {
+      // The reader runs ahead of the workers, so --max-clouds is enforced here
+      if (max_clouds != 0 && sensor.clouds >= max_clouds) return;
       sensor_msgs::msg::PointCloud2 msg;
       if (sensor.args->point_format == "xyzir") {
         msg = nebula::ros::to_ros_msg(
@@ -201,7 +278,10 @@ int convert(const Args & args)
       }
       msg.header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp_s * 1e9));
       msg.header.frame_id = frame_id;
-      writer.write(msg, sensor.args->output_topic, rclcpp::Time(bag_time_ns));
+      {
+        std::lock_guard<std::mutex> lock(writer_mutex);
+        writer.write(msg, sensor.args->output_topic, rclcpp::Time(sensor.bag_time_ns));
+      }
       ++sensor.clouds;
     };
     try {
@@ -236,34 +316,102 @@ int convert(const Args & args)
     return true;
   };
 
-  std::vector<Packet> batch;
-  while (reader.has_next() && !done()) {
-    const auto bag_msg = reader.read_next();
-    if (args.copy_other) writer.write(bag_msg);  // verbatim, original timestamps
-    const auto route = routes.find(bag_msg->topic_name);
-    if (route == routes.end()) continue;
-    auto [sensor, is_info] = route->second;
-
-    batch.clear();
-    if (!unpack(types.at(bag_msg->topic_name), *bag_msg, batch)) {
-      throw std::runtime_error("Unsupported message type " + types.at(bag_msg->topic_name));
-    }
-    bag_time_ns = static_cast<int64_t>(nebula::ros::get_timestamp_ns(*bag_msg));
-    for (const auto & p : batch) {
-      if (is_info) {
-        sensor->converter->feed_info(p);
-      } else {
-        sensor->converter->feed_scan(p);
-        ++sensor->packets;
-      }
+  // One progress line per input topic of the sensors
+  std::map<std::string, uint64_t> totals;
+  for (const auto & t : reader.get_metadata().topics_with_message_count) {
+    totals[t.topic_metadata.name] = t.message_count;
+  }
+  std::vector<std::string> bar_names;
+  std::vector<uint64_t> bar_totals;
+  for (auto & sensor : sensors) {
+    for (const bool is_info : {false, true}) {
+      const auto & topic = is_info ? sensor.args->info_topic : sensor.args->topic;
+      if (topic.empty()) continue;
+      sensor.progress_idx[is_info] = bar_names.size();
+      bar_names.push_back(topic);
+      bar_totals.push_back(totals.count(topic) ? totals.at(topic) : 0);
     }
   }
+  ProgressBars progress(bar_names, bar_totals);
+
+  // Each sensor is decoded by one worker, in bag order. Workers decode in parallel, because
+  // every sensor has its own decoder; only the reader and the writer are shared.
+  const size_t n_workers = std::min(std::max<size_t>(args.threads, 1), sensors.size());
+  std::vector<std::unique_ptr<WorkQueue>> queues;
+  for (size_t w = 0; w < n_workers; ++w) queues.push_back(std::make_unique<WorkQueue>(64));
+  auto abort_all = [&]() {
+    for (auto & q : queues) q->abort();
+  };
+
+  std::mutex error_mutex;
+  std::exception_ptr error;
+  std::vector<std::thread> workers;
+  for (size_t w = 0; w < n_workers; ++w) {
+    workers.emplace_back([&, w]() {
+      try {
+        std::vector<Packet> batch;
+        while (auto work = queues[w]->pop()) {
+          Sensor & sensor = *work->sensor;
+          batch.clear();
+          const auto & type = types.at(work->msg->topic_name);
+          if (!unpack(type, *work->msg, batch)) {
+            throw std::runtime_error("Unsupported message type " + type);
+          }
+          sensor.bag_time_ns = static_cast<int64_t>(nebula::ros::get_timestamp_ns(*work->msg));
+          for (const auto & p : batch) {
+            if (work->is_info) {
+              sensor.converter->feed_info(p);
+            } else {
+              sensor.converter->feed_scan(p);
+              ++sensor.packets;
+            }
+          }
+          progress.add(sensor.progress_idx[work->is_info]);
+        }
+      } catch (...) {
+        {
+          std::lock_guard<std::mutex> lock(error_mutex);
+          if (!error) error = std::current_exception();
+        }
+        abort_all();
+      }
+    });
+  }
+  auto join_workers = [&]() {
+    for (auto & t : workers) t.join();
+  };
+
+  progress.start();
+  try {
+    while (reader.has_next() && !done()) {
+      const BagMessage bag_msg = reader.read_next();
+      if (args.copy_other) {
+        std::lock_guard<std::mutex> lock(writer_mutex);
+        writer.write(bag_msg);  // verbatim, original timestamps
+      }
+      const auto route = routes.find(bag_msg->topic_name);
+      if (route == routes.end()) continue;
+      const auto [sensor, is_info] = route->second;
+      const size_t w = static_cast<size_t>(sensor - sensors.data()) % n_workers;
+      if (!queues[w]->push({sensor, is_info, bag_msg})) break;  // a worker failed
+    }
+  } catch (...) {
+    abort_all();
+    join_workers();
+    progress.stop();
+    throw;
+  }
+  for (auto & q : queues) q->close();
+  join_workers();
+  progress.stop();
+  if (error) std::rethrow_exception(error);
 
   bool all_ok = true;
   for (const auto & s : sensors) {
     std::printf(
       "%s: decoded %" PRIu64 " packets (%" PRIu64 " dropped) into %" PRIu64 " clouds on %s\n",
-      s.args->topic.c_str(), s.packets, s.converter->dropped_packets(), s.clouds,
+      s.args->topic.c_str(), s.packets, s.converter->dropped_packets(),
+      s.clouds.load(),
       s.args->output_topic.c_str());
     all_ok = all_ok && s.clouds > 0;
   }

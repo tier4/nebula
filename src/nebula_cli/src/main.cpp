@@ -36,6 +36,8 @@ Global options:
   --output-storage ID   sqlite3 (default) | mcap
   --max-clouds N        stop once every sensor produced N clouds (other topics are then copied
                         only up to that point)
+  --threads N           decoding threads (default 4); each sensor is decoded by one thread, so
+                        more threads than sensors have no effect
   --drop-other-topics   do not copy the input bag's other topics (by default all are copied as-is)
 
 Sensor options (apply to the latest --sensor; without --sensor there is one implicit sensor):

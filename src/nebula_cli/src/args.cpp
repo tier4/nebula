@@ -51,7 +51,10 @@ Args parse_args(int argc, char ** argv)
     else if (flag == "--output") a.output = value;
     else if (flag == "--output-storage") a.output_storage = value;
     else if (flag == "--max-clouds") a.max_clouds = std::stoull(value);
-    else if (flag == "--vendor") sensor().vendor = value;
+    else if (flag == "--threads") {
+      a.threads = std::stoull(value);
+      if (a.threads == 0) throw std::runtime_error("--threads must be at least 1");
+    } else if (flag == "--vendor") sensor().vendor = value;
     else if (flag == "--topic") sensor().topic = value;
     else if (flag == "--info-topic") sensor().info_topic = value;
     else if (flag == "--output-topic") sensor().output_topic = value;

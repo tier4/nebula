@@ -118,3 +118,18 @@ TEST(ParseArgs, MultiSensorRules)
            "--output-topic", "/x"}),
     std::runtime_error);
 }
+
+TEST(ParseArgs, ThreadsDefaultAndOverride)
+{
+  EXPECT_EQ(
+    parse({"--input", "in", "--output", "out", "--vendor", "hesai", "--topic", "/p"}).threads, 4u);
+  EXPECT_EQ(
+    parse({"--input", "in", "--output", "out", "--vendor", "hesai", "--topic", "/p", "--threads",
+           "2"})
+      .threads,
+    2u);
+  EXPECT_THROW(
+    parse({"--input", "in", "--output", "out", "--vendor", "hesai", "--topic", "/p", "--threads",
+           "0"}),
+    std::runtime_error);
+}

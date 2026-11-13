@@ -20,6 +20,8 @@ ros2 run nebula_cli nebula_cli convert --input my_bag --output out_bag \
 
 All other topics of the input bag are copied unchanged unless `--drop-other-topics` is given.
 
+Sensors are decoded in parallel, one thread per sensor, up to `--threads N` (default 4). A progress bar per input topic is shown on stderr.
+
 Run `nebula_cli --help` for all options. Supported vendors: `hesai`, `velodyne`, `robosense`.
 Input topic types: `PandarScan`, `VelodyneScan`, `RobosenseScan`, `NebulaPackets`.
 
