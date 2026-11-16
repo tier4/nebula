@@ -30,6 +30,9 @@ if(BUILD_TESTING)
   target_compile_definitions(
     test_pcd_io PRIVATE NEBULA_CORE_COMMON_TEST_RESOURCES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/test_resources")
 
+  ament_add_gtest(test_clock test/test_clock.cpp)
+  target_link_libraries(test_clock nebula_core_common)
+
   ament_add_gtest(test_nebula_common test/test_nebula_common.cpp)
   target_link_libraries(test_nebula_common nebula_core_common)
 

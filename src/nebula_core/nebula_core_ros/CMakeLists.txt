@@ -56,6 +56,9 @@ if(BUILD_TESTING)
   ament_add_gtest(test_severity_latch test/test_severity_latch.cpp)
   target_link_libraries(test_severity_latch nebula_core_ros
                         diagnostic_updater::diagnostic_updater)
+
+  ament_add_gtest(test_rclcpp_clock test/test_rclcpp_clock.cpp)
+  target_link_libraries(test_rclcpp_clock nebula_core_ros)
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
