@@ -52,6 +52,10 @@ if(BUILD_TESTING)
   target_include_directories(test_single_consumer_processor PRIVATE include)
   target_link_libraries(test_single_consumer_processor
                         nebula_core_common::nebula_core_common rcpputils::rcpputils)
+
+  ament_add_gtest(test_severity_latch test/test_severity_latch.cpp)
+  target_link_libraries(test_severity_latch nebula_core_ros
+                        diagnostic_updater::diagnostic_updater)
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
