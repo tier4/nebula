@@ -30,7 +30,7 @@ workflows:
         - 'dorny/paths-filter@v3.0.4'
     '.github/workflows/lint-autoware-system-design-format.yaml':
         - 'actions/checkout@v4.4.0'
-        - 'autowarefoundation/autoware_system_designer@v0.4.1'
+        - 'autowarefoundation/autoware_system_designer@v0.5.1'
     '.github/workflows/pre-commit-config-update.yaml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-python@v7.1.0'
@@ -137,9 +137,9 @@ dependencies:
             - 'pre-commit/action@v3.0.1'
             - 'stefanzweifel/git-auto-commit-action@v7'
             - 'streetsidesoftware/cspell-action@v9'
-    'autowarefoundation/autoware_system_designer@v0.4.1':
-        ref: 'v0.4.1'
-        commit: 'sha1-0bb96f29d8e27ee88658b506fa56967054b19f64'
+    'autowarefoundation/autoware_system_designer@v0.5.1':
+        ref: 'v0.5.1'
+        commit: 'sha1-b27fb793112ca401c03c47ffeac3525e1b8d31a0'
         owner_id: 48420599
         repo_id: 1118644261
         uses:
