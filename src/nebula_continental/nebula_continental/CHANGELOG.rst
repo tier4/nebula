@@ -2,8 +2,8 @@
 Changelog for package nebula_continental
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.0 (2026-11-16)
+------------------
 * refactor: name decoder and monitor loggers consistently across vendors (`#543 <https://github.com/tier4/nebula/issues/543>`_)
   Wrappers now log as DecoderWrapper and HwMonitorWrapper, and the decoders they own as
   DecoderWrapper.Decoder.

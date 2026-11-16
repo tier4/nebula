@@ -2,8 +2,8 @@
 Changelog for package nebula_core_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.0 (2026-11-16)
+------------------
 * build(nebula_core_decoders): use own thread safety annotations, drop rcpputils (`#544 <https://github.com/tier4/nebula/issues/544>`_)
   rcpputils was only needed for its thread safety annotation macros. nebula_core_common now
   defines the ones Nebula uses as NEBULA_TSA\_*.

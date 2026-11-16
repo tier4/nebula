@@ -2,8 +2,8 @@
 Changelog for package nebula_velodyne_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.0 (2026-11-16)
+------------------
 * refactor(nebula_velodyne_decoders): inject a logger instead of using rclcpp (`#532 <https://github.com/tier4/nebula/issues/532>`_)
   ``VelodyneDriver`` now takes a ``loggers::Logger`` in its constructor, and packet error logs are
   throttled per driver instance. This removes rclcpp from the Velodyne decoder package.

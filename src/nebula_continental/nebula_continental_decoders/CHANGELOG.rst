@@ -2,8 +2,8 @@
 Changelog for package nebula_continental_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.0 (2026-11-16)
+------------------
 * refactor(nebula_continental): inject a logger into the SRR520 decoder (`#534 <https://github.com/tier4/nebula/issues/534>`_)
   ``ContinentalSRR520Decoder`` now takes a ``loggers::Logger`` in its constructor. This removes rclcpp
   from the Continental decoder package.
