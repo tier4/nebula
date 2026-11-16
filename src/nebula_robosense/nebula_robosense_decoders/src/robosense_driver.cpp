@@ -20,7 +20,6 @@ RobosenseDriver::RobosenseDriver(
   const std::shared_ptr<loggers::Logger> & logger)
 : logger_(logger)
 {
-  auto decoder_logger = logger_->child("Decoder");
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
   switch (sensor_configuration->sensor_model) {
@@ -28,16 +27,16 @@ RobosenseDriver::RobosenseDriver(
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
       break;
     case SensorModel::ROBOSENSE_BPEARL_V3:
-      scan_decoder_.reset(new RobosenseDecoder<BpearlV3>(
-        sensor_configuration, calibration_configuration, decoder_logger));
+      scan_decoder_.reset(
+        new RobosenseDecoder<BpearlV3>(sensor_configuration, calibration_configuration, logger_));
       break;
     case SensorModel::ROBOSENSE_BPEARL_V4:
-      scan_decoder_.reset(new RobosenseDecoder<BpearlV4>(
-        sensor_configuration, calibration_configuration, decoder_logger));
+      scan_decoder_.reset(
+        new RobosenseDecoder<BpearlV4>(sensor_configuration, calibration_configuration, logger_));
       break;
     case SensorModel::ROBOSENSE_HELIOS:
-      scan_decoder_.reset(new RobosenseDecoder<Helios>(
-        sensor_configuration, calibration_configuration, decoder_logger));
+      scan_decoder_.reset(
+        new RobosenseDecoder<Helios>(sensor_configuration, calibration_configuration, logger_));
       break;
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;

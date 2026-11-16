@@ -41,7 +41,7 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
 
   info_driver_.emplace(
     sensor_cfg_ptr_,
-    std::make_shared<drivers::loggers::RclcppLogger>(get_logger().get_child("InfoDriver")));
+    std::make_shared<drivers::loggers::RclcppLogger>(get_logger().get_child("InfoDecoder")));
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
 
