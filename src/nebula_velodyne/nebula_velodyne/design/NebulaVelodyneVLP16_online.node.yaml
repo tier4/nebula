@@ -1,49 +1,79 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaVelodyneVLP16_online.node
+
+description: Nebula driver for a connected Velodyne VLP-16; decodes the received UDP packets into point clouds and records them per scan.
 
 base: NebulaVelodyneVLP16.node
 
 override:
   publishers:
     - name: velodyne_packets
+      description: Raw UDP packets of one scan, for recording and replay.
       message_type: velodyne_msgs/msg/VelodyneScan
       remap_target: velodyne_packets
       qos:
         depth: 10
         reliability: best_effort
     - name: velodyne_points
+      description: Point cloud of one scan in the Nebula XYZIRCAEDT point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: velodyne_points
       qos:
         depth: 10
         reliability: best_effort
     - name: aw_points
+      description: Point cloud of one scan in the Autoware XYZIR point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: aw_points
       qos:
         depth: 10
         reliability: best_effort
     - name: aw_points_ex
+      description: Point cloud of one scan in the Autoware XYZIRADT point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: aw_points_ex
       qos:
         depth: 10
         reliability: best_effort
+    - name: diagnostics
+      description: Sensor status read over HTTP.
+      message_type: diagnostic_msgs/msg/DiagnosticArray
+      global: /diagnostics
   param_values:
     - name: launch_hw
+      description: Receive packets from the sensor.
       type: bool
       default: true
   processes:
     - name: hw_interface
+      description: UDP receiver thread; hands each packet to the decoder.
       trigger_conditions:
         - periodic: 100 # Hz
       outcomes:
-        - to_output: velodyne_packets
+        - to_trigger: decoder
     - name: decoder
+      description: Decodes each packet on the receiver thread and publishes the scan and its packets once the scan completes.
       trigger_conditions:
         - and:
             - on_trigger: hw_interface
             - periodic: 10 # Hz
       outcomes:
+        - to_output: velodyne_packets
         - to_output: velodyne_points
+        - to_output: aw_points
+        - to_output: aw_points_ex
+    - name: fetch_sensor_status
+      description: Snapshot of the sensor status fetched over HTTP at startup.
+      trigger_conditions:
+        - once: null
+      outcomes:
+        - to_queue: sensor_status
+    - name: diagnose_sensor
+      description: Diagnostic updater reporting the fetched sensor status.
+      trigger_conditions:
+        - periodic: 1.0 # Hz
+      reads:
+        - from_queue: sensor_status
+      outcomes:
+        - to_output: diagnostics

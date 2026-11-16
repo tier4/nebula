@@ -1,77 +1,139 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaArs548_online.node
+
+description: Nebula driver for a connected Continental ARS548; decodes the received UDP packets, records them and forwards the vehicle motion to the sensor.
 
 base: NebulaArs548.node
 
 override:
   subscribers:
     - name: odometry_input
+      description: Vehicle velocity and yaw rate forwarded to the sensor.
       message_type: geometry_msgs/msg/TwistWithCovarianceStamped
       remap_target: odometry_input
     - name: acceleration_input
+      description: Vehicle acceleration forwarded to the sensor.
       message_type: geometry_msgs/msg/AccelWithCovarianceStamped
       remap_target: acceleration_input
     - name: steering_angle_input
+      description: Front axle steering angle forwarded to the sensor.
       message_type: std_msgs/msg/Float32
       remap_target: steering_angle_input
   publishers:
     - name: nebula_packets
+      description: Raw UDP packets, one per message, for recording and replay.
       message_type: nebula_msgs/msg/NebulaPackets
       remap_target: nebula_packets
     - name: continental_detections
+      description: Detection list of one radar cycle in the Continental format.
       message_type: continental_msgs/msg/ContinentalArs548DetectionList
       remap_target: continental_detections
     - name: continental_objects
+      description: Object list of one radar cycle in the Continental format.
       message_type: continental_msgs/msg/ContinentalArs548ObjectList
       remap_target: continental_objects
     - name: detection_points
+      description: Detections of one radar cycle as a point cloud.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: detection_points
     - name: object_points
+      description: Objects of one radar cycle as a point cloud.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: object_points
     - name: scan_raw
+      description: Detections of one radar cycle as a radar scan.
       message_type: radar_msgs/msg/RadarScan
       remap_target: scan_raw
     - name: objects_raw
+      description: Objects of one radar cycle as radar tracks.
       message_type: radar_msgs/msg/RadarTracks
       remap_target: objects_raw
     - name: marker_array
+      description: Visualization markers of the objects.
       message_type: visualization_msgs/msg/MarkerArray
       remap_target: marker_array
     - name: radar_objects
+      description: Objects of one radar cycle in the Autoware sensing format.
       message_type: autoware_sensing_msgs/msg/RadarObjects
       remap_target: radar_objects
     - name: radar_info
+      description: Static radar information, published once per radar_info_rate_subsample detection lists.
       message_type: autoware_sensing_msgs/msg/RadarInfo
       remap_target: radar_info
     - name: diagnostics
+      description: Sensor status reported by the radar, and the detection, object and liveness rates.
       message_type: diagnostic_msgs/msg/DiagnosticArray
       global: /diagnostics
   param_values:
     - name: launch_hw
+      description: Receive packets from the sensor.
       type: bool
       default: true
   processes:
     - name: hw_interface
+      description: UDP receiver thread; publishes each packet and hands it to the decoder.
       trigger_conditions:
         - periodic: 100 # Hz
       outcomes:
         - to_output: nebula_packets
-    - name: decoder
+        - to_queue: decode_status
+    - name: publish_detections
+      description: Publishes a detection list once its packet is decoded.
+      trigger_conditions:
+        - and:
+            - on_trigger: hw_interface
+            - periodic: 10 # Hz
+      outcomes:
+        - to_output: continental_detections
+        - to_output: detection_points
+        - to_output: scan_raw
+        - to_output: radar_info
+        - to_queue: decode_status
+    - name: publish_objects
+      description: Publishes an object list once its packet is decoded.
       trigger_conditions:
         - and:
             - on_trigger: hw_interface
             - periodic: 10 # Hz
       outcomes:
         - to_output: continental_objects
-        - to_output: continental_detections
-        - to_output: detection_points
         - to_output: object_points
         - to_output: radar_objects
-        - to_output: scan_raw
         - to_output: objects_raw
         - to_output: marker_array
+        - to_queue: decode_status
+    - name: publish_sensor_status
+      description: Publishes the sensor status once its packet is decoded.
+      trigger_conditions:
+        - and:
+            - on_trigger: hw_interface
+            - periodic: 10 # Hz
+      outcomes:
         - to_output: diagnostics
-        - to_output: radar_info
+    - name: diagnose_decoder
+      description: Diagnostic updaters reporting the detection, object and packet rates recorded by the decoder, once per radar cycle.
+      trigger_conditions:
+        - periodic: 10 # Hz
+      reads:
+        - from_queue: decode_status
+      outcomes:
+        - to_output: diagnostics
+    - name: forward_odometry
+      description: Sends the vehicle velocity, yaw rate and driving direction to the sensor.
+      trigger_conditions:
+        - on_input: odometry_input
+      outcomes:
+        - terminal: null
+    - name: forward_acceleration
+      description: Sends the vehicle acceleration to the sensor.
+      trigger_conditions:
+        - on_input: acceleration_input
+      outcomes:
+        - terminal: null
+    - name: forward_steering_angle
+      description: Sends the front axle steering angle to the sensor.
+      trigger_conditions:
+        - on_input: steering_angle_input
+      outcomes:
+        - terminal: null

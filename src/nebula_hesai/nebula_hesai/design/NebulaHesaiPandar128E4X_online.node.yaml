@@ -1,52 +1,99 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaHesaiPandar128E4X_online.node
+
+description: Nebula driver for a connected Hesai Pandar128E4X; decodes the received UDP packets into point clouds, records them per scan and monitors the sensor over TCP.
 
 base: NebulaHesaiPandar128E4X.node
 
 override:
   publishers:
     - name: pandar_packets
+      description: Raw UDP packets of one scan, for recording and replay.
       message_type: pandar_msgs/msg/PandarScan
       remap_target: pandar_packets
       qos:
         depth: 10
         reliability: best_effort
     - name: pandar_points
+      description: Point cloud of one scan in the Nebula XYZIRCAEDT point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: pandar_points
       qos:
         depth: 10
         reliability: best_effort
     - name: aw_points
+      description: Point cloud of one scan in the Autoware XYZIR point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: aw_points
       qos:
         depth: 10
         reliability: best_effort
     - name: aw_points_ex
+      description: Point cloud of one scan in the Autoware XYZIRADT point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: aw_points_ex
       qos:
         depth: 10
         reliability: best_effort
     - name: blockage_mask
+      description: Blockage mask image of one scan; published when the blockage mask output is enabled.
       message_type: sensor_msgs/msg/Image
       remap_target: blockage_mask
+    - name: diagnostics
+      description: Decoder status and sensor status fetched over TCP.
+      message_type: diagnostic_msgs/msg/DiagnosticArray
+      global: /diagnostics
   param_values:
     - name: launch_hw
+      description: Receive packets from the sensor.
       type: bool
       default: true
   processes:
     - name: hw_interface
+      description: UDP receiver thread; hands each packet to the decoder.
       trigger_conditions:
         - periodic: 10.0 # Hz
       outcomes:
-        - to_output: pandar_packets
+        - to_trigger: decoder
     - name: decoder
+      description: Decodes each packet on the receiver thread and publishes the scan once it completes; the packets of the scan go to the packet publisher.
       trigger_conditions:
         - and:
             - on_trigger: hw_interface
             - periodic: 10 # Hz
       outcomes:
         - to_output: pandar_points
+        - to_output: aw_points
+        - to_output: aw_points_ex
+        - to_output: blockage_mask
+        - to_queue: decode_status
+        - to_trigger: packets_publisher
+    - name: packets_publisher
+      description: Packet publish thread draining the bounded scan queue filled by the decoder.
+      trigger_conditions:
+        - on_trigger: decoder
+      outcomes:
+        - to_output: pandar_packets
+    - name: diagnose_decoder
+      description: Diagnostic updater reporting the publish rate, packet loss and functional safety state recorded by the decoder, once per scan period.
+      trigger_conditions:
+        - periodic: 10 # Hz
+      reads:
+        - from_queue: decode_status
+      outcomes:
+        - to_output: diagnostics
+    - name: fetch_sensor_status
+      description: Sensor status fetched over TCP once per diag_span on a worker thread.
+      trigger_conditions:
+        - periodic: 1.0 # Hz
+      outcomes:
+        - to_queue: sensor_status
+    - name: diagnose_sensor
+      description: Diagnostic updater reporting the fetched sensor status.
+      trigger_conditions:
+        - periodic: 1.0 # Hz
+      reads:
+        - from_queue: sensor_status
+      outcomes:
+        - to_output: diagnostics

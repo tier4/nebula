@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaVelodyneVLP16.node
+
+description: Nebula driver for the Velodyne VLP-16 lidar; decodes UDP packets into point clouds per scan.
 
 package:
   name: nebula_velodyne
@@ -18,12 +20,14 @@ publishers: []
 # parameters
 param_files:
   - name: config_file
+    description: Sensor, network and decoder configuration of the VLP-16.
     default: config/VLP16.param.yaml
     schema: schema/VLP16.schema.json
     allow_substs: true
 
 param_values:
   - name: launch_hw
+    description: Receive packets from the sensor when true; decode recorded packet scans when false.
     type: bool
     default: true
 

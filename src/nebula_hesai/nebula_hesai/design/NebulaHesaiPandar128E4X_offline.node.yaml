@@ -1,45 +1,70 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaHesaiPandar128E4X_offline.node
+
+description: Nebula driver for a Hesai Pandar128E4X replaying recorded packet scans; decodes them into point clouds.
 
 base: NebulaHesaiPandar128E4X.node
 
 override:
   subscribers:
     - name: pandar_packets
+      description: Recorded UDP packets of one scan.
       message_type: pandar_msgs/msg/PandarScan
       remap_target: pandar_packets
   publishers:
     - name: pandar_points
+      description: Point cloud of one scan in the Nebula XYZIRCAEDT point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: pandar_points
       qos:
         depth: 10
         reliability: best_effort
     - name: aw_points
+      description: Point cloud of one scan in the Autoware XYZIR point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: aw_points
       qos:
         depth: 10
         reliability: best_effort
     - name: aw_points_ex
+      description: Point cloud of one scan in the Autoware XYZIRADT point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: aw_points_ex
       qos:
         depth: 10
         reliability: best_effort
     - name: blockage_mask
+      description: Blockage mask image of one scan; published when the blockage mask output is enabled.
       message_type: sensor_msgs/msg/Image
       remap_target: blockage_mask
+    - name: diagnostics
+      description: Decoder status.
+      message_type: diagnostic_msgs/msg/DiagnosticArray
+      global: /diagnostics
   param_values:
     - name: launch_hw
+      description: Decode recorded packet scans.
       type: bool
       default: false
   processes:
     - name: decoder
+      description: Decodes the packets of each received scan and publishes the scan once it completes.
       trigger_conditions:
         - and:
             - on_input: pandar_packets
             - periodic: 10 # Hz
       outcomes:
         - to_output: pandar_points
+        - to_output: aw_points
+        - to_output: aw_points_ex
+        - to_output: blockage_mask
+        - to_queue: decode_status
+    - name: diagnose_decoder
+      description: Diagnostic updater reporting the publish rate, packet loss and functional safety state recorded by the decoder, once per scan period.
+      trigger_conditions:
+        - periodic: 10 # Hz
+      reads:
+        - from_queue: decode_status
+      outcomes:
+        - to_output: diagnostics

@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaArs548.node
+
+description: Nebula driver for the Continental ARS548 radar; decodes UDP packets into detection and object lists.
 
 package:
   name: nebula_continental
@@ -18,12 +20,14 @@ publishers: []
 # parameters
 param_files:
   - name: config_file
+    description: Sensor, network, vehicle and diagnostics configuration of the ARS548.
     default: config/ARS548.param.yaml
     schema: schema/ARS548.schema.json
     allow_substs: true
 
 param_values:
   - name: launch_hw
+    description: Receive packets from the sensor when true; decode recorded packets when false.
     type: bool
     default: true
 

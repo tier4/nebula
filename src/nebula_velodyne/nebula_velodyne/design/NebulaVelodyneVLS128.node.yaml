@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaVelodyneVLS128.node
+
+description: Nebula driver for the Velodyne VLS-128 lidar; decodes UDP packets into point clouds per scan.
 
 package:
   name: nebula_velodyne
@@ -18,12 +20,14 @@ publishers: []
 # parameters
 param_files:
   - name: config_file
+    description: Sensor, network and decoder configuration of the VLS-128.
     default: config/VLS128.param.yaml
     schema: schema/VLS128.schema.json
     allow_substs: true
 
 param_values:
   - name: launch_hw
+    description: Receive packets from the sensor when true; decode recorded packet scans when false.
     type: bool
     default: true
 

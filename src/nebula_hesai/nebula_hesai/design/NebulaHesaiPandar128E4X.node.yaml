@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaHesaiPandar128E4X.node
+
+description: Nebula driver for the Hesai Pandar128E4X lidar; decodes UDP packets into point clouds per scan.
 
 package:
   name: nebula_hesai
@@ -18,15 +20,18 @@ publishers: []
 # parameters
 param_files:
   - name: config_file
+    description: Sensor, network and decoder configuration of the Pandar128E4X.
     default: config/Pandar128E4X.param.yaml
     schema: schema/Pandar128E4X.schema.json
     allow_substs: true
 
 param_values:
   - name: launch_hw
+    description: Receive packets from the sensor when true; decode recorded packet scans when false.
     type: bool
     default: true
   - name: point_filters.downsample_mask.path
+    description: Path of the downsample mask image filtering the decoded points; empty disables the filter.
     type: string
     default: ""
 

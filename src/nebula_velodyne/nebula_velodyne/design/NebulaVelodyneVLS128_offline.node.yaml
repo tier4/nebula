@@ -1,28 +1,34 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaVelodyneVLS128_offline.node
+
+description: Nebula driver for a Velodyne VLS-128 replaying recorded packet scans; decodes them into point clouds.
 
 base: NebulaVelodyneVLS128.node
 
 override:
   subscribers:
     - name: velodyne_packets
+      description: Recorded UDP packets of one scan.
       message_type: velodyne_msgs/msg/VelodyneScan
       remap_target: velodyne_packets
   publishers:
     - name: velodyne_points
+      description: Point cloud of one scan in the Nebula XYZIRCAEDT point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: velodyne_points
       qos:
         depth: 10
         reliability: best_effort
     - name: aw_points
+      description: Point cloud of one scan in the Autoware XYZIR point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: aw_points
       qos:
         depth: 10
         reliability: best_effort
     - name: aw_points_ex
+      description: Point cloud of one scan in the Autoware XYZIRADT point type.
       message_type: sensor_msgs/msg/PointCloud2
       remap_target: aw_points_ex
       qos:
@@ -30,13 +36,17 @@ override:
         reliability: best_effort
   param_values:
     - name: launch_hw
+      description: Decode recorded packet scans.
       type: bool
       default: false
   processes:
     - name: decoder
+      description: Decodes the packets of each received scan and publishes the scan once it completes.
       trigger_conditions:
         - and:
             - on_input: velodyne_packets
             - periodic: 10 # Hz
       outcomes:
         - to_output: velodyne_points
+        - to_output: aw_points
+        - to_output: aw_points_ex
