@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_core_decoders/angles.hpp"
 #include "nebula_core_decoders/point_filters/blockage_mask.hpp"
 #include "nebula_core_decoders/point_filters/downsample_mask.hpp"
 #include "nebula_core_decoders/scan_cutter.hpp"
@@ -342,7 +343,7 @@ public:
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(correction_data),
     scan_cutter_(
-      2 * M_PIf, deg2rad(sensor_configuration_->cut_angle),
+      2 * pi_f, deg2rad(sensor_configuration_->cut_angle),
       deg2rad(sensor_configuration_->cloud_min_angle),
       deg2rad(sensor_configuration_->cloud_max_angle),
       [this](uint8_t buffer_index) { on_scan_complete(buffer_index); },

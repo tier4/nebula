@@ -112,7 +112,7 @@ public:
     uint32_t block_azimuth, uint32_t channel_id) const override
   {
     float azimuth_rad = block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
-    azimuth_rad = normalize_angle(azimuth_rad, M_PIf * 2);
+    azimuth_rad = normalize_angle(azimuth_rad, pi_f * 2);
 
     float elevation_rad = elevation_angle_rad_[channel_id];
 
@@ -133,7 +133,7 @@ public:
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
       float exact_azimuth = block_azimuth_rad + azimuth_offset_rad_[channel_id];
-      exact_azimuth = normalize_angle(exact_azimuth, 2 * M_PIf);
+      exact_azimuth = normalize_angle(exact_azimuth, 2 * pi_f);
       corrected_azimuths.azimuths[channel_id] = exact_azimuth;
     }
 
