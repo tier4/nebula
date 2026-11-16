@@ -13,8 +13,8 @@
 // limitations under the License.
 
 // # --8<-- [start:include]
-#include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
-#include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
+#include "nebula_core_common/diagnostics/liveness_monitor.hpp"
+#include "nebula_core_common/diagnostics/rate_bound_status.hpp"
 // # --8<-- [end:include]
 
 #include <diagnostic_updater/diagnostic_updater.hpp>

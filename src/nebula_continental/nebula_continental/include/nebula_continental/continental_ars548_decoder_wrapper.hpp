@@ -14,11 +14,11 @@
 
 #pragma once
 
+#include "nebula_core_common/diagnostics/hysteresis_state_machine.hpp"
+#include "nebula_core_common/diagnostics/liveness_monitor.hpp"
+#include "nebula_core_common/diagnostics/rate_bound_status.hpp"
 #include "nebula_core_ros/agnocast_wrapper/diagnostic_updater.hpp"
 #include "nebula_core_ros/agnocast_wrapper/node.hpp"
-#include "nebula_core_ros/diagnostics/hysteresis_state_machine.hpp"
-#include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
-#include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
 #include "nebula_core_ros/parameter_descriptors.hpp"
 #include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 

@@ -19,9 +19,9 @@
 #include "nebula_sample_hw_interfaces/sample_hw_interface.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_core_common/diagnostics/liveness_monitor.hpp>
+#include <nebula_core_common/diagnostics/rate_bound_status.hpp>
 #include <nebula_core_common/util/expected.hpp>
-#include <nebula_core_ros/diagnostics/liveness_monitor.hpp>
-#include <nebula_core_ros/diagnostics/rate_bound_status.hpp>
 #include <nebula_sample_common/sample_configuration.hpp>
 #include <rclcpp/rclcpp.hpp>
 

@@ -14,9 +14,9 @@
 
 #pragma once
 
+#include "nebula_core_common/diagnostics/liveness_monitor.hpp"
+#include "nebula_core_common/diagnostics/severity_latch.hpp"
 #include "nebula_core_ros/agnocast_wrapper/node.hpp"
-#include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
-#include "nebula_core_ros/diagnostics/severity_latch.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_hesai_decoders/decoders/functional_safety.hpp>

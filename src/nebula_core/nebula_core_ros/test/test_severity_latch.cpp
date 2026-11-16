@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_core_ros/diagnostics/severity_latch.hpp"
-
 #include <diagnostic_updater/diagnostic_status_wrapper.hpp>
+#include <nebula_core_common/diagnostics/severity_latch.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 

@@ -14,10 +14,10 @@
 
 #pragma once
 
+#include "nebula_core_common/diagnostics/rate_bound_status.hpp"
 #include "nebula_core_ros/agnocast_wrapper/diagnostic_updater.hpp"
 #include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_core_ros/agnocast_wrapper/node.hpp"
-#include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
 #include "nebula_core_ros/single_consumer_processor.hpp"
 #include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 #include "nebula_hesai/diagnostics/packet_loss_diagnostic.hpp"
