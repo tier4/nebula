@@ -25,6 +25,7 @@
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <robosense_msgs/msg/robosense_scan.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include <chrono>
 #include <memory>

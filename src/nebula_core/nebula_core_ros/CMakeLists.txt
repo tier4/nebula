@@ -31,6 +31,8 @@ target_link_libraries(
   nebula_core_ros PUBLIC rclcpp::rclcpp nebula_core_common::nebula_core_common
                          rosbag2_storage::rosbag2_storage Boost::headers)
 
+ament_target_dependencies(nebula_core_ros PUBLIC sensor_msgs)
+
 install(
   TARGETS nebula_core_ros
   EXPORT export_nebula_core_ros
@@ -69,7 +71,7 @@ install(
 install(DIRECTORY templates DESTINATION share/${PROJECT_NAME})
 
 ament_export_dependencies(Boost diagnostic_msgs diagnostic_updater
-                          nebula_core_common rclcpp rosbag2_storage)
+                          nebula_core_common rclcpp rosbag2_storage sensor_msgs)
 
 if(DEFINED ENV{ENABLE_AGNOCAST} AND "$ENV{ENABLE_AGNOCAST}" STREQUAL "1")
   ament_export_dependencies(agnocastlib glog)

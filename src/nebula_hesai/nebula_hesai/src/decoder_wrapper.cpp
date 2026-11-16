@@ -40,11 +40,12 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration,
   nebula::agnocast_wrapper::diagnostic_updater::Updater & diagnostic_updater, bool publish_packets)
 : status_(nebula::Status::NOT_INITIALIZED),
-  logger_(parent_node->get_logger().get_child("HesaiDecoder")),
+  logger_(parent_node->get_logger().get_child("DecoderWrapper")),
   parent_node_(*parent_node),
   sensor_cfg_(config),
   calibration_cfg_ptr_(calibration),
-  publish_diagnostic_(make_rate_bound_status(sensor_cfg_->rotation_speed, *parent_node)),
+  publish_diagnostic_(
+    make_rate_bound_status(sensor_cfg_->sensor_model, sensor_cfg_->rotation_speed, *parent_node)),
   debug_publisher_(parent_node, "nebula")
 {
   if (!sensor_cfg_) {

@@ -17,7 +17,7 @@ target_link_libraries(
   nebula_robosense_decoders
   PUBLIC nebula_core_common::nebula_core_common
          nebula_robosense_common::nebula_robosense_common
-         nebula_core_decoders::nebula_core_decoders rclcpp::rclcpp
+         nebula_core_decoders::nebula_core_decoders
          Boost::headers)
 
 # Robosense Info Decoder
@@ -32,7 +32,7 @@ target_link_libraries(
   nebula_robosense_decoders_info
   PUBLIC nebula_core_common::nebula_core_common
          nebula_robosense_common::nebula_robosense_common
-         nebula_core_decoders::nebula_core_decoders rclcpp::rclcpp
+         nebula_core_decoders::nebula_core_decoders
          Boost::headers)
 
 install(TARGETS nebula_robosense_decoders
@@ -46,6 +46,6 @@ ament_export_targets(export_nebula_robosense_decoders)
 ament_export_targets(export_nebula_robosense_decoders_info)
 
 ament_export_dependencies(Boost nebula_core_common nebula_robosense_common
-                          nebula_core_decoders rclcpp)
+                          nebula_core_decoders)
 
 ament_package()

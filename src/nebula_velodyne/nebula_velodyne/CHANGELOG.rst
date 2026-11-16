@@ -2,6 +2,36 @@
 Changelog for package nebula_velodyne
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* refactor: name decoder and monitor loggers consistently across vendors (`#543 <https://github.com/tier4/nebula/issues/543>`_)
+  Wrappers now log as DecoderWrapper and HwMonitorWrapper, and the decoders they own as
+  DecoderWrapper.Decoder.
+* refactor(nebula_velodyne_decoders): inject a logger instead of using rclcpp (`#532 <https://github.com/tier4/nebula/issues/532>`_)
+  ``VelodyneDriver`` now takes a ``loggers::Logger`` in its constructor, and packet error logs are
+  throttled per driver instance. This removes rclcpp from the Velodyne decoder package.
+* build(nebula_core_decoders): declare rcpputils, drop unused sensor_msgs (`#529 <https://github.com/tier4/nebula/issues/529>`_)
+  Remove the unused ``sensor_msgs`` include from ``nebula_driver_base.hpp`` and declare sensor_msgs in
+  the ROS packages that relied on it transitively.
+* Contributors: Max Schmeller
+
+1.4.0 (2026-11-11)
+------------------
+* fix(nebula_velodyne): bound azimuth lookups to the table size (`#511 <https://github.com/tier4/nebula/issues/511>`_)
+  The VLP32 decoder indexed the 36000-entry azimuth table with the raw 16-bit wire azimuth, which
+  crafted packets could push past the end of the table. All three decoders now share the table and
+  look it up through an azimuth_rad() helper that wraps the index.
+* fix(nebula_velodyne): do not read past the start of an emptied scan buffer (`#510 <https://github.com/tier4/nebula/issues/510>`_)
+  get_pointcloud() called back() on the scan buffer without re-checking for emptiness, so a scan
+  made up only of points just after the scan phase, which crafted packets can produce, read before
+  the start of the buffer.
+* fix(nebula_velodyne): validate packet size before decoding (`#506 <https://github.com/tier4/nebula/issues/506>`_)
+  Fixes CVE-2026-74238 / GHSA-7rjx-37vw-389j: the VLP16, VLP32 and VLS128 decoders read fixed
+  offsets of a 1206-byte packet without checking the received size. unpack() now returns a
+  PacketDecodeStatus and rejects packets that are not exactly 1206 bytes; the driver drops them
+  with a throttled error.
+* Contributors: Max Schmeller
+
 1.3.1 (2026-10-15)
 ------------------
 

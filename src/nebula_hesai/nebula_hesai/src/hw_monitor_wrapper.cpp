@@ -52,7 +52,7 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
   const std::shared_ptr<SyncToolingWorker> & sync_tooling_worker)
-: logger_(parent_node->get_logger().get_child("HwMonitor")),
+: logger_(parent_node->get_logger().get_child("HwMonitorWrapper")),
   status_(Status::OK),
   hw_interface_(hw_interface),
   parent_node_(parent_node),

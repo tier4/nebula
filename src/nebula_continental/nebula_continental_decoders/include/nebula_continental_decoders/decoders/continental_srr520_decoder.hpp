@@ -17,8 +17,8 @@
 #include "nebula_continental_decoders/decoders/continental_packets_decoder.hpp"
 
 #include <nebula_continental_common/continental_srr520.hpp>
+#include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/util/crc.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 #include <continental_msgs/msg/continental_srr520_detection_list.hpp>
 #include <continental_msgs/msg/continental_srr520_object_list.hpp>
@@ -59,8 +59,10 @@ class ContinentalSRR520Decoder : public ContinentalPacketsDecoder
 public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
-  explicit ContinentalSRR520Decoder(
-    const std::shared_ptr<const ContinentalSRR520SensorConfiguration> & sensor_configuration);
+  /// @param logger Logger used by this decoder
+  ContinentalSRR520Decoder(
+    const std::shared_ptr<const ContinentalSRR520SensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<loggers::Logger> & logger);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -109,10 +111,6 @@ public:
   /// @return Resulting status
   Status register_packets_callback(
     std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> nebula_packets_callback);
-
-  /// @brief Setting rclcpp::Logger
-  /// @param node Logger
-  void set_logger(std::shared_ptr<rclcpp::Logger> node);
 
 private:
   /// @brief Process a new near detection header packet
@@ -176,18 +174,6 @@ private:
   /// @param stamp The stamp in nanoseconds
   void process_sync_follow_up_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
-  /// @brief Printing the string to RCLCPP_INFO_STREAM
-  /// @param info Target string
-  void print_info(std::string info);
-
-  /// @brief Printing the string to RCLCPP_ERROR_STREAM
-  /// @param error Target string
-  void print_error(std::string error);
-
-  /// @brief Printing the string to RCLCPP_DEBUG_STREAM
-  /// @param debug Target string
-  void print_debug(std::string debug);
-
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg)>
     near_detection_list_callback_{};
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg)>
@@ -220,7 +206,7 @@ private:
   std::shared_ptr<const continental_srr520::ContinentalSRR520SensorConfiguration>
     sensor_configuration_{};
 
-  std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_{};
+  std::shared_ptr<loggers::Logger> logger_;
 };
 
 }  // namespace nebula::drivers::continental_srr520

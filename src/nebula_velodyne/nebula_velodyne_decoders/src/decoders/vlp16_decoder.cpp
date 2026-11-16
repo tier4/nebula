@@ -63,18 +63,18 @@ Vlp16Decoder::Vlp16Decoder(
 std::tuple<drivers::NebulaPointCloudPtr, double> Vlp16Decoder::get_pointcloud()
 {
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
-  if (!scan_pc_->empty()) {
-    auto current_azimuth = scan_pc_->back().azimuth;
-    auto phase_diff =
+  const size_t kQuarterTurnDeg = static_cast<size_t>(angles::to_degrees(M_PI_2));
+  // Move the trailing points that already belong to the next scan to the overflow buffer.
+  // The scan may consist only of such points, so the emptiness check must come before back().
+  while (!scan_pc_->empty()) {
+    const auto current_azimuth = scan_pc_->back().azimuth;
+    const auto phase_diff =
       static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
-    size_t kQuarterTurnDeg = static_cast<size_t>(angles::to_degrees(M_PI_2));
-    while (phase_diff < kQuarterTurnDeg && !scan_pc_->empty()) {
-      overflow_pc_->push_back(scan_pc_->back());
-      scan_pc_->pop_back();
-      current_azimuth = scan_pc_->back().azimuth;
-      phase_diff =
-        static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
+    if (phase_diff >= kQuarterTurnDeg) {
+      break;
     }
+    overflow_pc_->push_back(scan_pc_->back());
+    scan_pc_->pop_back();
   }
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
@@ -313,7 +313,7 @@ PacketDecodeStatus Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, dou
                 current_point.z = z_coord;
                 current_point.return_type = return_type;
                 current_point.channel = corrections.laser_ring;
-                current_point.azimuth = rotation_radians_[azimuth_corrected];
+                current_point.azimuth = azimuth_rad(azimuth_corrected);
                 current_point.elevation = sin_vert_angle;
                 auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
                 if (point_ts < 0) point_ts = 0;

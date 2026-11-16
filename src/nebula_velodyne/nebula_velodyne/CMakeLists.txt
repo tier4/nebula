@@ -24,8 +24,9 @@ target_link_libraries(
          nebula_velodyne_hw_interfaces::nebula_velodyne_hw_interfaces
          nebula_core_ros::nebula_core_ros)
 
-ament_target_dependencies(velodyne_ros_wrapper PUBLIC diagnostic_msgs
-                          velodyne_msgs nebula_msgs rclcpp_components)
+ament_target_dependencies(
+  velodyne_ros_wrapper PUBLIC diagnostic_msgs velodyne_msgs nebula_msgs
+  rclcpp_components sensor_msgs)
 
 rclcpp_components_register_node(
   velodyne_ros_wrapper PLUGIN "VelodyneRosWrapper" EXECUTABLE

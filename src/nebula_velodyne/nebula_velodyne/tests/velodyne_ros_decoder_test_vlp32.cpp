@@ -11,6 +11,7 @@
 
 #include <nebula_core_common/io/pcd.hpp>
 #include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
+#include <nebula_core_ros/rclcpp_logger.hpp>
 #include <nebula_velodyne_decoders/decoders/vlp32_decoder.hpp>
 
 #include <gtest/gtest.h>
@@ -56,8 +57,9 @@ Status VelodyneRosDecoderTest::initialize_driver(
   std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
-  driver_ptr_ =
-    std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
+  driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(
+    sensor_configuration, calibration_configuration,
+    std::make_shared<drivers::loggers::RclcppLogger>(get_logger()));
   decoder_ptr_ =
     std::make_shared<drivers::vlp32::Vlp32Decoder>(sensor_configuration, calibration_configuration);
   return driver_ptr_->get_status();

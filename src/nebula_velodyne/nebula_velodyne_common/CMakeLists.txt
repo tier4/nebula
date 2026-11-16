@@ -15,7 +15,17 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(nebula_velodyne_common PUBLIC yaml-cpp)
+target_link_libraries(
+  nebula_velodyne_common PUBLIC yaml-cpp nebula_core_common::nebula_core_common)
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+
+  ament_add_gtest(test_velodyne_common test/test_velodyne_common.cpp)
+  target_link_libraries(test_velodyne_common nebula_velodyne_common)
+endif()
 
 install(TARGETS nebula_velodyne_common EXPORT export_nebula_velodyne_common)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})

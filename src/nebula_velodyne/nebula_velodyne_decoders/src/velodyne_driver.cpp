@@ -6,16 +6,20 @@
 #include "nebula_velodyne_decoders/decoders/vlp32_decoder.hpp"
 #include "nebula_velodyne_decoders/decoders/vls128_decoder.hpp"
 
+#include <chrono>
 #include <memory>
 #include <tuple>
 #include <vector>
 
 namespace nebula::drivers
 {
+
 VelodyneDriver::VelodyneDriver(
   const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
   const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
-    calibration_configuration)
+    calibration_configuration,
+  const std::shared_ptr<loggers::Logger> & logger)
+: logger_(logger)
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
@@ -57,8 +61,7 @@ std::tuple<drivers::NebulaPointCloudPtr, double> VelodyneDriver::parse_cloud_pac
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
 
   if (driver_status_ != nebula::Status::OK) {
-    auto logger = rclcpp::get_logger("VelodyneDriver");
-    RCLCPP_ERROR(logger, "Driver not OK.");
+    logger_->error("Driver not OK.");
     return pointcloud;
   }
 
@@ -66,16 +69,15 @@ std::tuple<drivers::NebulaPointCloudPtr, double> VelodyneDriver::parse_cloud_pac
     case PacketDecodeStatus::OK:
       break;
     case PacketDecodeStatus::INVALID_PACKET_SIZE:
-      RCLCPP_ERROR_THROTTLE(
-        rclcpp::get_logger("VelodyneDriver"), clock_, 5000,
-        "Packet size mismatch: got %zu bytes, expected %d bytes. Dropping packet.", packet.size(),
-        g_packet_size);
+      NEBULA_LOG_STREAM(
+        logger_->throttled(std::chrono::seconds(5)).error,
+        "Packet size mismatch: got " << packet.size() << " bytes, expected " << g_packet_size
+                                     << " bytes. Dropping packet.");
       return pointcloud;
     case PacketDecodeStatus::INVALID_BLOCK_HEADER:
       // The decoder skipped the rest of the packet; the scan state is still updated.
-      RCLCPP_WARN_THROTTLE(
-        rclcpp::get_logger("VelodyneDriver"), clock_, 5000,
-        "Unrecognized block header, skipping the rest of the packet.");
+      logger_->throttled(std::chrono::seconds(5))
+        .warn("Unrecognized block header, skipping the rest of the packet.");
       break;
   }
 

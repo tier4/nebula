@@ -4,6 +4,8 @@
 
 #include "nebula_core_common/util/string_conversions.hpp"
 
+#include <boost/format.hpp>
+
 #include <iostream>
 #include <memory>
 #include <string>

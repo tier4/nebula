@@ -16,7 +16,7 @@ VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
   rclcpp::Node * const parent_node,
   const std::shared_ptr<nebula::drivers::VelodyneHwInterface> & hw_interface,
   std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config)
-: logger_(parent_node->get_logger().get_child("HwMonitor")),
+: logger_(parent_node->get_logger().get_child("HwMonitorWrapper")),
   diagnostics_updater_(
     (parent_node->declare_parameter<bool>("diagnostic_updater.use_fqn", true), parent_node)),
   hw_interface_(hw_interface),

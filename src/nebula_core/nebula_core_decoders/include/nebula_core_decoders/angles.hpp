@@ -20,6 +20,9 @@
 namespace nebula::drivers
 {
 
+/// Pi as a `float`. Portable replacement for `M_PIf`, which is a glibc extension.
+constexpr float pi_f = static_cast<float>(M_PI);
+
 struct Radians
 {
   static constexpr double circle_modulus = 2 * M_PI;

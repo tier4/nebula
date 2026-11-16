@@ -17,7 +17,7 @@ target_link_libraries(
   nebula_hesai_decoders
   PUBLIC nebula_core_common::nebula_core_common
          nebula_hesai_common::nebula_hesai_common
-         nebula_core_decoders::nebula_core_decoders rclcpp::rclcpp
+         nebula_core_decoders::nebula_core_decoders
          Boost::headers)
 
 install(TARGETS nebula_hesai_decoders EXPORT export_nebula_hesai_decoders)
@@ -29,6 +29,6 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_hesai_decoders)
 
 ament_export_dependencies(Boost nebula_core_common nebula_hesai_common
-                          nebula_core_decoders rclcpp)
+                          nebula_core_decoders)
 
 ament_package()

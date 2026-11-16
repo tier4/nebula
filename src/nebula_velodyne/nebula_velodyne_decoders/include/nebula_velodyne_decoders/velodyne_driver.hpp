@@ -15,6 +15,7 @@
 #ifndef NEBULA_VELODYNE_DECODERS__VELODYNE_DRIVER_HPP_
 #define NEBULA_VELODYNE_DECODERS__VELODYNE_DRIVER_HPP_
 
+#include "nebula_core_common/loggers/logger.hpp"
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_core_common/point_types.hpp"
@@ -42,18 +43,19 @@ private:
   Status driver_status_;
   /// @brief Decoder according to the model
   std::shared_ptr<drivers::VelodyneScanDecoder> scan_decoder_;
-  /// @brief Clock used to throttle error logging
-  rclcpp::Clock clock_{RCL_STEADY_TIME};
+  std::shared_ptr<loggers::Logger> logger_;
 
 public:
   VelodyneDriver() = delete;
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver
+  /// @param logger Logger used by this driver
   VelodyneDriver(
     const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
-      calibration_configuration);
+      calibration_configuration,
+    const std::shared_ptr<loggers::Logger> & logger);
 
   /// @brief Setting CalibrationConfiguration (not used)
   /// @param calibration_configuration
