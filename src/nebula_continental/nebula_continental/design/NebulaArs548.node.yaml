@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaArs548.node
+
+description: Nebula driver for the Continental ARS548 radar.
 
 package:
   name: nebula_continental

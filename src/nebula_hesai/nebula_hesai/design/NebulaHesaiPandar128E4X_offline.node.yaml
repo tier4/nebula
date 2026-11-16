@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaHesaiPandar128E4X_offline.node
+
+description: Nebula driver for the Hesai Pandar128E4X, replaying recorded packets.
 
 base: NebulaHesaiPandar128E4X.node
 
@@ -31,15 +33,31 @@ override:
     - name: blockage_mask
       message_type: sensor_msgs/msg/Image
       remap_target: blockage_mask
+    - name: diagnostics
+      message_type: diagnostic_msgs/msg/DiagnosticArray
+      global: /diagnostics
   param_values:
     - name: launch_hw
       type: bool
       default: false
   processes:
     - name: decoder
+      description: Decodes each recorded scan.
       trigger_conditions:
         - and:
             - on_input: pandar_packets
             - periodic: 10 # Hz
       outcomes:
         - to_output: pandar_points
+        - to_output: aw_points
+        - to_output: aw_points_ex
+        - to_output: blockage_mask
+        - to_queue: decode_status
+    - name: diagnose_decoder
+      description: Decoder diagnostics.
+      trigger_conditions:
+        - periodic: 10 # Hz
+      reads:
+        - from_queue: decode_status
+      outcomes:
+        - to_output: diagnostics
