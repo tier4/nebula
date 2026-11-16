@@ -764,8 +764,9 @@ inline bool supports_lidar_monitor(const SensorModel & sensor_model)
 inline uint8_t get_scans_per_rotation(const SensorModel & sensor_model)
 {
   switch (sensor_model) {
-    // The AT128 rotates a three-sided polygon mirror and outputs one scan per mirror face
+    // The AT128 and AT128P rotate a three-sided polygon mirror and output one scan per mirror face
     case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_AT128P:
       return 3;
     default:
       return 1;
