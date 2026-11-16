@@ -85,6 +85,10 @@ if(BUILD_TESTING)
     -D_SRC_CALIBRATION_DIR_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../nebula_hesai_decoders/calibration/"
   )
 
+  # AT128P sensor definition test
+  ament_add_gtest(test_hesai_at128p tests/test_hesai_at128p.cpp)
+  target_link_libraries(test_hesai_at128p
+                        nebula_hesai_decoders::nebula_hesai_decoders)
   # Fault message handling test
   ament_add_gtest(test_hesai_fault_message tests/test_hesai_fault_message.cpp)
   target_link_libraries(test_hesai_fault_message

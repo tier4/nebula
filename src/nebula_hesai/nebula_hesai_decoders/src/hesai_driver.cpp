@@ -72,6 +72,10 @@ HesaiDriver::HesaiDriver(
       scan_decoder_ = initialize_decoder<PandarAT128>(
         sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
+    case SensorModel::HESAI_AT128P:
+      scan_decoder_ = initialize_decoder<PandarAT128P>(
+        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+      break;
     case SensorModel::HESAI_PANDAR128_E3X: {
       scan_decoder_ = initialize_decoder<Pandar128E3X>(
         sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);

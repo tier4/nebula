@@ -57,7 +57,9 @@ HesaiRosOfflineExtractBag::HesaiRosOfflineExtractBag(
   sensor_cfg_ptr_ = std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
+  if (
+    sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration.sensor_model == drivers::SensorModel::HESAI_AT128P) {
     correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>(correction_configuration);
     wrapper_status_ = initialize_driver(
       std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
@@ -131,7 +133,9 @@ Status HesaiRosOfflineExtractBag::get_parameters(
 
   calibration_configuration.calibration_file =
     this->declare_parameter<std::string>("calibration_file", "", param_read_only());
-  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
+  if (
+    sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration.sensor_model == drivers::SensorModel::HESAI_AT128P) {
     correction_file_path_ =
       this->declare_parameter<std::string>("correction_file", "", param_read_only());
   }
@@ -172,7 +176,9 @@ Status HesaiRosOfflineExtractBag::get_parameters(
       return cal_status;
     }
   }
-  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
+  if (
+    sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration.sensor_model == drivers::SensorModel::HESAI_AT128P) {
     if (correction_file_path_.empty()) {
       return Status::INVALID_CALIBRATION_FILE;
     } else {

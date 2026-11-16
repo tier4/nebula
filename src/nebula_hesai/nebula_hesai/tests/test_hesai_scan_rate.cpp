@@ -44,8 +44,8 @@ TEST_P(ScanRateTest, ScanRateMatchesRotationSpeed)
   EXPECT_DOUBLE_EQ(get_scan_rate_hz(sensor_model, static_cast<uint16_t>(2 * rpm_at_10_hz)), 20.0);
 }
 
-// All Hesai sensors output one scan per rotation, except for the AT128, which outputs one scan per
-// face of its three-sided mirror
+// All Hesai sensors output one scan per rotation, except for the AT128 and AT128P, which output one
+// scan per face of their three-sided mirror
 INSTANTIATE_TEST_SUITE_P(
   TestHesaiScanRate, ScanRateTest,
   testing::Values(
@@ -58,6 +58,7 @@ INSTANTIATE_TEST_SUITE_P(
     ScanRateTestParams{SensorModel::HESAI_PANDARXT32, 600},
     ScanRateTestParams{SensorModel::HESAI_PANDARXT32M, 600},
     ScanRateTestParams{SensorModel::HESAI_PANDARAT128, 200},
+    ScanRateTestParams{SensorModel::HESAI_AT128P, 200},
     ScanRateTestParams{SensorModel::HESAI_PANDAR128_E3X, 600},
     ScanRateTestParams{SensorModel::HESAI_PANDAR128_E4X, 600}),
   [](const testing::TestParamInfo<ScanRateTestParams> & info) {

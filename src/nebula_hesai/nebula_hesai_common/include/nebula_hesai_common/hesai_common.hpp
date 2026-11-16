@@ -644,6 +644,14 @@ inline ReturnMode return_mode_from_string_hesai(
       if (return_mode == "Dual" || return_mode == "LastStrongest")
         return ReturnMode::DUAL_LAST_STRONGEST;
       break;
+    case SensorModel::HESAI_AT128P:
+      if (return_mode == "Last") return ReturnMode::LAST;
+      if (return_mode == "Strongest") return ReturnMode::STRONGEST;
+      if (return_mode == "Dual" || return_mode == "LastStrongest")
+        return ReturnMode::DUAL_LAST_STRONGEST;
+      if (return_mode == "First") return ReturnMode::FIRST;
+      if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
+      break;
     default:
       throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
   }
@@ -665,6 +673,7 @@ inline ReturnMode return_mode_from_int_hesai(
     case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_AT128P:
       if (return_mode == 0) return ReturnMode::LAST;
       if (return_mode == 1) return ReturnMode::STRONGEST;
       if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
@@ -705,6 +714,7 @@ inline int int_from_return_mode_hesai(
     case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_AT128P:
       if (return_mode == ReturnMode::LAST) return 0;
       if (return_mode == ReturnMode::STRONGEST) return 1;
       if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_STRONGEST)
@@ -754,8 +764,9 @@ inline bool supports_lidar_monitor(const SensorModel & sensor_model)
 inline uint8_t get_scans_per_rotation(const SensorModel & sensor_model)
 {
   switch (sensor_model) {
-    // The AT128 rotates a three-sided polygon mirror and outputs one scan per mirror face
+    // The AT128 and AT128P rotate a three-sided polygon mirror and output one scan per mirror face
     case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_AT128P:
       return 3;
     default:
       return 1;
@@ -797,6 +808,7 @@ inline bool supports_packet_loss_detection(const SensorModel & sensor_model)
     case SensorModel::HESAI_PANDAR40M:
     case SensorModel::HESAI_PANDARQT128:
     case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_AT128P:
     case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
       return true;
