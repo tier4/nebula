@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaHesaiPandar128E4X.node
+
+description: Nebula driver for the Hesai Pandar128E4X lidar.
 
 package:
   name: nebula_hesai

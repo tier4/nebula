@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaVelodyneVLP16.node
+
+description: Nebula driver for the Velodyne VLP-16 lidar.
 
 package:
   name: nebula_velodyne

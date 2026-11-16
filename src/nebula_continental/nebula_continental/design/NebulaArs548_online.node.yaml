@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaArs548_online.node
+
+description: Nebula driver for the Continental ARS548, connected to the sensor.
 
 base: NebulaArs548.node
 
@@ -55,23 +57,68 @@ override:
       default: true
   processes:
     - name: hw_interface
+      description: UDP packet receiver thread.
       trigger_conditions:
         - periodic: 100 # Hz
       outcomes:
         - to_output: nebula_packets
-    - name: decoder
+        - to_queue: decode_status
+    - name: publish_detections
+      description: Decodes and publishes detection lists.
+      trigger_conditions:
+        - and:
+            - on_trigger: hw_interface
+            - periodic: 10 # Hz
+      outcomes:
+        - to_output: continental_detections
+        - to_output: detection_points
+        - to_output: scan_raw
+        - to_output: radar_info
+        - to_queue: decode_status
+    - name: publish_objects
+      description: Decodes and publishes object lists.
       trigger_conditions:
         - and:
             - on_trigger: hw_interface
             - periodic: 10 # Hz
       outcomes:
         - to_output: continental_objects
-        - to_output: continental_detections
-        - to_output: detection_points
         - to_output: object_points
         - to_output: radar_objects
-        - to_output: scan_raw
         - to_output: objects_raw
         - to_output: marker_array
+        - to_queue: decode_status
+    - name: publish_sensor_status
+      description: Decodes and publishes the sensor status.
+      trigger_conditions:
+        - and:
+            - on_trigger: hw_interface
+            - periodic: 10 # Hz
+      outcomes:
         - to_output: diagnostics
-        - to_output: radar_info
+    - name: diagnose_decoder
+      description: Decoder diagnostics.
+      trigger_conditions:
+        - periodic: 10 # Hz
+      reads:
+        - from_queue: decode_status
+      outcomes:
+        - to_output: diagnostics
+    - name: forward_odometry
+      description: Sends the vehicle velocity to the sensor.
+      trigger_conditions:
+        - on_input: odometry_input
+      outcomes:
+        - terminal: null
+    - name: forward_acceleration
+      description: Sends the vehicle acceleration to the sensor.
+      trigger_conditions:
+        - on_input: acceleration_input
+      outcomes:
+        - terminal: null
+    - name: forward_steering_angle
+      description: Sends the steering angle to the sensor.
+      trigger_conditions:
+        - on_input: steering_angle_input
+      outcomes:
+        - terminal: null
