@@ -2,6 +2,13 @@
 Changelog for package nebula_core_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* build(nebula_core_decoders): declare rcpputils, drop unused sensor_msgs (`#529 <https://github.com/tier4/nebula/issues/529>`_)
+  Remove the unused ``sensor_msgs`` include from ``nebula_driver_base.hpp`` and declare sensor_msgs in
+  the ROS packages that relied on it transitively.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 

@@ -2,6 +2,13 @@
 Changelog for package nebula_velodyne_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* refactor(nebula_velodyne_decoders): inject a logger instead of using rclcpp (`#532 <https://github.com/tier4/nebula/issues/532>`_)
+  ``VelodyneDriver`` now takes a ``loggers::Logger`` in its constructor, and packet error logs are
+  throttled per driver instance. This removes rclcpp from the Velodyne decoder package.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 * fix(nebula_velodyne): bound azimuth lookups to the table size (`#511 <https://github.com/tier4/nebula/issues/511>`_)

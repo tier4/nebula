@@ -2,6 +2,13 @@
 Changelog for package nebula_hesai_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* fix(nebula_hesai): account for the AT128's three scans per rotation (`#527 <https://github.com/tier4/nebula/issues/527>`_)
+  The AT128 outputs one scan per mirror face, so at 200 RPM it outputs scans at 10 Hz, not 3.33 Hz.
+  The publish rate and functional safety diagnostics now use the scan rate.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 

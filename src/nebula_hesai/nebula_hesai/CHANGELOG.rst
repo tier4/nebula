@@ -2,6 +2,19 @@
 Changelog for package nebula_hesai
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* refactor: name decoder and monitor loggers consistently across vendors (`#543 <https://github.com/tier4/nebula/issues/543>`_)
+  Wrappers now log as DecoderWrapper and HwMonitorWrapper, and the decoders they own as
+  DecoderWrapper.Decoder.
+* fix: build with the conda-forge toolchain (M_PIf, boost/format.hpp) (`#545 <https://github.com/tier4/nebula/issues/545>`_)
+  Replace ``M_PIf``, a glibc extension that the conda-forge (RoboStack) sysroot lacks, and include
+  ``boost/format.hpp`` explicitly.
+* fix(nebula_hesai): account for the AT128's three scans per rotation (`#527 <https://github.com/tier4/nebula/issues/527>`_)
+  The AT128 outputs one scan per mirror face, so at 200 RPM it outputs scans at 10 Hz, not 3.33 Hz.
+  The publish rate and functional safety diagnostics now use the scan rate.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 * fix(hesai_decoder): add handling for fault message packets and corresponding tests (`#521 <https://github.com/tier4/nebula/issues/521>`_)

@@ -2,6 +2,16 @@
 Changelog for package nebula_continental
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* refactor: name decoder and monitor loggers consistently across vendors (`#543 <https://github.com/tier4/nebula/issues/543>`_)
+  Wrappers now log as DecoderWrapper and HwMonitorWrapper, and the decoders they own as
+  DecoderWrapper.Decoder.
+* refactor(nebula_continental): inject a logger into the SRR520 decoder (`#534 <https://github.com/tier4/nebula/issues/534>`_)
+  ``ContinentalSRR520Decoder`` now takes a ``loggers::Logger`` in its constructor. This removes rclcpp
+  from the Continental decoder package.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 * fix(nebula_continental): reject truncated ARS548 object list packets (`#505 <https://github.com/tier4/nebula/issues/505>`_)

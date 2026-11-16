@@ -2,6 +2,13 @@
 Changelog for package nebula_velodyne_hw_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* fix: build with the conda-forge toolchain (M_PIf, boost/format.hpp) (`#545 <https://github.com/tier4/nebula/issues/545>`_)
+  Replace ``M_PIf``, a glibc extension that the conda-forge (RoboStack) sysroot lacks, and include
+  ``boost/format.hpp`` explicitly.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 

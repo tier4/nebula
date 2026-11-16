@@ -2,6 +2,19 @@
 Changelog for package nebula_velodyne
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* refactor: name decoder and monitor loggers consistently across vendors (`#543 <https://github.com/tier4/nebula/issues/543>`_)
+  Wrappers now log as DecoderWrapper and HwMonitorWrapper, and the decoders they own as
+  DecoderWrapper.Decoder.
+* refactor(nebula_velodyne_decoders): inject a logger instead of using rclcpp (`#532 <https://github.com/tier4/nebula/issues/532>`_)
+  ``VelodyneDriver`` now takes a ``loggers::Logger`` in its constructor, and packet error logs are
+  throttled per driver instance. This removes rclcpp from the Velodyne decoder package.
+* build(nebula_core_decoders): declare rcpputils, drop unused sensor_msgs (`#529 <https://github.com/tier4/nebula/issues/529>`_)
+  Remove the unused ``sensor_msgs`` include from ``nebula_driver_base.hpp`` and declare sensor_msgs in
+  the ROS packages that relied on it transitively.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 * fix(nebula_velodyne): bound azimuth lookups to the table size (`#511 <https://github.com/tier4/nebula/issues/511>`_)

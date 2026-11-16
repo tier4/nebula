@@ -2,6 +2,22 @@
 Changelog for package nebula_core_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* build(nebula_core_decoders): use own thread safety annotations, drop rcpputils (`#544 <https://github.com/tier4/nebula/issues/544>`_)
+  rcpputils was only needed for its thread safety annotation macros. nebula_core_common now
+  defines the ones Nebula uses as NEBULA_TSA\_*.
+* fix: build with the conda-forge toolchain (M_PIf, boost/format.hpp) (`#545 <https://github.com/tier4/nebula/issues/545>`_)
+  Replace ``M_PIf``, a glibc extension that the conda-forge (RoboStack) sysroot lacks, and include
+  ``boost/format.hpp`` explicitly.
+* build(nebula_core_decoders): replace png++ with libpng, declare zlib (`#538 <https://github.com/tier4/nebula/issues/538>`_)
+  png++ is not packaged for conda-forge (RoboStack) or RHEL. Downsample masks that are not 8-bit
+  grayscale are now rejected instead of being converted.
+* build(nebula_core_decoders): declare rcpputils, drop unused sensor_msgs (`#529 <https://github.com/tier4/nebula/issues/529>`_)
+  Remove the unused ``sensor_msgs`` include from ``nebula_driver_base.hpp`` and declare sensor_msgs in
+  the ROS packages that relied on it transitively.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 
