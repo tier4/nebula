@@ -21,6 +21,7 @@
 #include <mutex>
 #include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -141,10 +142,15 @@ public:
   /// ```
   /// @param period The minimum time between two messages that are let through
   /// @return A view that forwards messages if this call passed the throttle, and drops them if not
+  /// @throws std::invalid_argument if `period` is negative
   Filtered throttled(
     std::chrono::nanoseconds period, const char * file = __builtin_FILE(),
     uint32_t line = __builtin_LINE())
   {
+    if (period.count() < 0) {
+      throw std::invalid_argument("Throttle period must not be negative");
+    }
+
     const uint64_t period_ns = static_cast<uint64_t>(period.count());
     const uint64_t now_ns = steady_now_ns();
 
