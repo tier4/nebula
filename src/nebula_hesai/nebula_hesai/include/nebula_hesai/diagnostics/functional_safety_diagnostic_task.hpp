@@ -14,11 +14,12 @@
 
 #pragma once
 
-#include "nebula_core_common/diagnostics/liveness_monitor.hpp"
-#include "nebula_core_common/diagnostics/severity_latch.hpp"
-#include "nebula_core_ros/agnocast_wrapper/node.hpp"
+#include "nebula_core_ros/diagnostics/render.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_core_common/diagnostics/liveness_monitor.hpp>
+#include <nebula_core_common/diagnostics/severity_latch.hpp>
+#include <nebula_core_common/util/clock.hpp>
 #include <nebula_hesai_decoders/decoders/functional_safety.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
@@ -109,17 +110,30 @@ class FunctionalSafetyDiagnosticTask : public diagnostic_updater::CompositeDiagn
 {
 public:
   explicit FunctionalSafetyDiagnosticTask(
-    nebula::agnocast_wrapper::Node * const parent_node,
+    const std::shared_ptr<const util::Clock> & clock,
     std::unique_ptr<FunctionalSafetyStatusProcessor> status_processor)
   : CompositeDiagnosticTask("Functional safety status"),
-    liveness_monitor_("Liveness", parent_node, 100ms),
-    status_latch_("Status"),
-    stuck_latch_("Sensor functional safety system operation status"),
+    liveness_monitor_(clock, 100ms),
+    liveness_task_(
+      "Liveness",
+      [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
+        render(liveness_monitor_.report(), status);
+      }),
+    status_task_(
+      "Status",
+      [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
+        render_latched(status_latch_.report(), status, copy_status);
+      }),
+    stuck_task_(
+      "Sensor functional safety system operation status",
+      [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
+        render_latched(stuck_latch_.report(), status, copy_status);
+      }),
     status_processor_(std::move(status_processor))
   {
-    addTask(&liveness_monitor_);
-    addTask(&status_latch_);
-    addTask(&stuck_latch_);
+    addTask(&liveness_task_);
+    addTask(&status_task_);
+    addTask(&stuck_task_);
   }
 
   void on_status(
@@ -128,7 +142,7 @@ public:
   {
     diagnostic_msgs::msg::DiagnosticStatus status;
     status_processor_->populate_status(severity, error_codes, status);
-    status_latch_.submit(status);
+    status_latch_.submit(static_cast<diagnostics::Level>(status.level), status);
   }
 
   void on_alive() { liveness_monitor_.tick(); }
@@ -145,13 +159,26 @@ public:
       status.message = "Sensor functional safety system is running";
     }
 
-    stuck_latch_.submit(status);
+    stuck_latch_.submit(static_cast<diagnostics::Level>(status.level), status);
   }
 
 private:
-  LivenessMonitor liveness_monitor_;
-  SeverityLatch status_latch_;
-  SeverityLatch stuck_latch_;
+  using StatusLatch = diagnostics::SeverityLatch<diagnostic_msgs::msg::DiagnosticStatus>;
+
+  static void copy_status(
+    const StatusLatch::Report & report, diagnostic_updater::DiagnosticStatusWrapper & status)
+  {
+    status.values.insert(
+      status.values.end(), report.status.values.begin(), report.status.values.end());
+    status.summary(report.status.level, report.status.message);
+  }
+
+  diagnostics::LivenessMonitor liveness_monitor_;
+  StatusLatch status_latch_;
+  StatusLatch stuck_latch_;
+  diagnostic_updater::FunctionDiagnosticTask liveness_task_;
+  diagnostic_updater::FunctionDiagnosticTask status_task_;
+  diagnostic_updater::FunctionDiagnosticTask stuck_task_;
   std::unique_ptr<FunctionalSafetyStatusProcessor> status_processor_;
 };
 

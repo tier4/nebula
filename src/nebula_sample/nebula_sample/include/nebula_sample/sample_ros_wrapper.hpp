@@ -121,8 +121,8 @@ private:
     explicit Diagnostics(rclcpp::Node * node) : updater(node) {}
 
     diagnostic_updater::Updater updater;
-    std::optional<custom_diagnostic_tasks::RateBoundStatus> publish_rate;
-    std::optional<LivenessMonitor> packet_liveness;
+    std::optional<diagnostics::RateBoundStatus> publish_rate;
+    std::optional<diagnostics::LivenessMonitor> packet_liveness;
   };
 
   /// @brief Publish a decoded pointcloud to ROS.

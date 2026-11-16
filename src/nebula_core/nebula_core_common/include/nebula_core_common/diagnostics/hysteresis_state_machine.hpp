@@ -17,86 +17,68 @@
 #ifndef NEBULA_CORE_COMMON__DIAGNOSTICS__HYSTERESIS_STATE_MACHINE_HPP_
 #define NEBULA_CORE_COMMON__DIAGNOSTICS__HYSTERESIS_STATE_MACHINE_HPP_
 
-#include <tracetools/utils.hpp>
+#include "nebula_core_common/diagnostics/level.hpp"
 
-#include <diagnostic_msgs/msg/diagnostic_status.hpp>
-
+#include <cstddef>
+#include <stdexcept>
 #include <string>
 #include <variant>
 
-namespace custom_diagnostic_tasks
+namespace nebula::diagnostics
 {
-using DiagnosticStatus_t = unsigned char;
-
 // Helper struct to express state machine nodes
 struct StateBase
 {
-  explicit StateBase(const DiagnosticStatus_t lv) : level(lv), num_observations(1) {}
+  explicit StateBase(const Level lv) : level(lv), num_observations(1) {}
 
-  DiagnosticStatus_t level;
+  Level level;
   size_t num_observations;
 };
 
 struct Stale : public StateBase
 {
-  Stale() : StateBase(diagnostic_msgs::msg::DiagnosticStatus::STALE) {}
+  Stale() : StateBase(Level::STALE) {}
 };
 
 struct Ok : public StateBase
 {
-  Ok() : StateBase(diagnostic_msgs::msg::DiagnosticStatus::OK) {}
+  Ok() : StateBase(Level::OK) {}
 };
 
 struct Warn : public StateBase
 {
-  Warn() : StateBase(diagnostic_msgs::msg::DiagnosticStatus::WARN) {}
+  Warn() : StateBase(Level::WARN) {}
 };
 
 struct Error : public StateBase
 {
-  Error() : StateBase(diagnostic_msgs::msg::DiagnosticStatus::ERROR) {}
+  Error() : StateBase(Level::ERROR) {}
 };
 
 using StateHolder = std::variant<Stale, Ok, Warn, Error>;
 
-static inline StateHolder generate_state(const DiagnosticStatus_t & state)
+inline StateHolder generate_state(const Level & state)
 {
   switch (state) {
-    case diagnostic_msgs::msg::DiagnosticStatus::STALE:
+    case Level::STALE:
       return Stale{};
-    case diagnostic_msgs::msg::DiagnosticStatus::OK:
+    case Level::OK:
       return Ok{};
-    case diagnostic_msgs::msg::DiagnosticStatus::WARN:
+    case Level::WARN:
       return Warn{};
-    case diagnostic_msgs::msg::DiagnosticStatus::ERROR:
+    case Level::ERROR:
       return Error{};
     default:
       throw std::runtime_error("Undefined status");
   }
 }
 
-static std::string get_level_string(DiagnosticStatus_t level)
-{
-  switch (level) {
-    case diagnostic_msgs::msg::DiagnosticStatus::OK:
-      return "OK";
-    case diagnostic_msgs::msg::DiagnosticStatus::WARN:
-      return "WARN";
-    case diagnostic_msgs::msg::DiagnosticStatus::ERROR:
-      return "ERROR";
-    case diagnostic_msgs::msg::DiagnosticStatus::STALE:
-      return "STALE";
-    default:
-      return "UNDEFINED";
-  }
-}
-
-static DiagnosticStatus_t get_level(const StateHolder & state)
+inline Level get_level(const StateHolder & state)
 {
   return std::visit([](const auto & s) { return s.level; }, state);
 }
 
-static size_t get_num_observations(const StateHolder & state)
+inline size_t get_num_observations(const StateHolder & state)
 {
   return std::visit([](const auto & s) { return s.num_observations; }, state);
 }
@@ -133,7 +115,7 @@ to WARN until successive `num_frame_transition` WARNs are observed.
   /**
    * \brief update internal state and returns the filtered state
    */
-  void update_state(const DiagnosticStatus_t & observation)
+  void update_state(const Level & observation)
   {
     // If the classify result is same as previous one and the observation is
     // different from the current one, increment the number of observation
@@ -157,7 +139,7 @@ to WARN until successive `num_frame_transition` WARNs are observed.
     bool is_immediate_relax =
       (immediate_relax_state_ && get_level(candidate_state_) < current_level);
 
-    DiagnosticStatus_t updated_level = current_level;
+    Level updated_level = current_level;
     if (is_immediate_error || observed_over_threshold || is_immediate_relax) {
       updated_level = get_level(candidate_state_);
     }
@@ -165,18 +147,15 @@ to WARN until successive `num_frame_transition` WARNs are observed.
     current_state_ = generate_state(updated_level);
   }
 
-  DiagnosticStatus_t get_candidate_level() { return get_level(candidate_state_); }
+  Level get_candidate_level() { return get_level(candidate_state_); }
 
   size_t get_candidate_num_observation() { return get_num_observations(candidate_state_); }
 
   size_t get_num_frame_transition() { return num_frame_transition_; }
 
-  DiagnosticStatus_t get_current_state_level() { return get_level(current_state_); }
+  Level get_current_state_level() { return get_level(current_state_); }
 
-  void set_current_state_level(const DiagnosticStatus_t & state)
-  {
-    current_state_ = generate_state(state);
-  }
+  void set_current_state_level(const Level & state) { current_state_ = generate_state(state); }
 
   bool get_immediate_error_report_param() { return immediate_error_report_; }
 
@@ -190,6 +169,6 @@ protected:
   StateHolder current_state_;
 };  // class HysteresisStateMachine
 
-}  // namespace custom_diagnostic_tasks
+}  // namespace nebula::diagnostics
 
 #endif  // NEBULA_CORE_COMMON__DIAGNOSTICS__HYSTERESIS_STATE_MACHINE_HPP_

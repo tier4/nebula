@@ -98,7 +98,10 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
 
-  diagnostic_updater.add(publish_diagnostic_);
+  diagnostic_updater.add(
+    "rate bound check", [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
+      render(publish_diagnostic_.report(), status);
+    });
 }
 
 void HesaiDecoderWrapper::on_config_change(
@@ -254,14 +257,15 @@ void HesaiDecoderWrapper::initialize_functional_safety(
   }
 
   if (!fs_config) {
-    functional_safety_diagnostic_.emplace(&parent_node_, std::make_unique<FunctionalSafetyBasic>());
+    functional_safety_diagnostic_.emplace(
+      make_diagnostics_clock(parent_node_), std::make_unique<FunctionalSafetyBasic>());
     diagnostic_updater.add(functional_safety_diagnostic_.value());
     return;
   }
 
   auto error_definitions = read_error_definitions_from_csv(fs_config->error_definitions_path);
   functional_safety_diagnostic_.emplace(
-    &parent_node_,
+    make_diagnostics_clock(parent_node_),
     std::make_unique<FunctionalSafetyAdvanced>(error_definitions, fs_config->ignored_error_codes));
 
   diagnostic_updater.add(functional_safety_diagnostic_.value());

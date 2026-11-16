@@ -14,10 +14,11 @@
 
 #pragma once
 
-#include "nebula_core_common/diagnostics/rate_bound_status.hpp"
 #include "nebula_core_ros/agnocast_wrapper/diagnostic_updater.hpp"
 #include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_core_ros/agnocast_wrapper/node.hpp"
+#include "nebula_core_ros/diagnostics/render.hpp"
+#include "nebula_core_ros/rclcpp_clock.hpp"
 #include "nebula_core_ros/single_consumer_processor.hpp"
 #include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 #include "nebula_hesai/diagnostics/packet_loss_diagnostic.hpp"
@@ -27,6 +28,7 @@
 #include <autoware_utils_debug/debug_publisher.hpp>
 #include <diagnostic_updater/publisher.hpp>
 #include <diagnostic_updater/update_functions.hpp>
+#include <nebula_core_common/diagnostics/rate_bound_status.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 #include <rclcpp/node.hpp>
@@ -93,7 +95,7 @@ private:
       std::chrono::duration<double>(seconds));
   }
 
-  static custom_diagnostic_tasks::RateBoundStatus make_rate_bound_status(
+  static diagnostics::RateBoundStatus make_rate_bound_status(
     drivers::SensorModel sensor_model, uint16_t rpm, nebula::agnocast_wrapper::Node & node)
   {
     double nominal_rate_hz = drivers::get_scan_rate_hz(sensor_model, rpm);
@@ -121,9 +123,9 @@ private:
         rpm, nominal_rate_hz, min_ok_hz, max_ok_hz);
     }
 
-    custom_diagnostic_tasks::RateBoundStatusParam ok_params(min_ok_hz, max_ok_hz);
-    custom_diagnostic_tasks::RateBoundStatusParam warn_params(min_warn_hz, max_warn_hz);
-    return {&node, ok_params, warn_params, num_frame_transition};
+    diagnostics::RateBoundStatusParam ok_params(min_ok_hz, max_ok_hz);
+    diagnostics::RateBoundStatusParam warn_params(min_warn_hz, max_warn_hz);
+    return {make_diagnostics_clock(node), ok_params, warn_params, num_frame_transition};
   }
 
   void initialize_functional_safety(
@@ -163,7 +165,7 @@ private:
 
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::Image) blockage_mask_pub_;
 
-  custom_diagnostic_tasks::RateBoundStatus publish_diagnostic_;
+  diagnostics::RateBoundStatus publish_diagnostic_;
   std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;
   std::optional<PacketLossDiagnosticTask> packet_loss_diagnostic_;
 

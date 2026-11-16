@@ -14,55 +14,53 @@
 
 #pragma once
 
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <rcpputils/thread_safety_annotations.hpp>
-
-#include <diagnostic_msgs/msg/diagnostic_status.hpp>
+#include "nebula_core_common/diagnostics/level.hpp"
+#include "nebula_core_common/util/thread_safety_annotations.hpp"
 
 #include <mutex>
 #include <optional>
-#include <string>
+#include <utility>
 
-namespace nebula::ros
+namespace nebula::diagnostics
 {
 
-class SeverityLatch : public diagnostic_updater::DiagnosticTask
+/**
+ * @brief Keeps the most severe status submitted since the last `report()`.
+ *
+ * If nothing was submitted since then, the last submitted status is reported again.
+ *
+ * @tparam T The type of the latched status
+ */
+template <typename T>
+class SeverityLatch
 {
 public:
-  explicit SeverityLatch(const std::string & name) : diagnostic_updater::DiagnosticTask(name) {}
+  struct Report
+  {
+    Level level{};
+    T status{};
+  };
 
-  void run(diagnostic_updater::DiagnosticStatusWrapper & status) override
+  /// @brief The latched status, or nothing if none has been submitted yet.
+  [[nodiscard]] std::optional<Report> report()
   {
     std::lock_guard lock(mutex_);
-
-    if (!current_status_) {
-      status.summary(diagnostic_msgs::msg::DiagnosticStatus::STALE, "No status available");
-      return;
-    }
-
-    status.values.insert(
-      status.values.end(), current_status_->values.begin(), current_status_->values.end());
-    status.summary(current_status_->level, current_status_->message);
 
     // Reported the status, allow it to be reset in the next `submit()`.
-    should_reset_ = true;
+    should_reset_ = current_.has_value();
+    return current_;
   }
 
-  void submit(diagnostic_msgs::msg::DiagnosticStatus status)
+  void submit(Level level, T status)
   {
     std::lock_guard lock(mutex_);
 
-    if (!current_status_) {
-      current_status_ = status;
-      return;
-    }
-
-    // Only the highest severity status in between two `run()`s is reported.
-    // If multiple statuses with the same severity are submitted, only the last one is reported.
-    // If the `current_status_` is from a previous cycle (demarked by `should_reset_`), it is
+    // Only the highest severity status in between two `report()`s is kept.
+    // If multiple statuses with the same severity are submitted, only the last one is kept.
+    // If the current status is from a previous cycle (demarked by `should_reset_`), it is
     // replaced with the new status, even if that new status has a lower severity.
-    if (status.level >= current_status_->level || should_reset_) {
-      current_status_ = status;
+    if (!current_ || level >= current_->level || should_reset_) {
+      current_ = Report{level, std::move(status)};
       // The status of the previous cycle is gone, latch within the new cycle from here on.
       should_reset_ = false;
     }
@@ -70,12 +68,11 @@ public:
 
 private:
   std::mutex mutex_;
-  //! Indicates that `current_status_` has been reported at least once via `run()`. In order to
-  //! have something to report in the next `run()` the status is kept until the next one is
+  //! Indicates that the current status has been reported at least once via `report()`. In order to
+  //! have something to report in the next `report()` the status is kept until the next one is
   //! `submit()`-ed. This member signals that the status has been reported and can be reset.
-  bool should_reset_ RCPPUTILS_TSA_GUARDED_BY(mutex_) = false;
-  std::optional<diagnostic_msgs::msg::DiagnosticStatus> current_status_
-    RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  bool should_reset_ NEBULA_TSA_GUARDED_BY(mutex_) = false;
+  std::optional<Report> current_ NEBULA_TSA_GUARDED_BY(mutex_);
 };
 
-}  // namespace nebula::ros
+}  // namespace nebula::diagnostics

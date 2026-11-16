@@ -19,23 +19,20 @@
 #ifndef NEBULA_CORE_COMMON__DIAGNOSTICS__RATE_BOUND_STATUS_HPP_
 #define NEBULA_CORE_COMMON__DIAGNOSTICS__RATE_BOUND_STATUS_HPP_
 
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_core_common/diagnostics/hysteresis_state_machine.hpp>
+#include "nebula_core_common/diagnostics/hysteresis_state_machine.hpp"
+#include "nebula_core_common/diagnostics/level.hpp"
+#include "nebula_core_common/util/clock.hpp"
 
-#include <diagnostic_msgs/msg/diagnostic_status.hpp>
-
-#include <rcl/time.h>
-
-#include <iomanip>
+#include <chrono>
+#include <cstddef>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <sstream>
 #include <stdexcept>
-#include <string>
+#include <utility>
 
-namespace custom_diagnostic_tasks
+namespace nebula::diagnostics
 {
 /**
  * \brief A structure that holds the constructor parameters for the
@@ -54,19 +51,38 @@ struct RateBoundStatusParam
 };
 
 /**
- * \brief Diagnostic task to monitor the interval between events.
+ * \brief Monitors the interval between events.
  *
- * This diagnostic task monitors the difference between consecutive events,
- * and creates corresponding diagnostics. This task categorize observed intervals into
- * OK/WARN/ERROR according to the value ranges passed via constructor arguments
+ * This monitors the difference between consecutive events, and categorizes observed intervals
+ * into OK/WARN/ERROR according to the value ranges passed via constructor arguments
  */
-class RateBoundStatus : public diagnostic_updater::DiagnosticTask
+class RateBoundStatus
 {
 public:
+  struct Report
+  {
+    /// The level after hysteresis
+    Level level{};
+    /// The rate of the last two events, or of the time since the last event if events stopped.
+    /// Unset if less than two events have been observed.
+    std::optional<double> rate_hz;
+    /// The level that the current observations would lead to
+    Level candidate_level{};
+    /// The number of successive observations of `candidate_level`
+    size_t candidate_num_observations{};
+    /// The minimum number of events that were missed since the last event
+    size_t assumed_skipped_frames{};
+    size_t num_frame_transition{};
+    RateBoundStatusParam ok_params{0};
+    RateBoundStatusParam warn_params{0};
+    bool immediate_error_report{};
+    bool immediate_relax_state{};
+  };
+
   /**
-   * \brief Constructs RateBoundStatus, which inherits diagnostic_updater::DiagnosticTask.
+   * \brief Constructs RateBoundStatus.
    *
-   * \param parent_node The node from which parameters are read.
+   * \param clock The clock that the interval between events is measured on.
    * \param ok_params The pair of min/max frequency for the topic rate to be recognized as "OK".
    * \param warn_params The pair of min/max frequency for the topic rate to be recognized as "WARN".
    * These values should have a wider range than `ok_params`.
@@ -76,16 +92,12 @@ public:
    * \param immediate_error_report If true, errors related to the rate bounds will be
    * reported immediately once observed; otherwise, the hysteresis damping method using
    * `num_frame_transition` will be adopted
-   * \param name The arbitrary string to be assigned for this diagnostic task.
-   * This name will not be exposed in the actual published topics.
    */
-  template <typename NodeT>
   RateBoundStatus(
-    const NodeT * parent_node, const RateBoundStatusParam & ok_params,
+    std::shared_ptr<const util::Clock> clock, const RateBoundStatusParam & ok_params,
     const RateBoundStatusParam & warn_params, const size_t num_frame_transition = 1,
-    const bool immediate_error_report = false, const bool immediate_relax_state = true,
-    const std::string & name = "rate bound check")
-  : DiagnosticTask(name),
+    const bool immediate_error_report = false, const bool immediate_relax_state = true)
+  : clock_(std::move(clock)),
     ok_params_(ok_params),
     warn_params_(warn_params),
     num_frame_transition_(num_frame_transition),
@@ -101,17 +113,6 @@ public:
       throw std::runtime_error(
         "Invalid range parameters were detected. warn_params should specify a range "
         "that includes a range of ok_params.");
-    }
-
-    // select clock according to the use_sim_time parameter set to the parent
-    bool use_sim_time = false;
-    if (parent_node->has_parameter("use_sim_time")) {
-      use_sim_time = parent_node->get_parameter("use_sim_time").as_bool();
-    }
-    if (use_sim_time) {
-      clock_ = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
-    } else {
-      clock_ = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
     }
   }
 
@@ -159,23 +160,23 @@ public:
   }
 
   /**
-   * \brief function called every update
+   * \brief Classify the current rate and advance the hysteresis by one observation
    */
-  void run(diagnostic_updater::DiagnosticStatusWrapper & stat) override
+  [[nodiscard]] Report report()
   {
     std::unique_lock<std::mutex> lock(lock_);
 
     // classify the current observation
-    DiagnosticStatus_t frame_result{};
+    Level frame_result{};
     if (!frequency_ || zero_seen_) {
-      frame_result = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+      frame_result = Level::STALE;
     } else {
       if (is_ok(frequency_.value())) {
-        frame_result = diagnostic_msgs::msg::DiagnosticStatus::OK;
+        frame_result = Level::OK;
       } else if (is_warn(frequency_.value())) {
-        frame_result = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+        frame_result = Level::WARN;
       } else {
-        frame_result = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+        frame_result = Level::ERROR;
       }
     }
 
@@ -188,7 +189,7 @@ public:
       double freq_from_prev_tick = 1. / delta;
       // If the latest update too older than warn_params_ criteria, frame_result fires error
       if (freq_from_prev_tick < warn_params_.min_frequency) {
-        frame_result = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+        frame_result = Level::ERROR;
         is_valid_observation = false;
         frequency_ = freq_from_prev_tick;
         auto max_frame_period_s = 1. / warn_params_.min_frequency;
@@ -200,67 +201,25 @@ public:
     // Update state using hysteresis
     hysteresis_state_machine_.update_state(frame_result);
     if (!is_valid_observation && num_frame_skipped >= num_frame_transition_) {
-      hysteresis_state_machine_.set_current_state_level(
-        diagnostic_msgs::msg::DiagnosticStatus::ERROR);
+      hysteresis_state_machine_.set_current_state_level(Level::ERROR);
     }
 
-    auto current_state = hysteresis_state_machine_.get_current_state_level();
-    stat.summary(current_state, generate_msg(current_state));
-
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(2) << frequency_.value_or(0.0);
-    stat.add("Publish rate", ss.str());
-
-    ss.str("");  // reset contents
-    ss << get_level_string(current_state);
-    stat.add("Effective rate status", ss.str());
-
-    ss.str("");  // reset contents
-    ss << get_level_string(hysteresis_state_machine_.get_candidate_level());
-    stat.add("Candidate rate status", ss.str());
-
-    ss.str("");  // reset contents
-    ss << hysteresis_state_machine_.get_candidate_num_observation();
-    stat.add("Candidate status observed frames", ss.str());
-
-    ss.str("");  // reset contents
-    ss << num_frame_skipped;
-    stat.add("Assumed skipped frames", ss.str());
-
-    ss.str("");  // reset contents
-    ss << hysteresis_state_machine_.get_num_frame_transition();
-    stat.add("Observed frames transition threshold", ss.str());
-
-    ss.str("");  // reset contents
-    ss << std::fixed << std::setprecision(2) << ok_params_.min_frequency;
-    stat.add("Minimum OK rate threshold", ss.str());
-
-    if (ok_params_.max_frequency) {
-      ss.str("");  // reset contents
-      ss << std::fixed << std::setprecision(2) << ok_params_.max_frequency.value();
-      stat.add("Maximum OK rate threshold", ss.str());
-    }
-
-    ss.str("");  // reset contents
-    ss << std::fixed << std::setprecision(2) << warn_params_.min_frequency;
-    stat.add("Minimum WARN rate threshold", ss.str());
-
-    if (warn_params_.max_frequency) {
-      ss.str("");  // reset contents
-      ss << std::fixed << std::setprecision(2) << warn_params_.max_frequency.value();
-      stat.add("Maximum WARN rate threshold", ss.str());
-    }
-
-    ss.str("");  // reset contents
-    ss << (hysteresis_state_machine_.get_immediate_error_report_param() ? "true" : "false");
-    stat.add("Immediate error report", ss.str());
-
-    ss.str("");  // reset contents
-    ss << (hysteresis_state_machine_.get_immediate_relax_state_param() ? "true" : "false");
-    stat.add("Immediate relax state", ss.str());
+    Report report;
+    report.level = hysteresis_state_machine_.get_current_state_level();
+    report.rate_hz = frequency_;
+    report.candidate_level = hysteresis_state_machine_.get_candidate_level();
+    report.candidate_num_observations = hysteresis_state_machine_.get_candidate_num_observation();
+    report.assumed_skipped_frames = num_frame_skipped;
+    report.num_frame_transition = hysteresis_state_machine_.get_num_frame_transition();
+    report.ok_params = ok_params_;
+    report.warn_params = warn_params_;
+    report.immediate_error_report = hysteresis_state_machine_.get_immediate_error_report_param();
+    report.immediate_relax_state = hysteresis_state_machine_.get_immediate_relax_state_param();
+    return report;
   }
 
 protected:
+  std::shared_ptr<const util::Clock> clock_;
   RateBoundStatusParam ok_params_;
   RateBoundStatusParam warn_params_;
   size_t num_frame_transition_;
@@ -271,34 +230,9 @@ protected:
 
   HysteresisStateMachine hysteresis_state_machine_;
 
-  std::shared_ptr<rclcpp::Clock> clock_;
-
-  inline double get_now() { return clock_->now().seconds(); }
-
-  static std::string generate_msg(const DiagnosticStatus_t & state)
-  {
-    std::string ret;
-    switch (state) {
-      case diagnostic_msgs::msg::DiagnosticStatus::OK:
-        ret = "Rate is reasonable";
-        break;
-      case diagnostic_msgs::msg::DiagnosticStatus::WARN:
-        ret = "Rate is within warning range";
-        break;
-      case diagnostic_msgs::msg::DiagnosticStatus::ERROR:
-        ret = "Rate is out of valid range";
-        break;
-      case diagnostic_msgs::msg::DiagnosticStatus::STALE:
-        ret = "Topic has not been received yet";
-        break;
-      default:
-        ret = "Undefined state";
-        break;
-    }
-    return ret;
-  }
+  double get_now() { return std::chrono::duration<double>(clock_->now()).count(); }
 };  // class RateBoundStatus
 
-}  // namespace custom_diagnostic_tasks
+}  // namespace nebula::diagnostics
 
 #endif  // NEBULA_CORE_COMMON__DIAGNOSTICS__RATE_BOUND_STATUS_HPP_

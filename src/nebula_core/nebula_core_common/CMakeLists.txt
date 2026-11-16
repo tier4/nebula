@@ -33,6 +33,12 @@ if(BUILD_TESTING)
   ament_add_gtest(test_clock test/test_clock.cpp)
   target_link_libraries(test_clock nebula_core_common)
 
+  ament_add_gtest(test_diagnostics test/test_diagnostics.cpp)
+  target_link_libraries(test_diagnostics nebula_core_common)
+
+  ament_add_gtest(test_severity_latch test/test_severity_latch.cpp)
+  target_link_libraries(test_severity_latch nebula_core_common)
+
   ament_add_gtest(test_nebula_common test/test_nebula_common.cpp)
   target_link_libraries(test_nebula_common nebula_core_common)
 
