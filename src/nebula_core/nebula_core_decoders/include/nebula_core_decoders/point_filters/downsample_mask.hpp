@@ -21,10 +21,8 @@
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_common/util/string_conversions.hpp>
-#include <png++/error.hpp>
-#include <png++/gray_pixel.hpp>
-#include <png++/image.hpp>
 
+#include <png.h>
 #include <sys/types.h>
 
 #include <algorithm>
@@ -37,6 +35,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace nebula::drivers::point_filters
 {
@@ -55,9 +54,88 @@ const DitherTransform g_default_dither_transform = [](size_t x, size_t y) { retu
 namespace impl
 {
 
+/// An 8-bit grayscale image, stored row by row.
+class GrayscaleImage
+{
+public:
+  GrayscaleImage(size_t width, size_t height)
+  : width_(width), height_(height), data_(width * height)
+  {
+  }
+
+  /**
+   * @brief Load an 8-bit grayscale PNG file. Other formats, such as RGB or alpha, are rejected.
+   *
+   * @throws std::runtime_error if the file cannot be read or is not an 8-bit grayscale PNG.
+   */
+  static GrayscaleImage read(const std::filesystem::path & path)
+  {
+    PngImage png;
+
+    if (png_image_begin_read_from_file(&png.handle, path.c_str()) == 0) {
+      throw std::runtime_error("Could not read " + path.native() + ": " + png.handle.message);
+    }
+
+    if (png.handle.format != PNG_FORMAT_GRAY) {
+      throw std::runtime_error(
+        "Could not read " + path.native() + ": expected an 8-bit grayscale PNG without alpha");
+    }
+
+    GrayscaleImage image(png.handle.width, png.handle.height);
+
+    if (png_image_finish_read(&png.handle, nullptr, image.data_.data(), 0, nullptr) == 0) {
+      throw std::runtime_error("Could not read " + path.native() + ": " + png.handle.message);
+    }
+
+    return image;
+  }
+
+  /**
+   * @brief Write the image to a PNG file.
+   *
+   * @throws std::runtime_error if the file cannot be written.
+   */
+  void write(const std::filesystem::path & path) const
+  {
+    PngImage png;
+    png.handle.width = static_cast<png_uint_32>(width_);
+    png.handle.height = static_cast<png_uint_32>(height_);
+    png.handle.format = PNG_FORMAT_GRAY;
+
+    if (png_image_write_to_file(&png.handle, path.c_str(), 0, data_.data(), 0, nullptr) == 0) {
+      throw std::runtime_error("Could not write " + path.native() + ": " + png.handle.message);
+    }
+  }
+
+  [[nodiscard]] size_t get_width() const { return width_; }
+  [[nodiscard]] size_t get_height() const { return height_; }
+
+  [[nodiscard]] uint8_t get_pixel(size_t x, size_t y) const { return data_[y * width_ + x]; }
+  void set_pixel(size_t x, size_t y, uint8_t value) { data_[y * width_ + x] = value; }
+
+private:
+  /// Owns the resources libpng attaches to a `png_image`, releasing them on scope exit.
+  struct PngImage
+  {
+    PngImage() { handle.version = PNG_IMAGE_VERSION; }
+    ~PngImage() { png_image_free(&handle); }
+
+    PngImage(const PngImage &) = delete;
+    PngImage & operator=(const PngImage &) = delete;
+    PngImage(PngImage &&) = delete;
+    PngImage & operator=(PngImage &&) = delete;
+
+    png_image handle{};
+  };
+
+  size_t width_;
+  size_t height_;
+  std::vector<uint8_t> data_;
+};
+
 inline void dither(
-  const png::image<png::gray_pixel> & in, png::image<png::gray_pixel> & out,
-  uint8_t quantization_levels, const DitherTransform & transform)
+  const GrayscaleImage & in, GrayscaleImage & out, uint8_t quantization_levels,
+  const DitherTransform & transform)
 {
   if (in.get_width() != out.get_width() || in.get_height() != out.get_height()) {
     std::stringstream ss;
@@ -82,8 +160,7 @@ inline void dither(
 
   for (size_t y = 0; y < out.get_height(); ++y) {
     for (size_t x = 0; x < out.get_width(); ++x) {
-      const auto & pixel = in.get_pixel(x, y);
-      uint32_t numerator = static_cast<uint32_t>(pixel) * denominator / 255;
+      uint32_t numerator = static_cast<uint32_t>(in.get_pixel(x, y)) * denominator / 255;
       size_t pos = transform(x, y) % denominator;
       bool keep = should_keep(numerator, pos);
       out.set_pixel(x, y, keep * 255);
@@ -116,12 +193,12 @@ public:
       throw std::invalid_argument("n_channels must be positive");
     }
 
-    png::image<png::gray_pixel> factors(filename);
+    auto factors = impl::GrayscaleImage::read(filename);
 
     size_t mask_cols = azimuth_range_mdeg.extent() / azimuth_peak_resolution_mdeg;
     size_t mask_rows = n_channels;
 
-    png::image<png::gray_pixel> dithered(mask_cols, mask_rows);
+    impl::GrayscaleImage dithered(mask_cols, mask_rows);
     impl::dither(factors, dithered, g_quantization_levels, dither_transform);
 
     mask_ = Eigen::MatrixX<uint8_t>(mask_rows, mask_cols);
@@ -140,8 +217,8 @@ public:
       try {
         dithered.write(out_path);
         logger->info("Wrote dithered mask to " + out_path.native());
-      } catch (const png::std_error & e) {
-        logger->warn("Could not write " + out_path.native() + ": " + e.what());
+      } catch (const std::runtime_error & e) {
+        logger->warn(e.what());
       }
     }
   }

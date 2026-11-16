@@ -104,6 +104,7 @@ The required resolution of the mask is sensor-dependent:
 <!-- prettier-ignore-start -->
 !!! warning
     If the mask resolution does not match the required resolution, Nebula will not start (if configured on launch) or reject the setting (if set during runtime).
+    The same applies to RGB masks and masks with an alpha channel.
 <!-- prettier-ignore-end -->
 
 #### Behavior
