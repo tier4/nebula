@@ -89,7 +89,7 @@ Note that a scan can start mid-packet, if the scan phase does not align with pac
 
 The block offset follows a formula linear in the block index for all sensor models which additionally depends on the number of returns of the currently active `return_mode`. The parametrization is different for each sensor.
 
-The channel offset is given as a formula, table or set of tables for all sensors. A few sensors' formula is influenced by factors such as high resolution mode (128E3X, 128E4X), alternate firing sequences (QT128) and near/farfield firing (128E3X).
+The channel offset is given as a formula, table or set of tables for all sensors. A few sensors' formula is influenced by factors such as high resolution mode (128E4X) and alternate firing sequences (QT128).
 
 ### Return types
 
@@ -98,7 +98,7 @@ Differences only arise in multi-return (dual or triple) in the output order of t
 
 Here is an exhaustive list of differences:
 
-- For Dual (First, Last) `0x3B`, 128E3X, 128E4X and XT32 reverse the output order (Last, First)
+- For Dual (First, Last) `0x3B`, 128E4X and XT32 reverse the output order (Last, First)
 - For Dual (Last, Strongest) `0x39`, all sensors except XT32M place the second strongest return in the even block if last == strongest
 - For Dual (First, Strongest) `0x3c`, the same as for `0x39` holds.
 
@@ -170,7 +170,7 @@ Then, consult the new sensor's datasheet and identify the following parameters:
 | App. 3  | Angle Correction                         |
 
 With this information, create a `PacketMySensor` struct and `SensorMySensor` class.
-Reuse already-defined structs as much as possible (c.f. `Packet128E3X` and `Packet128E4X`).
+Reuse already-defined structs as much as possible.
 
 Implement timing correction in `SensorMySensor` and define the class constants `float MIN_RANGE`,
 `float MAX_RANGE` and `size_t MAX_SCAN_BUFFER_POINTS`.
