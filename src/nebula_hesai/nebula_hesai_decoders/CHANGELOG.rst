@@ -2,6 +2,16 @@
 Changelog for package nebula_hesai_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* fix: build with the conda-forge toolchain (M_PIf, boost/format.hpp) (`#545 <https://github.com/tier4/nebula/issues/545>`_)
+  Replace ``M_PIf``, a glibc extension that the conda-forge (RoboStack) sysroot lacks, and include
+  ``boost/format.hpp`` explicitly.
+* refactor(nebula_hesai_decoders): remove the rclcpp dependency (`#530 <https://github.com/tier4/nebula/issues/530>`_)
+  Remove the leftover rclcpp includes and the unused ``rclcpp::Logger`` member of
+  ``AngleCorrectorCorrectionBased``.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 * fix(hesai_decoder): add handling for fault message packets and corresponding tests (`#521 <https://github.com/tier4/nebula/issues/521>`_)

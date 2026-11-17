@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
@@ -113,7 +114,7 @@ public:
     // ////////////////////////////////////////
 
     for (size_t i = 0; i < max_azimuth; ++i) {
-      float rad = 2.f * i * M_PIf / max_azimuth;
+      float rad = 2.f * i * pi_f / max_azimuth;
       cos_[i] = cosf(rad);
       sin_[i] = sinf(rad);
     }

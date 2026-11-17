@@ -2,6 +2,16 @@
 Changelog for package nebula_robosense_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* refactor: name decoder and monitor loggers consistently across vendors (`#543 <https://github.com/tier4/nebula/issues/543>`_)
+  Wrappers now log as DecoderWrapper and HwMonitorWrapper, and the decoders they own as
+  DecoderWrapper.Decoder.
+* refactor(nebula_robosense_decoders): inject a logger instead of using rclcpp (`#531 <https://github.com/tier4/nebula/issues/531>`_)
+  ``RobosenseDriver`` and ``RobosenseInfoDriver`` now take a ``loggers::Logger`` in their constructors.
+  This removes rclcpp from the Robosense decoder package.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 

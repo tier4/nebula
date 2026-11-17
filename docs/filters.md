@@ -97,6 +97,7 @@ The required resolution of the mask is sensor-dependent:
 | PandarXT32   | 2000 x 32           |
 | PandarXT32M  | 2000 x 32           |
 | PandarAT128  | 1200 x 128          |
+| AT128P       | 1200 x 128          |
 | PandarQT64   | 600 x 64            |
 | PandarQT128  | 900 x 128           |
 | Pandar128E4X | 3600 x 128          |
@@ -104,6 +105,7 @@ The required resolution of the mask is sensor-dependent:
 <!-- prettier-ignore-start -->
 !!! warning
     If the mask resolution does not match the required resolution, Nebula will not start (if configured on launch) or reject the setting (if set during runtime).
+    The same applies to RGB masks and masks with an alpha channel.
 <!-- prettier-ignore-end -->
 
 #### Behavior

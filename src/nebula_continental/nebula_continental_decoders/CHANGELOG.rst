@@ -2,6 +2,16 @@
 Changelog for package nebula_continental_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* refactor(nebula_continental): inject a logger into the SRR520 decoder (`#534 <https://github.com/tier4/nebula/issues/534>`_)
+  ``ContinentalSRR520Decoder`` now takes a ``loggers::Logger`` in its constructor. This removes rclcpp
+  from the Continental decoder package.
+* feat(nebula_core_common): add throttled and log-once logging to Logger (`#536 <https://github.com/tier4/nebula/issues/536>`_)
+  Add ``Logger::throttled(period)`` and ``Logger::once()``, with state kept per logger instance and
+  call site. ``NEBULA_LOG_STREAM`` no longer builds messages that are dropped.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 * fix(nebula_continental): reject truncated ARS548 object list packets (`#505 <https://github.com/tier4/nebula/issues/505>`_)

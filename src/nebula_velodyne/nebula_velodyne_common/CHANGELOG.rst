@@ -2,6 +2,12 @@
 Changelog for package nebula_velodyne_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* fix(nebula_velodyne_common): report calibration read/write failures (`#429 <https://github.com/tier4/nebula/issues/429>`_)
+  Failures to read or write a calibration file are now reported instead of being ignored.
+* Contributors: Max Schmeller
+
 1.4.0 (2026-11-11)
 ------------------
 

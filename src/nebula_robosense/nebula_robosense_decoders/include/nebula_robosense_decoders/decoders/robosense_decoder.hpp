@@ -213,8 +213,6 @@ public:
     angle_corrector_(calibration_configuration),
     logger_(logger)
   {
-    NEBULA_LOG_STREAM(logger_->info, *sensor_configuration_);
-
     decode_pc_.reset(new NebulaPointCloud);
     output_pc_.reset(new NebulaPointCloud);
 

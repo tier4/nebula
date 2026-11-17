@@ -50,7 +50,9 @@ HesaiRosDecoderTest::HesaiRosDecoderTest(
   sensor_cfg_ptr_ = std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
+  if (
+    sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration.sensor_model == drivers::SensorModel::HESAI_AT128P) {
     correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>(correction_configuration);
     wrapper_status_ = InitializeDriver(
       std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
@@ -124,7 +126,9 @@ Status HesaiRosDecoderTest::GetParameters(
     return Status::INVALID_CALIBRATION_FILE;
   }
 
-  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
+  if (
+    sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration.sensor_model == drivers::SensorModel::HESAI_AT128P) {
     auto cal_status =
       correction_configuration.load_from_file(sensor_configuration.calibration_path);
     if (cal_status != Status::OK) {
