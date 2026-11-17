@@ -6,7 +6,8 @@ find_package(Boost REQUIRED)
 autoware_package()
 
 # Hesai Decoder
-add_library(nebula_hesai_decoders SHARED src/hesai_driver.cpp)
+add_library(nebula_hesai_decoders SHARED src/hesai_decode_pipeline.cpp
+                                         src/hesai_driver.cpp)
 
 target_include_directories(
   nebula_hesai_decoders

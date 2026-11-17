@@ -22,14 +22,11 @@
 #include "nebula_core_ros/single_consumer_processor.hpp"
 #include "nebula_hesai/diagnostics/render.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_scan_decoder.hpp"
-#include "nebula_hesai_decoders/diagnostics/functional_safety_monitor.hpp"
-#include "nebula_hesai_decoders/diagnostics/packet_loss_monitor.hpp"
-#include "nebula_hesai_decoders/hesai_driver.hpp"
+#include "nebula_hesai_decoders/hesai_decode_pipeline.hpp"
 
 #include <autoware_utils_debug/debug_publisher.hpp>
 #include <diagnostic_updater/publisher.hpp>
 #include <diagnostic_updater/update_functions.hpp>
-#include <nebula_core_common/diagnostics/rate_bound_status.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 #include <rclcpp/node.hpp>
@@ -96,64 +93,18 @@ private:
       std::chrono::duration<double>(seconds));
   }
 
-  static diagnostics::RateBoundStatus make_rate_bound_status(
-    drivers::SensorModel sensor_model, uint16_t rpm, nebula::agnocast_wrapper::Node & node)
-  {
-    double nominal_rate_hz = drivers::get_scan_rate_hz(sensor_model, rpm);
+  /// @brief Read the settings of the decoder's diagnostics from the node's parameters
+  static drivers::HesaiDecoderDiagnosticsConfiguration declare_diagnostics_configuration(
+    drivers::SensorModel sensor_model, nebula::agnocast_wrapper::Node & node);
 
-    double min_ok_hz =
-      node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_ok.min_hz");
-    double max_ok_hz = node.declare_parameter<double>(
-      "diagnostics.pointcloud_publish_rate.frequency_ok.max_hz",
-      std::numeric_limits<double>::infinity());
-    double min_warn_hz =
-      node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_warn.min_hz");
-    double max_warn_hz = node.declare_parameter<double>(
-      "diagnostics.pointcloud_publish_rate.frequency_warn.max_hz",
-      std::numeric_limits<double>::infinity());
-
-    size_t num_frame_transition =
-      node.declare_parameter<int>("diagnostics.pointcloud_publish_rate.num_frame_transition", 1);
-
-    // Warn if misconfigured. Since this is not a critical error, continue operation.
-    if (nominal_rate_hz < min_ok_hz || nominal_rate_hz > max_ok_hz) {
-      RCLCPP_WARN(
-        node.get_logger(),
-        "The configured sensor framerate (%d RPM = %.2f Hz) is outside the configured framerate "
-        "bounds: %.2f - %.2f. Please check the sensor configuration.",
-        rpm, nominal_rate_hz, min_ok_hz, max_ok_hz);
-    }
-
-    diagnostics::RateBoundStatusParam ok_params(min_ok_hz, max_ok_hz);
-    diagnostics::RateBoundStatusParam warn_params(min_warn_hz, max_warn_hz);
-    return {make_diagnostics_clock(node), ok_params, warn_params, num_frame_transition};
-  }
-
-  void initialize_functional_safety(
-    nebula::agnocast_wrapper::diagnostic_updater::Updater & diagnostic_updater,
-    const std::optional<drivers::AdvancedFunctionalSafetyConfiguration> & fs_config);
-
-  void initialize_packet_loss_diagnostic(
-    nebula::agnocast_wrapper::diagnostic_updater::Updater & diagnostic_updater);
-
-  std::pair<
-    std::shared_ptr<drivers::point_filters::BlockageMaskPlugin>,
-    NEBULA_PUBLISHER_PTR(sensor_msgs::msg::Image)>
-  initialize_blockage_mask_plugin();
-
-  std::shared_ptr<drivers::HesaiDriver> initialize_driver(
-    const std::shared_ptr<const drivers::HesaiSensorConfiguration> & config,
-    const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration);
+  void on_blockage_mask(
+    const drivers::point_filters::BlockageMask & blockage_mask, double timestamp_s);
 
   nebula::Status status_;
   rclcpp::Logger logger_;
   nebula::agnocast_wrapper::Node & parent_node_;
 
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_;
-  std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> calibration_cfg_ptr_;
-
-  std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
-  std::mutex mtx_driver_ptr_;
 
   pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_;
   NEBULA_PUBLISHER_PTR(pandar_msgs::msg::PandarScan) packets_pub_;
@@ -166,10 +117,6 @@ private:
 
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::Image) blockage_mask_pub_;
 
-  diagnostics::RateBoundStatus publish_diagnostic_;
-  std::optional<drivers::FunctionalSafetyMonitor> functional_safety_diagnostic_;
-  std::optional<drivers::PacketLossMonitor> packet_loss_diagnostic_;
-
   autoware_utils_debug::BasicDebugPublisher<nebula::agnocast_wrapper::Node> debug_publisher_;
 
   struct PerformanceCounters
@@ -178,5 +125,9 @@ private:
     uint64_t receive_time_current_scan_ns{0};
     uint64_t publish_time_current_scan_ns{0};
   } current_scan_perf_counters_;
+
+  std::mutex mtx_pipeline_;
+  /// Declared last, since its callbacks use the members above
+  std::optional<drivers::HesaiDecodePipeline> pipeline_;
 };
 }  // namespace nebula::ros

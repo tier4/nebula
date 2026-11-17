@@ -6,9 +6,6 @@
 #include "nebula_core_ros/cie_thread_factory.hpp"
 #include "nebula_core_ros/point_cloud_conversions.hpp"
 #include "nebula_core_ros/rclcpp_logger.hpp"
-#include "nebula_hesai_decoders/decoders/functional_safety.hpp"
-#include "nebula_hesai_decoders/diagnostics/functional_safety_advanced.hpp"
-#include "nebula_hesai_decoders/diagnostics/functional_safety_basic.hpp"
 
 #include <nebula_core_common/util/stopwatch.hpp>
 #include <nebula_core_common/util/string_conversions.hpp>
@@ -42,33 +39,19 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   logger_(parent_node->get_logger().get_child("DecoderWrapper")),
   parent_node_(*parent_node),
   sensor_cfg_(config),
-  calibration_cfg_ptr_(calibration),
-  publish_diagnostic_(
-    make_rate_bound_status(sensor_cfg_->sensor_model, sensor_cfg_->rotation_speed, *parent_node)),
   debug_publisher_(parent_node, "nebula")
 {
   if (!sensor_cfg_) {
     throw std::runtime_error("HesaiDecoderWrapper cannot be instantiated without a valid config!");
   }
 
-  if (!calibration_cfg_ptr_) {
+  if (!calibration) {
     throw std::runtime_error("HesaiDecoderWrapper cannot be instantiated without a valid config!");
   }
 
-  RCLCPP_INFO_STREAM(
-    logger_, "Using calibration data from " << calibration_cfg_ptr_->calibration_file);
+  RCLCPP_INFO_STREAM(logger_, "Using calibration data from " << calibration->calibration_file);
 
   RCLCPP_INFO(logger_, "Starting Decoder");
-
-  initialize_functional_safety(diagnostic_updater, sensor_cfg_->functional_safety);
-  initialize_packet_loss_diagnostic(diagnostic_updater);
-
-  driver_ptr_ = initialize_driver(sensor_cfg_, calibration_cfg_ptr_);
-  status_ = driver_ptr_->get_status();
-
-  if (Status::OK != status_) {
-    throw std::runtime_error("Error instantiating decoder: " + util::to_string(status_));
-  }
 
   // Publish packets only if enabled by the ROS wrapper
   if (publish_packets) {
@@ -95,40 +78,98 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   aw_points_ex_pub_ =
     parent_node_.create_publisher<sensor_msgs::msg::PointCloud2>("aw_points_ex", pointcloud_qos);
 
-  RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
+  drivers::HesaiDecodePipeline::blockage_mask_callback_t blockage_mask_cb;
+  if (sensor_cfg_->blockage_mask_horizontal_bin_size_mdeg) {
+    blockage_mask_pub_ = parent_node_.create_publisher<sensor_msgs::msg::Image>(
+      "blockage_mask", rclcpp::SensorDataQoS());
+    blockage_mask_cb = [this](
+                         const drivers::point_filters::BlockageMask & blockage_mask,
+                         double timestamp_s) { on_blockage_mask(blockage_mask, timestamp_s); };
+  }
 
-  diagnostic_updater.add(
-    "rate bound check", [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
-      render(publish_diagnostic_.report(), status);
+  pipeline_.emplace(
+    sensor_cfg_, calibration,
+    declare_diagnostics_configuration(sensor_cfg_->sensor_model, parent_node_),
+    std::make_shared<drivers::loggers::RclcppLogger>(logger_), make_diagnostics_clock(parent_node_),
+    [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
+      on_pointcloud_decoded(pointcloud, timestamp_s);
+    },
+    std::move(blockage_mask_cb));
+  status_ = pipeline_->status();
+
+  using diagnostic_updater::DiagnosticStatusWrapper;
+
+  if (drivers::supports_functional_safety(sensor_cfg_->sensor_model)) {
+    diagnostic_updater.add("Functional safety status", [this](DiagnosticStatusWrapper & status) {
+      render(pipeline_->report_functional_safety().value(), status);
     });
+  }
+
+  if (drivers::supports_packet_loss_detection(sensor_cfg_->sensor_model)) {
+    diagnostic_updater.add("Packet loss status", [this](DiagnosticStatusWrapper & status) {
+      render(pipeline_->report_packet_loss().value(), status);
+    });
+  }
+
+  diagnostic_updater.add("rate bound check", [this](DiagnosticStatusWrapper & status) {
+    render(pipeline_->report_pointcloud_rate(), status);
+  });
+
+  RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
+}
+
+drivers::HesaiDecoderDiagnosticsConfiguration
+HesaiDecoderWrapper::declare_diagnostics_configuration(
+  drivers::SensorModel sensor_model, nebula::agnocast_wrapper::Node & node)
+{
+  drivers::HesaiDecoderDiagnosticsConfiguration config;
+
+  auto & rate = config.pointcloud_publish_rate;
+  rate.frequency_ok.min_hz =
+    node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_ok.min_hz");
+  rate.frequency_ok.max_hz = node.declare_parameter<double>(
+    "diagnostics.pointcloud_publish_rate.frequency_ok.max_hz", rate.frequency_ok.max_hz);
+  rate.frequency_warn.min_hz =
+    node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_warn.min_hz");
+  rate.frequency_warn.max_hz = node.declare_parameter<double>(
+    "diagnostics.pointcloud_publish_rate.frequency_warn.max_hz", rate.frequency_warn.max_hz);
+  rate.num_frame_transition =
+    node.declare_parameter<int>("diagnostics.pointcloud_publish_rate.num_frame_transition", 1);
+
+  if (drivers::supports_packet_loss_detection(sensor_model)) {
+    config.packet_loss.emplace();
+    config.packet_loss->error_threshold =
+      node.declare_parameter<uint16_t>("diagnostics.packet_loss.error_threshold");
+  }
+
+  return config;
 }
 
 void HesaiDecoderWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config)
 {
-  {
-    std::lock_guard lock(mtx_driver_ptr_);
-    sensor_cfg_ = new_config;
-  }
-  reset_decoder();
+  std::lock_guard lock(mtx_pipeline_);
+  sensor_cfg_ = new_config;
+  current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
+  current_scan_perf_counters_ = {};
+  pipeline_->set_sensor_configuration(new_config);
 }
 
 void HesaiDecoderWrapper::on_calibration_change(
   const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & new_calibration)
 {
-  {
-    std::lock_guard lock(mtx_driver_ptr_);
-    calibration_cfg_ptr_ = new_calibration;
-  }
-  reset_decoder();
+  std::lock_guard lock(mtx_pipeline_);
+  current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
+  current_scan_perf_counters_ = {};
+  pipeline_->set_calibration(new_calibration);
 }
 
 void HesaiDecoderWrapper::reset_decoder()
 {
-  std::lock_guard lock(mtx_driver_ptr_);
+  std::lock_guard lock(mtx_pipeline_);
   current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
-  driver_ptr_ = initialize_driver(sensor_cfg_, calibration_cfg_ptr_);
   current_scan_perf_counters_ = {};
+  pipeline_->reset();
 }
 
 drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
@@ -152,8 +193,8 @@ drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
     current_scan_msg_->packets.emplace_back(pandar_packet_msg);
   }
 
-  std::lock_guard lock(mtx_driver_ptr_);
-  auto decode_result = driver_ptr_->parse_cloud_packet(packet_msg->data);
+  std::lock_guard lock(mtx_pipeline_);
+  auto decode_result = pipeline_->process_packet(packet_msg->data);
 
   current_scan_perf_counters_.decode_time_current_scan_ns +=
     decode_result.performance_counters.decode_time_ns;
@@ -207,8 +248,6 @@ void HesaiDecoderWrapper::on_pointcloud_decoded(
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }
 
-  publish_diagnostic_.tick();
-
   uint64_t publish_duration_ns = publish_watch.elapsed_ns();
   current_scan_perf_counters_.publish_time_current_scan_ns += publish_duration_ns;
 
@@ -247,124 +286,29 @@ void HesaiDecoderWrapper::publish_cloud(
   publisher->publish(std::move(pointcloud));
 }
 
-void HesaiDecoderWrapper::initialize_functional_safety(
-  nebula::agnocast_wrapper::diagnostic_updater::Updater & diagnostic_updater,
-  const std::optional<drivers::AdvancedFunctionalSafetyConfiguration> & fs_config)
+void HesaiDecoderWrapper::on_blockage_mask(
+  const drivers::point_filters::BlockageMask & blockage_mask, double timestamp_s)
 {
-  if (!drivers::supports_functional_safety(sensor_cfg_->sensor_model)) {
-    return;
-  }
-
-  std::unique_ptr<drivers::FunctionalSafetyStatusProcessor> status_processor;
-  if (fs_config) {
-    status_processor = std::make_unique<drivers::FunctionalSafetyAdvanced>(
-      drivers::read_error_definitions_from_csv(fs_config->error_definitions_path),
-      fs_config->ignored_error_codes);
-  } else {
-    status_processor = std::make_unique<drivers::FunctionalSafetyBasic>();
-  }
-
-  functional_safety_diagnostic_.emplace(
-    make_diagnostics_clock(parent_node_), std::move(status_processor));
-  diagnostic_updater.add(
-    "Functional safety status", [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
-      render(functional_safety_diagnostic_->report(), status);
-    });
-}
-
-void HesaiDecoderWrapper::initialize_packet_loss_diagnostic(
-  nebula::agnocast_wrapper::diagnostic_updater::Updater & diagnostic_updater)
-{
-  if (!drivers::supports_packet_loss_detection(sensor_cfg_->sensor_model)) {
-    return;
-  }
-
-  uint64_t error_threshold =
-    parent_node_.declare_parameter<uint16_t>("diagnostics.packet_loss.error_threshold");
-  packet_loss_diagnostic_.emplace(error_threshold, make_diagnostics_clock(parent_node_));
-  diagnostic_updater.add(
-    "Packet loss status", [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
-      render(packet_loss_diagnostic_->report(), status);
-    });
-}
-
-std::pair<
-  std::shared_ptr<drivers::point_filters::BlockageMaskPlugin>,
-  NEBULA_PUBLISHER_PTR(sensor_msgs::msg::Image)>
-HesaiDecoderWrapper::initialize_blockage_mask_plugin()
-{
-  if (!sensor_cfg_->blockage_mask_horizontal_bin_size_mdeg) {
-    return {nullptr, nullptr};
-  }
-
-  auto blockage_mask_plugin = std::make_shared<drivers::point_filters::BlockageMaskPlugin>(
-    sensor_cfg_->blockage_mask_horizontal_bin_size_mdeg.value());
-  auto blockage_mask_pub = parent_node_.create_publisher<sensor_msgs::msg::Image>(
-    "blockage_mask", rclcpp::SensorDataQoS());
-
-  blockage_mask_plugin->set_callback(
-    [this, blockage_mask_pub](
-      const drivers::point_filters::BlockageMask & blockage_mask, double timestamp_s) {
-      auto msg = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(blockage_mask_pub_);
-      msg->header.stamp = rclcpp::Time(seconds_to_chrono_nano_seconds(timestamp_s).count());
-      msg->header.frame_id = sensor_cfg_->frame_id;
-      msg->encoding = sensor_msgs::image_encodings::MONO8;
-      msg->width = blockage_mask.get_width();
-      msg->height = blockage_mask.get_height();
-      msg->is_bigendian = false;
-      msg->step = blockage_mask.get_width() * sizeof(uint8_t);
-      msg->data = blockage_mask.get_mask();
-      blockage_mask_pub->publish(std::move(msg));
-    });
-
-  return {blockage_mask_plugin, blockage_mask_pub};
-}
-
-std::shared_ptr<drivers::HesaiDriver> HesaiDecoderWrapper::initialize_driver(
-  const std::shared_ptr<const drivers::HesaiSensorConfiguration> & config,
-  const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration)
-{
-  auto pointcloud_cb = [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
-    on_pointcloud_decoded(pointcloud, timestamp_s);
-  };
-
-  auto [blockage_mask_plugin, blockage_mask_pub] = initialize_blockage_mask_plugin();
-  blockage_mask_pub_ = blockage_mask_pub;
-
-  drivers::FunctionalSafetyDecoderBase::alive_cb_t alive_cb;
-  drivers::FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb;
-  drivers::FunctionalSafetyDecoderBase::status_cb_t status_cb;
-
-  if (functional_safety_diagnostic_) {
-    alive_cb = [this]() { functional_safety_diagnostic_->on_alive(); };
-    stuck_cb = [this](bool is_stuck) { functional_safety_diagnostic_->on_stuck(is_stuck); };
-    status_cb = [this](
-                  drivers::FunctionalSafetySeverity severity,
-                  const drivers::FunctionalSafetyErrorCodes & codes) {
-      functional_safety_diagnostic_->on_status(severity, codes);
-    };
-  }
-
-  drivers::PacketLossDetectorBase::lost_cb_t lost_cb;
-
-  if (packet_loss_diagnostic_) {
-    lost_cb = [this](uint64_t n_lost) { packet_loss_diagnostic_->on_lost(n_lost); };
-  }
-
-  return std::make_shared<drivers::HesaiDriver>(
-    config, calibration, std::make_shared<drivers::loggers::RclcppLogger>(logger_),
-    std::move(pointcloud_cb), std::move(alive_cb), std::move(stuck_cb), std::move(status_cb),
-    std::move(lost_cb), std::move(blockage_mask_plugin));
+  auto msg = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(blockage_mask_pub_);
+  msg->header.stamp = rclcpp::Time(seconds_to_chrono_nano_seconds(timestamp_s).count());
+  msg->header.frame_id = sensor_cfg_->frame_id;
+  msg->encoding = sensor_msgs::image_encodings::MONO8;
+  msg->width = blockage_mask.get_width();
+  msg->height = blockage_mask.get_height();
+  msg->is_bigendian = false;
+  msg->step = blockage_mask.get_width() * sizeof(uint8_t);
+  msg->data = blockage_mask.get_mask();
+  blockage_mask_pub_->publish(std::move(msg));
 }
 
 nebula::Status HesaiDecoderWrapper::status()
 {
-  std::lock_guard lock(mtx_driver_ptr_);
+  std::lock_guard lock(mtx_pipeline_);
 
-  if (!driver_ptr_) {
+  if (!pipeline_) {
     return nebula::Status::NOT_INITIALIZED;
   }
 
-  return driver_ptr_->get_status();
+  return pipeline_->status();
 }
 }  // namespace nebula::ros
