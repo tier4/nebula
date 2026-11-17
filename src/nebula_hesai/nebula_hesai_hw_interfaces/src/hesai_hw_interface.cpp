@@ -1280,9 +1280,8 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
 #endif
   //*
   // g_ptc_command_set_lidar_range
-  // The padded FoV is written once by HesaiHwInterfaceWrapper::configure_lidar_range, which
-  // retries a timeout. Writing the unpadded range here as well makes the sensor ignore the
-  // following padded write.
+  // The padded FoV is written by HesaiHwInterfaceWrapper::configure_lidar_range, which retries a
+  // timeout.
   if (hesai_lidar_range_all.method == 0) {
     auto current_cloud_min_angle_ddeg = hesai_lidar_range_all.start;
     if (
