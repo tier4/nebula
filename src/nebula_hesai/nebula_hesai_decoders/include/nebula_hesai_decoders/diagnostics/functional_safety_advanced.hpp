@@ -14,14 +14,10 @@
 
 #pragma once
 
-#include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 #include "nebula_hesai_decoders/decoders/functional_safety.hpp"
-
-#include <diagnostic_msgs/msg/detail/key_value__struct.hpp>
+#include "nebula_hesai_decoders/diagnostics/functional_safety_monitor.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/range/algorithm/find.hpp>
-#include <boost/range/algorithm/find_if.hpp>
 #include <boost/tokenizer.hpp>
 
 #include <algorithm>
@@ -31,22 +27,19 @@
 #include <limits>
 #include <sstream>
 #include <string>
-#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
-namespace nebula::ros
+namespace nebula::drivers
 {
-
-using std::string_literals::operator""s;
 
 struct ErrorDefinition
 {
   uint16_t code;
   std::string description;
-  drivers::FunctionalSafetySeverity severity;
+  FunctionalSafetySeverity severity;
 
   bool operator==(const ErrorDefinition & other) const
   {
@@ -62,20 +55,20 @@ struct ErrorDefinition
 };
 
 /// Convert severity string to enum value
-inline drivers::FunctionalSafetySeverity string_to_severity(const std::string & severity_str)
+inline FunctionalSafetySeverity string_to_severity(const std::string & severity_str)
 {
   std::string lower_str = boost::algorithm::to_lower_copy(severity_str);
 
   if (lower_str == "ok") {
-    return drivers::FunctionalSafetySeverity::OK;
+    return FunctionalSafetySeverity::OK;
   }
 
   if (lower_str == "warning") {
-    return drivers::FunctionalSafetySeverity::WARNING;
+    return FunctionalSafetySeverity::WARNING;
   }
 
   if (lower_str == "error") {
-    return drivers::FunctionalSafetySeverity::ERROR;
+    return FunctionalSafetySeverity::ERROR;
   }
 
   throw std::runtime_error("Unknown severity level: " + severity_str);
@@ -144,7 +137,7 @@ inline std::vector<ErrorDefinition> read_error_definitions_from_csv(const std::s
     // Parse description and severity
     const std::string & description = fields[1];
     const std::string & severity_str = fields[2];
-    drivers::FunctionalSafetySeverity severity = string_to_severity(severity_str);
+    FunctionalSafetySeverity severity = string_to_severity(severity_str);
 
     const ErrorDefinition current{code, description, severity};
 
@@ -187,113 +180,50 @@ public:
     }
   }
 
-  void populate_status(
-    drivers::FunctionalSafetySeverity severity,
-    const drivers::FunctionalSafetyErrorCodes & error_codes,
-    diagnostic_msgs::msg::DiagnosticStatus & inout_status) override
+  [[nodiscard]] FunctionalSafetyStatus process(
+    FunctionalSafetySeverity severity, const FunctionalSafetyErrorCodes & error_codes) override
   {
-    diagnostic_msgs::msg::KeyValue kv;
-    kv.key = "Diagnostic codes";
-    kv.value = detail::error_codes_to_string(error_codes);
-    inout_status.values.push_back(kv);
+    FunctionalSafetyStatus status;
+    status.sensor_severity = severity;
+    status.error_codes = error_codes;
+    status.faults.emplace();
 
     if (error_codes.empty()) {
       // If there are no error codes, report the severity reported by the sensor
-      inout_status.level = detail::severity_to_diagnostic_status_level(severity);
-      inout_status.message = detail::status_to_string(severity, 0);
-      return;
+      status.severity = severity;
+      return status;
     }
 
-    auto [non_exempted_error_codes, exempted_error_codes] =
-      split_error_codes(error_codes, exempted_codes_);
+    FunctionalSafetySeverity max_severity = FunctionalSafetySeverity::OK;
+    for (const auto & error_code : error_codes) {
+      FunctionalSafetyFault fault;
+      fault.code = error_code;
+      fault.is_exempted = exempted_codes_.count(error_code) > 0;
 
-    drivers::FunctionalSafetySeverity max_severity = drivers::FunctionalSafetySeverity::OK;
-    for (const auto & error_code : non_exempted_error_codes) {
       // If the error code is not found in the definitions, use the severity reported by the
       // sensor as the worst-case assumption.
-      const auto error_definition =
-        get_error_definition(error_code)
-          .value_or(ErrorDefinition{error_code, "Unknown error", severity});
+      const auto it = error_definitions_.find(error_code);
+      if (it == error_definitions_.end()) {
+        fault.description = "Unknown error";
+        fault.severity = severity;
+      } else {
+        fault.description = it->second.description;
+        fault.severity = it->second.severity;
+      }
 
-      max_severity = std::max(max_severity, error_definition.severity);
-      auto error_kv = to_key_value(error_definition);
-      inout_status.values.push_back(error_kv);
+      if (!fault.is_exempted) {
+        max_severity = std::max(max_severity, fault.severity);
+      }
+      status.faults->push_back(std::move(fault));
     }
 
-    for (const auto & error_code : exempted_error_codes) {
-      const auto error_definition =
-        get_error_definition(error_code)
-          .value_or(ErrorDefinition{error_code, "Unknown error", severity});
-      auto error_kv = to_key_value(error_definition);
-      error_kv.value = "[Exempted] " + error_kv.value;
-      inout_status.values.push_back(error_kv);
-    }
-
-    inout_status.level = detail::severity_to_diagnostic_status_level(max_severity);
-
-    // When the effective severity is OK, report nominal operation regardless of code count
-    const size_t n_errors_for_message =
-      (max_severity == drivers::FunctionalSafetySeverity::OK) ? 0 : non_exempted_error_codes.size();
-    inout_status.message = detail::status_to_string(max_severity, n_errors_for_message);
+    status.severity = max_severity;
+    return status;
   }
 
 private:
-  static std::tuple<drivers::FunctionalSafetyErrorCodes, drivers::FunctionalSafetyErrorCodes>
-  split_error_codes(
-    const drivers::FunctionalSafetyErrorCodes & error_codes,
-    const std::unordered_set<uint16_t> & exempted_codes)
-  {
-    drivers::FunctionalSafetyErrorCodes non_exempted_error_codes;
-    drivers::FunctionalSafetyErrorCodes exempted_error_codes;
-    for (const auto & error_code : error_codes) {
-      if (boost::range::find(exempted_codes, error_code) == exempted_codes.end()) {
-        non_exempted_error_codes.push_back(error_code);
-      } else {
-        exempted_error_codes.push_back(error_code);
-      }
-    }
-    return std::make_tuple(non_exempted_error_codes, exempted_error_codes);
-  }
-
-  [[nodiscard]] std::optional<ErrorDefinition> get_error_definition(uint16_t error_code) const
-  {
-    auto it = error_definitions_.find(error_code);
-
-    if (it == error_definitions_.end()) {
-      return std::nullopt;
-    }
-
-    return it->second;
-  }
-
-  static diagnostic_msgs::msg::KeyValue to_key_value(const ErrorDefinition & error_definition)
-  {
-    diagnostic_msgs::msg::KeyValue kv;
-    std::stringstream ss;
-    ss << "0x" << std::hex << std::setw(4) << std::setfill('0') << error_definition.code;
-    kv.key = ss.str();
-
-    char prefix{};
-    switch (error_definition.severity) {
-      case drivers::FunctionalSafetySeverity::OK:
-        prefix = 'O';
-        break;
-      case drivers::FunctionalSafetySeverity::WARNING:
-        prefix = 'W';
-        break;
-      case drivers::FunctionalSafetySeverity::ERROR:
-        prefix = 'E';
-        break;
-      default:
-        throw std::runtime_error(
-          "Unknown severity level: " + std::to_string(static_cast<int>(error_definition.severity)));
-    }
-    kv.value = "["s + prefix + "] " + error_definition.description;
-    return kv;
-  }
-
   std::unordered_map<uint16_t, ErrorDefinition> error_definitions_;
   std::unordered_set<uint16_t> exempted_codes_;
 };
 
-}  // namespace nebula::ros
+}  // namespace nebula::drivers

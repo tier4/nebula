@@ -6,10 +6,9 @@
 #include "nebula_core_ros/cie_thread_factory.hpp"
 #include "nebula_core_ros/point_cloud_conversions.hpp"
 #include "nebula_core_ros/rclcpp_logger.hpp"
-#include "nebula_hesai/diagnostics/functional_safety_advanced.hpp"
-#include "nebula_hesai/diagnostics/functional_safety_basic.hpp"
-#include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 #include "nebula_hesai_decoders/decoders/functional_safety.hpp"
+#include "nebula_hesai_decoders/diagnostics/functional_safety_advanced.hpp"
+#include "nebula_hesai_decoders/diagnostics/functional_safety_basic.hpp"
 
 #include <nebula_core_common/util/stopwatch.hpp>
 #include <nebula_core_common/util/string_conversions.hpp>
@@ -256,19 +255,21 @@ void HesaiDecoderWrapper::initialize_functional_safety(
     return;
   }
 
-  if (!fs_config) {
-    functional_safety_diagnostic_.emplace(
-      make_diagnostics_clock(parent_node_), std::make_unique<FunctionalSafetyBasic>());
-    diagnostic_updater.add(functional_safety_diagnostic_.value());
-    return;
+  std::unique_ptr<drivers::FunctionalSafetyStatusProcessor> status_processor;
+  if (fs_config) {
+    status_processor = std::make_unique<drivers::FunctionalSafetyAdvanced>(
+      drivers::read_error_definitions_from_csv(fs_config->error_definitions_path),
+      fs_config->ignored_error_codes);
+  } else {
+    status_processor = std::make_unique<drivers::FunctionalSafetyBasic>();
   }
 
-  auto error_definitions = read_error_definitions_from_csv(fs_config->error_definitions_path);
   functional_safety_diagnostic_.emplace(
-    make_diagnostics_clock(parent_node_),
-    std::make_unique<FunctionalSafetyAdvanced>(error_definitions, fs_config->ignored_error_codes));
-
-  diagnostic_updater.add(functional_safety_diagnostic_.value());
+    make_diagnostics_clock(parent_node_), std::move(status_processor));
+  diagnostic_updater.add(
+    "Functional safety status", [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
+      render(functional_safety_diagnostic_->report(), status);
+    });
 }
 
 void HesaiDecoderWrapper::initialize_packet_loss_diagnostic(
@@ -280,8 +281,11 @@ void HesaiDecoderWrapper::initialize_packet_loss_diagnostic(
 
   uint64_t error_threshold =
     parent_node_.declare_parameter<uint16_t>("diagnostics.packet_loss.error_threshold");
-  packet_loss_diagnostic_.emplace(error_threshold, parent_node_.get_clock());
-  diagnostic_updater.add(packet_loss_diagnostic_.value());
+  packet_loss_diagnostic_.emplace(error_threshold, make_diagnostics_clock(parent_node_));
+  diagnostic_updater.add(
+    "Packet loss status", [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
+      render(packet_loss_diagnostic_->report(), status);
+    });
 }
 
 std::pair<

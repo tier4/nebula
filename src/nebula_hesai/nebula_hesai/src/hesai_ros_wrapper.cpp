@@ -138,7 +138,8 @@ void HesaiRosWrapper::initialize_sync_tooling(const drivers::HesaiSensorConfigur
   auto sync_tooling_worker = std::make_shared<SyncToolingWorker>(
     this, *config.sync_diagnostics_topic, config.frame_id, config.ptp_domain);
 
-  sync_tooling_plugin_.emplace(SyncToolingPlugin{sync_tooling_worker, util::RateLimiter(100ms)});
+  sync_tooling_plugin_.emplace(
+    SyncToolingPlugin{sync_tooling_worker, util::RateLimiter(std::chrono::milliseconds(100))});
 }
 
 nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()

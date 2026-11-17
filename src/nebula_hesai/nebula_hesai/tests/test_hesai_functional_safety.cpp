@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_hesai/diagnostics/functional_safety_advanced.hpp"
+#include "nebula_hesai/diagnostics/render.hpp"
 #include "nebula_hesai_decoders/decoders/functional_safety.hpp"
+#include "nebula_hesai_decoders/diagnostics/functional_safety_advanced.hpp"
+#include "nebula_hesai_decoders/diagnostics/functional_safety_basic.hpp"
 
 #include <boost/range/algorithm/sort.hpp>
 
@@ -29,13 +31,13 @@ static_assert(false, " _TEST_RESOURCES_PATH is not defined");
 #endif
 
 using Severity = nebula::drivers::FunctionalSafetySeverity;
-using diagnostic_msgs::msg::DiagnosticStatus;
+using nebula::diagnostics::Level;
 
 struct CsvTestCase
 {
   std::filesystem::path path;
   bool expected_valid;
-  std::vector<nebula::ros::ErrorDefinition> expected_error_definitions;
+  std::vector<nebula::drivers::ErrorDefinition> expected_error_definitions;
 };
 
 struct PopulateStatusTestCase
@@ -45,7 +47,7 @@ struct PopulateStatusTestCase
   nebula::drivers::FunctionalSafetyErrorCodes arg_error_codes;
 
   std::vector<uint16_t> exempted_error_codes;
-  uint8_t expected_status_level;  ///< DiagnosticStatus::{OK, WARN, ERROR}
+  Level expected_status_level;
 };
 
 namespace
@@ -89,7 +91,7 @@ std::vector<CsvTestCase> csv_test_cases()
   };
 }
 
-std::vector<nebula::ros::ErrorDefinition> error_definitions()
+std::vector<nebula::drivers::ErrorDefinition> error_definitions()
 {
   return {
     {0x1111, "Aaa", Severity::OK},
@@ -102,35 +104,19 @@ std::vector<PopulateStatusTestCase> populate_status_test_cases()
 {
   return {
     // If no error codes are provided, the status level is the severity reported by the sensor
-    {"no_codes_ok", Severity::OK, {}, {}, DiagnosticStatus::OK},
-    {"no_codes_warn", Severity::WARNING, {}, {}, DiagnosticStatus::WARN},
-    {"no_codes_error", Severity::ERROR, {}, {}, DiagnosticStatus::ERROR},
+    {"no_codes_ok", Severity::OK, {}, {}, Level::OK},
+    {"no_codes_warn", Severity::WARNING, {}, {}, Level::WARN},
+    {"no_codes_error", Severity::ERROR, {}, {}, Level::ERROR},
     // Error definitions override severity reported by the sensor
-    {"def_ok", Severity::ERROR, {0x1111}, {}, DiagnosticStatus::OK},
-    {"def_warn", Severity::ERROR, {0x2222}, {}, DiagnosticStatus::WARN},
-    {"def_error", Severity::OK, {0x3333}, {}, DiagnosticStatus::ERROR},
+    {"def_ok", Severity::ERROR, {0x1111}, {}, Level::OK},
+    {"def_warn", Severity::ERROR, {0x2222}, {}, Level::WARN},
+    {"def_error", Severity::OK, {0x3333}, {}, Level::ERROR},
     // The reported status is the worst severity of the non-exempted error codes
-    {"exempt_ok_leave_error",
-     Severity::OK,
-     {0x1111, 0x2222, 0x3333},
-     {0x1111},
-     DiagnosticStatus::ERROR},
-    {"exempt_error_leave_warn",
-     Severity::OK,
-     {0x1111, 0x2222, 0x3333},
-     {0x3333},
-     DiagnosticStatus::WARN},
-    {"exempt_all_but_ok",
-     Severity::OK,
-     {0x1111, 0x2222, 0x3333},
-     {0x2222, 0x3333},
-     DiagnosticStatus::OK},
+    {"exempt_ok_leave_error", Severity::OK, {0x1111, 0x2222, 0x3333}, {0x1111}, Level::ERROR},
+    {"exempt_error_leave_warn", Severity::OK, {0x1111, 0x2222, 0x3333}, {0x3333}, Level::WARN},
+    {"exempt_all_but_ok", Severity::OK, {0x1111, 0x2222, 0x3333}, {0x2222, 0x3333}, Level::OK},
     // If all are exempted, the status is OK
-    {"exempt_all",
-     Severity::ERROR,
-     {0x1111, 0x2222, 0x3333},
-     {0x1111, 0x2222, 0x3333},
-     DiagnosticStatus::OK},
+    {"exempt_all", Severity::ERROR, {0x1111, 0x2222, 0x3333}, {0x1111, 0x2222, 0x3333}, Level::OK},
   };
 }
 
@@ -144,12 +130,13 @@ TEST_P(CsvReaderTest, ReadCsv)
 {
   const auto & test_case = GetParam();
   if (!test_case.expected_valid) {
-    EXPECT_THROW(nebula::ros::read_error_definitions_from_csv(test_case.path), std::runtime_error);
+    EXPECT_THROW(
+      nebula::drivers::read_error_definitions_from_csv(test_case.path), std::runtime_error);
     return;
   }
 
-  std::vector<nebula::ros::ErrorDefinition> parsed;
-  EXPECT_NO_THROW(parsed = nebula::ros::read_error_definitions_from_csv(test_case.path));
+  std::vector<nebula::drivers::ErrorDefinition> parsed;
+  EXPECT_NO_THROW(parsed = nebula::drivers::read_error_definitions_from_csv(test_case.path));
 
   auto expected = test_case.expected_error_definitions;
 
@@ -165,10 +152,11 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(FunctionalSafetyAdvanced, ConstructorValidation)
 {
-  EXPECT_NO_THROW(nebula::ros::FunctionalSafetyAdvanced({}, {}));
-  EXPECT_NO_THROW(nebula::ros::FunctionalSafetyAdvanced({{0x1111, "Aaa", Severity::OK}}, {}));
-  EXPECT_NO_THROW(nebula::ros::FunctionalSafetyAdvanced({}, {0x1111}));
-  EXPECT_NO_THROW(nebula::ros::FunctionalSafetyAdvanced({{0x1111, "Aaa", Severity::OK}}, {0x1111}));
+  EXPECT_NO_THROW(nebula::drivers::FunctionalSafetyAdvanced({}, {}));
+  EXPECT_NO_THROW(nebula::drivers::FunctionalSafetyAdvanced({{0x1111, "Aaa", Severity::OK}}, {}));
+  EXPECT_NO_THROW(nebula::drivers::FunctionalSafetyAdvanced({}, {0x1111}));
+  EXPECT_NO_THROW(
+    nebula::drivers::FunctionalSafetyAdvanced({{0x1111, "Aaa", Severity::OK}}, {0x1111}));
 }
 
 class PopulateStatusTest : public ::testing::TestWithParam<PopulateStatusTestCase>
@@ -178,23 +166,74 @@ class PopulateStatusTest : public ::testing::TestWithParam<PopulateStatusTestCas
 TEST_P(PopulateStatusTest, PopulateStatus)
 {
   const auto & test_case = GetParam();
-  nebula::ros::FunctionalSafetyAdvanced functional_safety_advanced(
+  nebula::drivers::FunctionalSafetyAdvanced functional_safety_advanced(
     error_definitions(), test_case.exempted_error_codes);
-  diagnostic_msgs::msg::DiagnosticStatus status;
-  functional_safety_advanced.populate_status(
-    test_case.arg_severity, test_case.arg_error_codes, status);
-  EXPECT_EQ(status.level, test_case.expected_status_level);
+  const auto status =
+    functional_safety_advanced.process(test_case.arg_severity, test_case.arg_error_codes);
+  EXPECT_EQ(status.level(), test_case.expected_status_level);
+  EXPECT_EQ(status.sensor_severity, test_case.arg_severity);
+  ASSERT_TRUE(status.faults.has_value());
+  EXPECT_EQ(status.faults->size(), test_case.arg_error_codes.size());
 }
 
 INSTANTIATE_TEST_SUITE_P(
   PopulateStatusTest, PopulateStatusTest, testing::ValuesIn(populate_status_test_cases()),
   [](const testing::TestParamInfo<PopulateStatusTestCase> & p) { return p.param.name; });
 
-TEST(FunctionalSafetyAdvanced, PopulateStatus)
+TEST(FunctionalSafetyAdvanced, ReportsFaultsWithDefinitionsAndExemptions)
 {
-  nebula::ros::FunctionalSafetyAdvanced functional_safety_advanced(error_definitions(), {});
-  diagnostic_msgs::msg::DiagnosticStatus status;
-  functional_safety_advanced.populate_status(Severity::OK, {0x1111}, status);
+  nebula::drivers::FunctionalSafetyAdvanced functional_safety_advanced(
+    error_definitions(), {0x3333});
+  const auto status = functional_safety_advanced.process(Severity::ERROR, {0x2222, 0x3333, 0x9999});
+
+  ASSERT_TRUE(status.faults.has_value());
+  const std::vector<nebula::drivers::FunctionalSafetyFault> expected{
+    {0x2222, "Bbb", Severity::WARNING, false},
+    {0x3333, "Ccc", Severity::ERROR, true},
+    {0x9999, "Unknown error", Severity::ERROR, false},
+  };
+  EXPECT_EQ(status.faults.value(), expected);
+  EXPECT_EQ(status.severity, Severity::ERROR);
+}
+
+TEST(FunctionalSafetyRender, RendersStatusLikeBefore)
+{
+  nebula::drivers::FunctionalSafetyAdvanced functional_safety_advanced(
+    error_definitions(), {0x3333});
+  diagnostic_updater::DiagnosticStatusWrapper status;
+
+  nebula::ros::render(functional_safety_advanced.process(Severity::OK, {0x1111}), status);
   EXPECT_EQ(status.level, diagnostic_msgs::msg::DiagnosticStatus::OK);
   EXPECT_EQ(status.message, "Operating nominally");
+
+  status = diagnostic_updater::DiagnosticStatusWrapper();
+  nebula::ros::render(functional_safety_advanced.process(Severity::OK, {0x2222, 0x3333}), status);
+  EXPECT_EQ(status.level, diagnostic_msgs::msg::DiagnosticStatus::WARN);
+  EXPECT_EQ(status.message, "Sensor reports 1 warnings");
+  ASSERT_EQ(status.values.size(), 3U);
+  EXPECT_EQ(status.values[0].key, "Diagnostic codes");
+  EXPECT_EQ(status.values[0].value, "0x2222, 0x3333");
+  EXPECT_EQ(status.values[1].key, "0x2222");
+  EXPECT_EQ(status.values[1].value, "[W] Bbb");
+  EXPECT_EQ(status.values[2].key, "0x3333");
+  EXPECT_EQ(status.values[2].value, "[Exempted] [E] Ccc");
+}
+
+TEST(FunctionalSafetyRender, MergesPartsLikeACompositeTask)
+{
+  nebula::drivers::FunctionalSafetyMonitor::Report report;
+  report.liveness.is_alive = true;
+  diagnostic_updater::DiagnosticStatusWrapper status;
+
+  nebula::ros::render(report, status);
+  EXPECT_EQ(status.level, diagnostic_msgs::msg::DiagnosticStatus::STALE);
+  EXPECT_EQ(status.message, "No status available; No status available");
+
+  report.status = nebula::drivers::FunctionalSafetyBasic().process(Severity::OK, {});
+  report.is_stuck = true;
+  status = diagnostic_updater::DiagnosticStatusWrapper();
+  nebula::ros::render(report, status);
+  EXPECT_EQ(status.level, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
+  EXPECT_EQ(status.message, "Sensor functional safety system is stuck");
+  EXPECT_EQ(report.level(), nebula::diagnostics::Level::ERROR);
 }

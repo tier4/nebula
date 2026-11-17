@@ -20,9 +20,10 @@
 #include "nebula_core_ros/diagnostics/render.hpp"
 #include "nebula_core_ros/rclcpp_clock.hpp"
 #include "nebula_core_ros/single_consumer_processor.hpp"
-#include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
-#include "nebula_hesai/diagnostics/packet_loss_diagnostic.hpp"
+#include "nebula_hesai/diagnostics/render.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_scan_decoder.hpp"
+#include "nebula_hesai_decoders/diagnostics/functional_safety_monitor.hpp"
+#include "nebula_hesai_decoders/diagnostics/packet_loss_monitor.hpp"
 #include "nebula_hesai_decoders/hesai_driver.hpp"
 
 #include <autoware_utils_debug/debug_publisher.hpp>
@@ -166,8 +167,8 @@ private:
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::Image) blockage_mask_pub_;
 
   diagnostics::RateBoundStatus publish_diagnostic_;
-  std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;
-  std::optional<PacketLossDiagnosticTask> packet_loss_diagnostic_;
+  std::optional<drivers::FunctionalSafetyMonitor> functional_safety_diagnostic_;
+  std::optional<drivers::PacketLossMonitor> packet_loss_diagnostic_;
 
   autoware_utils_debug::BasicDebugPublisher<nebula::agnocast_wrapper::Node> debug_publisher_;
 

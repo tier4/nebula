@@ -14,13 +14,13 @@
 
 #pragma once
 
-#include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
+#include "nebula_hesai_decoders/diagnostics/functional_safety_monitor.hpp"
 
-namespace nebula::ros
+namespace nebula::drivers
 {
 
 /**
- * @brief Forwards sensor error codes and LiDAR status to the diagnostic updater as-is.
+ * @brief Takes over the severity reported by the sensor as-is.
  *
  * Since error names and severities for many Hesai LiDARs are not published to the general
  * public, this module only provides a single status, as reported by the sensor, along with a
@@ -29,19 +29,15 @@ namespace nebula::ros
 class FunctionalSafetyBasic : public FunctionalSafetyStatusProcessor
 {
 public:
-  void populate_status(
-    drivers::FunctionalSafetySeverity severity,
-    const drivers::FunctionalSafetyErrorCodes & error_codes,
-    diagnostic_msgs::msg::DiagnosticStatus & inout_status) override
+  [[nodiscard]] FunctionalSafetyStatus process(
+    FunctionalSafetySeverity severity, const FunctionalSafetyErrorCodes & error_codes) override
   {
-    inout_status.level = detail::severity_to_diagnostic_status_level(severity);
-    inout_status.message = detail::status_to_string(severity, error_codes.size());
-
-    diagnostic_msgs::msg::KeyValue kv;
-    kv.key = "Diagnostic codes";
-    kv.value = detail::error_codes_to_string(error_codes);
-    inout_status.values.push_back(kv);
+    FunctionalSafetyStatus status;
+    status.sensor_severity = severity;
+    status.severity = severity;
+    status.error_codes = error_codes;
+    return status;
   }
 };
 
-}  // namespace nebula::ros
+}  // namespace nebula::drivers
