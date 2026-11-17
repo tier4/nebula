@@ -14,11 +14,15 @@
 
 #pragma once
 
+#include "nebula_hesai_decoders/decoders/functional_safety.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_packet.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_sensor.hpp"
-#include "nebula_hesai_decoders/decoders/pandar_128e3x.hpp"
 
+#include <nebula_core_common/util/bitfield.hpp>
+
+#include <cstdint>
 #include <iostream>
+#include <ostream>
 #include <vector>
 
 namespace nebula::drivers
@@ -29,7 +33,131 @@ namespace hesai_packet
 
 #pragma pack(push, 1)
 
-using Packet128E4X = Packet128E3X;
+struct Tail128E4X
+{
+  uint8_t reserved1[9];
+  uint16_t azimuth_state;
+  uint8_t operational_state;
+  uint8_t return_mode;
+  uint16_t motor_speed;
+  DateTime<1900> date_time;
+  uint32_t timestamp;
+  uint8_t factory_information;
+
+  /* Ignored optional fields */
+
+  uint32_t udp_sequence;
+
+  uint16_t imu_temperature;
+  uint16_t imu_acceleration_unit;
+  uint16_t imu_angular_velocity_unit;
+  uint32_t imu_timestamp;
+  uint16_t imu_x_axis_acceleration;
+  uint16_t imu_y_axis_acceleration;
+  uint16_t imu_z_axis_acceleration;
+  uint16_t imu_x_axis_angular_velocity;
+  uint16_t imu_y_axis_angular_velocity;
+  uint16_t imu_z_axis_angular_velocity;
+
+  uint32_t crc_tail;
+
+  /// @brief Get the azimuth state of the given block in the packet
+  /// @param block_id The block ID (i.e. its index in the packet). Valid IDs are 0 and 1.
+  /// @return The azimuth state number of the block
+  uint8_t get_azimuth_state(unsigned int block_id) const
+  {
+    return (azimuth_state >> (14 - block_id * 2)) & 0b11;
+  }
+};
+
+struct ChannelHealth128E4X
+{
+  uint16_t fault_info_num;
+  uint32_t channel_health_status;
+  uint8_t reserved[2];
+};
+
+struct FunctionalSafety128E4X
+{
+  static constexpr uint64_t update_cycle_ns = 5'000'000;
+
+  enum class LidarState : uint8_t {
+    INITIALIZATION = 0,
+    NORMAL = 1,
+    WARNING = 2,
+    PRE_PERFORMANCE_DEGRADATION = 3,
+    PERFORMANCE_DEGRADATION = 4,
+    PRE_SHUTDOWN = 5,
+    SHUTDOWN_OR_OUTPUT_UNTRUSTED = 6,
+    STANDBY = 7,
+  };
+
+  enum class FaultCodeType : uint8_t {
+    NONE = 0,
+    CURRENT_FAULT = 1,
+    PAST_FAULT = 2  /// Currently unsupported by the sensor
+  };
+
+  uint8_t fs_version;
+
+  uint8_t bitfield1;
+  BITFIELD_ACCESSOR(LidarState, lidar_state, 5, 7, bitfield1)
+  BITFIELD_ACCESSOR(FaultCodeType, fault_code_type, 3, 4, bitfield1)
+  BITFIELD_ACCESSOR(uint8_t, rolling_counter, 0, 2, bitfield1)
+
+  uint8_t bitfield2;
+  BITFIELD_ACCESSOR(uint8_t, total_fault_code_num, 4, 7, bitfield2)
+  BITFIELD_ACCESSOR(uint8_t, fault_code_id, 0, 3, bitfield2)
+
+  uint16_t fault_code;
+  ChannelHealth128E4X channel_health;
+  uint32_t crc_fs;
+
+  [[nodiscard]] FunctionalSafetySeverity severity() const
+  {
+    switch (lidar_state()) {
+      case LidarState::INITIALIZATION:
+      case LidarState::NORMAL:
+      case LidarState::WARNING:
+        return FunctionalSafetySeverity::OK;
+      case LidarState::PRE_PERFORMANCE_DEGRADATION:
+      case LidarState::PERFORMANCE_DEGRADATION:
+      case LidarState::PRE_SHUTDOWN:
+        return FunctionalSafetySeverity::WARNING;
+      case LidarState::SHUTDOWN_OR_OUTPUT_UNTRUSTED:
+      case LidarState::STANDBY:
+      default:
+        return FunctionalSafetySeverity::ERROR;
+    }
+  }
+
+  friend bool operator==(const FunctionalSafety128E4X & lhs, const FunctionalSafety128E4X & rhs)
+  {
+    return lhs.lidar_state() == rhs.lidar_state() &&
+           lhs.fault_code_type() == rhs.fault_code_type() &&
+           lhs.rolling_counter() == rhs.rolling_counter() &&
+           lhs.total_fault_code_num() == rhs.total_fault_code_num() &&
+           lhs.fault_code == rhs.fault_code;
+  }
+
+  friend bool operator!=(const FunctionalSafety128E4X & lhs, const FunctionalSafety128E4X & rhs)
+  {
+    return !(lhs == rhs);
+  }
+};
+
+struct Packet128E4X : public PacketBase<2, 128, 2, 100>
+{
+  using body_t = BodyWithCrc<Block<Unit3B, Packet128E4X::n_channels>, Packet128E4X::n_blocks>;
+  Header12B header;
+  body_t body;
+  FunctionalSafety128E4X fs;
+  Tail128E4X tail;
+
+  /* Ignored optional fields */
+
+  // uint8_t cyber_security[32];
+};
 
 #pragma pack(pop)
 

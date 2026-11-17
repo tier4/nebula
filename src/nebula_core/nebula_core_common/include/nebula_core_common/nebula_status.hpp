@@ -60,6 +60,9 @@ struct Status
       case Status::UDP_CONNECTION_ERROR:
         os << "Udp Connection Error";
         break;
+      case Status::CAN_CONNECTION_ERROR:
+        os << "Can Connection Error";
+        break;
       case Status::SENSOR_CONFIG_ERROR:
         os << "Could not set SensorConfiguration";
         break;

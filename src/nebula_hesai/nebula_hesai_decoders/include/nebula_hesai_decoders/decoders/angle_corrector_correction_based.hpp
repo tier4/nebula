@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
@@ -37,7 +38,6 @@ class AngleCorrectorCorrectionBased : public AngleCorrector<HesaiCorrection, Cha
 private:
   static constexpr size_t max_azimuth = 360 * AngleUnit;
   std::shared_ptr<const HesaiCorrection> correction_;
-  rclcpp::Logger logger_;
 
   std::array<float, max_azimuth> cos_{};
   std::array<float, max_azimuth> sin_{};
@@ -102,21 +102,19 @@ private:
 public:
   explicit AngleCorrectorCorrectionBased(
     const std::shared_ptr<const HesaiCorrection> & sensor_correction)
-  : correction_(sensor_correction), logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased"))
+  : correction_(sensor_correction)
   {
     if (sensor_correction == nullptr) {
       throw std::runtime_error(
         "Cannot instantiate AngleCorrectorCorrectionBased without correction data");
     }
 
-    logger_.set_level(rclcpp::Logger::Level::Debug);
-
     // ////////////////////////////////////////
     // Trigonometry lookup tables
     // ////////////////////////////////////////
 
     for (size_t i = 0; i < max_azimuth; ++i) {
-      float rad = 2.f * i * M_PIf / max_azimuth;
+      float rad = 2.f * i * pi_f / max_azimuth;
       cos_[i] = cosf(rad);
       sin_[i] = sinf(rad);
     }

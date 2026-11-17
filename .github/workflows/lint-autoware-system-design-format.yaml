@@ -16,13 +16,18 @@ on:
       - "**/*.system.yaml"
       - "**/*.parameter_set.yaml"
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Lint system design format files
         uses: autowarefoundation/autoware_system_designer@v0.4.1

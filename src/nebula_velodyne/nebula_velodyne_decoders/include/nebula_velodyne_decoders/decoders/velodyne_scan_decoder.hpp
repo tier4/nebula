@@ -18,7 +18,6 @@
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_velodyne_common/velodyne_calibration_decoder.hpp>
 #include <nebula_velodyne_common/velodyne_common.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
@@ -27,6 +26,7 @@
 
 #include <angles/angles.h>
 
+#include <array>
 #include <cerrno>
 #include <cmath>
 #include <cstdint>
@@ -149,6 +149,13 @@ enum RETURN_TYPE {
   DUAL_ONLY = 7
 };
 
+/// @brief Result of decoding a single packet
+enum class PacketDecodeStatus : uint8_t {
+  OK,                    ///< The packet was decoded
+  INVALID_PACKET_SIZE,   ///< The packet was dropped because its size is not the expected one
+  INVALID_BLOCK_HEADER,  ///< A block header was not recognized, the rest of the packet was skipped
+};
+
 /// @brief Base class for Velodyne LiDAR decoder
 class VelodyneScanDecoder
 {
@@ -158,6 +165,18 @@ private:
   bool has_scanned_{false};
 
 protected:
+  /// @brief Azimuth in radians for each possible wire azimuth value in [deg/100]
+  std::array<float, g_rotation_max_units> rotation_radians_{};
+
+  /// @brief Look up the azimuth in radians for a wire azimuth value.
+  /// The wire value is an unchecked 16-bit field, so it is wrapped into the table's range.
+  /// @param rotation The azimuth value in [deg/100] as sent by the sensor
+  /// @return The azimuth in radians
+  float azimuth_rad(uint16_t rotation) const
+  {
+    return rotation_radians_[rotation % g_rotation_max_units];
+  }
+
   /// @brief Checks if the current packet completes the ongoing scan.
   /// TODO: this has been moved from velodyne_hw_interface.cpp and is a temporary solution until
   /// the Velodyne decoder uses the same structure as Hesai/Robosense
@@ -217,8 +236,10 @@ public:
   VelodyneScanDecoder() = default;
 
   /// @brief Virtual function for parsing and shaping VelodynePacket
-  /// @param pandar_packet
-  virtual void unpack(const std::vector<uint8_t> & packet, double packet_seconds) = 0;
+  /// @param packet The packet payload
+  /// @param packet_seconds The packet's timestamp in seconds, including the sub-second part
+  /// @return OK if the packet was decoded, or the reason it was dropped
+  virtual PacketDecodeStatus unpack(const std::vector<uint8_t> & packet, double packet_seconds) = 0;
   /// @brief Virtual function for parsing VelodynePacket based on packet structure
   /// @param pandar_packet
   /// @return Resulting flag

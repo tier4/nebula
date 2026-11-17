@@ -23,7 +23,6 @@ ament_target_dependencies(
   nebula_core_common
   nebula_velodyne_common
   nebula_core_decoders
-  rclcpp
   velodyne_msgs)
 
 target_link_libraries(nebula_velodyne_decoders PUBLIC Boost::headers)

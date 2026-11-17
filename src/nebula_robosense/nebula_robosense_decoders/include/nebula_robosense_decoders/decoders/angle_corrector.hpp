@@ -16,8 +16,6 @@
 
 #include "nebula_robosense_common/robosense_common.hpp"
 
-#include <rclcpp/rclcpp.hpp>
-
 #include <cstdint>
 #include <memory>
 

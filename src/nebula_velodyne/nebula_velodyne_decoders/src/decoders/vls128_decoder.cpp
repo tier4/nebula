@@ -64,18 +64,18 @@ Vls128Decoder::Vls128Decoder(
 std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
 {
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
-  if (!scan_pc_->empty()) {
-    auto current_azimuth = scan_pc_->back().azimuth;
-    auto phase_diff =
+  const size_t kQuarterTurnDeg = static_cast<size_t>(angles::to_degrees(M_PI_2));
+  // Move the trailing points that already belong to the next scan to the overflow buffer.
+  // The scan may consist only of such points, so the emptiness check must come before back().
+  while (!scan_pc_->empty()) {
+    const auto current_azimuth = scan_pc_->back().azimuth;
+    const auto phase_diff =
       static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
-    size_t kQuarterTurnDeg = static_cast<size_t>(angles::to_degrees(M_PI_2));
-    while (phase_diff < kQuarterTurnDeg && !scan_pc_->empty()) {
-      overflow_pc_->push_back(scan_pc_->back());
-      scan_pc_->pop_back();
-      current_azimuth = scan_pc_->back().azimuth;
-      phase_diff =
-        static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
+    if (phase_diff >= kQuarterTurnDeg) {
+      break;
     }
+    overflow_pc_->push_back(scan_pc_->back());
+    scan_pc_->pop_back();
   }
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
@@ -133,8 +133,13 @@ void Vls128Decoder::reset_overflow(double time_stamp)
   overflow_pc_->reserve(max_pts_);
 }
 
-void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
+PacketDecodeStatus Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
 {
+  // Every fixed-offset access below assumes a full-size packet.
+  if (packet.size() != static_cast<size_t>(g_packet_size)) {
+    return PacketDecodeStatus::INVALID_PACKET_SIZE;
+  }
+
   check_and_handle_scan_complete(packet, packet_seconds, phase_);
 
   const raw_packet_t * raw = (const raw_packet_t *)packet.data();
@@ -164,9 +169,7 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
         bank_origin = 96;
         break;
       default:
-        // Do not flood the log with messages, only issue at most one
-        // of these warnings per minute.
-        return;  // bad packet: skip the rest
+        return PacketDecodeStatus::INVALID_BLOCK_HEADER;  // bad packet: skip the rest
     }
 
     float azimuth_diff;
@@ -328,7 +331,7 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
               current_point.z = z_coord;
               current_point.return_type = return_type;
               current_point.channel = corrections.laser_ring;
-              current_point.azimuth = rotation_radians_[azimuth_corrected];
+              current_point.azimuth = azimuth_rad(azimuth_corrected);
               current_point.elevation = sin_vert_angle;
               current_point.distance = distance;
               auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
@@ -343,6 +346,8 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
     }  // scan area condition
   }  // for (uint block = 0; block < static_cast < uint > (BLOCKS_PER_PACKET - (4 * dual_return));
      // block++)
+
+  return PacketDecodeStatus::OK;
 }
 
 bool Vls128Decoder::parse_packet(

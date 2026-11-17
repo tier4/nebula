@@ -25,6 +25,7 @@ nav = [
       { "QT64" = "parameters/vendors/hesai/qt64.md" },
       { "QT128" = "parameters/vendors/hesai/qt128.md" },
       { "AT128" = "parameters/vendors/hesai/at128.md" },
+      { "AT128P" = "parameters/vendors/hesai/at128p.md" },
       { "XT16" = "parameters/vendors/hesai/xt16.md" },
       { "XT32" = "parameters/vendors/hesai/xt32.md" },
       { "XT32M" = "parameters/vendors/hesai/xt32m.md" },
@@ -55,6 +56,7 @@ nav = [
     { "Contributing to Nebula" = "contributing/index.md" },
     { "Integration Guide" = "integration_guide.md" },
     { "Benchmarking" = "contributing/benchmarking.md" },
+    { "Cutting Releases" = "contributing/cutting_releases.md" },
   ] },
   { "API Reference" = [
     { "API Reference" = "api_reference.md" },

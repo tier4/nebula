@@ -12,6 +12,8 @@
 #ifndef NEBULA_VELODYNE_COMMON__VELODYNE_CALIBRATION_DECODER_HPP_
 #define NEBULA_VELODYNE_COMMON__VELODYNE_CALIBRATION_DECODER_HPP_
 
+#include "nebula_core_common/nebula_status.hpp"
+
 #include <yaml-cpp/yaml.h>
 
 #include <cmath>
@@ -62,8 +64,8 @@ public:
     read(calibration_file);
   }
 
-  void read(const std::string & calibration_file);
-  void write(const std::string & calibration_file);
+  nebula::Status read(const std::string & calibration_file);
+  nebula::Status write(const std::string & calibration_file);
 };
 
 }  // namespace nebula::drivers

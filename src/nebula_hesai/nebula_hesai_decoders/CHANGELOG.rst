@@ -2,6 +2,24 @@
 Changelog for package nebula_hesai_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* fix: build with the conda-forge toolchain (M_PIf, boost/format.hpp) (`#545 <https://github.com/tier4/nebula/issues/545>`_)
+  Replace ``M_PIf``, a glibc extension that the conda-forge (RoboStack) sysroot lacks, and include
+  ``boost/format.hpp`` explicitly.
+* refactor(nebula_hesai_decoders): remove the rclcpp dependency (`#530 <https://github.com/tier4/nebula/issues/530>`_)
+  Remove the leftover rclcpp includes and the unused ``rclcpp::Logger`` member of
+  ``AngleCorrectorCorrectionBased``.
+* Contributors: Max Schmeller
+
+1.4.0 (2026-11-11)
+------------------
+* fix(hesai_decoder): add handling for fault message packets and corresponding tests (`#521 <https://github.com/tier4/nebula/issues/521>`_)
+  Some sensors (e.g. the AT128P) send fault message packets (SOP 0xCDDC) to the data port, which
+  the decoder reported as truncated point cloud packets about 200 times per second. unpack() now
+  returns the new DecodeError::PACKET_IGNORED for them without logging.
+* Contributors: Autumn60
+
 1.3.1 (2026-10-15)
 ------------------
 

@@ -29,6 +29,7 @@ enum class DecodeError : uint8_t {
   PACKET_PARSE_FAILED,  ///< Failed to parse packet structure
   DRIVER_NOT_OK,        ///< Driver status is not OK
   INVALID_PACKET_SIZE,  ///< Packet size is invalid
+  PACKET_IGNORED,       ///< Valid packet without point cloud data (e.g. IMU or fault message)
 };
 
 /// @brief Metadata for a decoded packet

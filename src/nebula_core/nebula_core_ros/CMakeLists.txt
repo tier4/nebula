@@ -31,6 +31,8 @@ target_link_libraries(
   nebula_core_ros PUBLIC rclcpp::rclcpp nebula_core_common::nebula_core_common
                          rosbag2_storage::rosbag2_storage Boost::headers)
 
+ament_target_dependencies(nebula_core_ros PUBLIC sensor_msgs)
+
 install(
   TARGETS nebula_core_ros
   EXPORT export_nebula_core_ros
@@ -50,6 +52,10 @@ if(BUILD_TESTING)
   target_include_directories(test_single_consumer_processor PRIVATE include)
   target_link_libraries(test_single_consumer_processor
                         nebula_core_common::nebula_core_common rcpputils::rcpputils)
+
+  ament_add_gtest(test_severity_latch test/test_severity_latch.cpp)
+  target_link_libraries(test_severity_latch nebula_core_ros
+                        diagnostic_updater::diagnostic_updater)
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
@@ -69,7 +75,7 @@ install(
 install(DIRECTORY templates DESTINATION share/${PROJECT_NAME})
 
 ament_export_dependencies(Boost diagnostic_msgs diagnostic_updater
-                          nebula_core_common rclcpp rosbag2_storage)
+                          nebula_core_common rclcpp rosbag2_storage sensor_msgs)
 
 if(DEFINED ENV{ENABLE_AGNOCAST} AND "$ENV{ENABLE_AGNOCAST}" STREQUAL "1")
   ament_export_dependencies(agnocastlib glog)

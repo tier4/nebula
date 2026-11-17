@@ -63,15 +63,16 @@ Vlp32Decoder::Vlp32Decoder(
 std::tuple<drivers::NebulaPointCloudPtr, double> Vlp32Decoder::get_pointcloud()
 {
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
-  if (!scan_pc_->empty()) {
-    auto current_azimuth = scan_pc_->back().azimuth;
-    auto phase_diff = (2 * M_PI + current_azimuth - phase);
-    while (phase_diff < M_PI_2 && !scan_pc_->empty()) {
-      overflow_pc_->push_back(scan_pc_->back());
-      scan_pc_->pop_back();
-      current_azimuth = scan_pc_->back().azimuth;
-      phase_diff = (2 * M_PI + current_azimuth - phase);
+  // Move the trailing points that already belong to the next scan to the overflow buffer.
+  // The scan may consist only of such points, so the emptiness check must come before back().
+  while (!scan_pc_->empty()) {
+    const auto current_azimuth = scan_pc_->back().azimuth;
+    const auto phase_diff = (2 * M_PI + current_azimuth - phase);
+    if (phase_diff >= M_PI_2) {
+      break;
     }
+    overflow_pc_->push_back(scan_pc_->back());
+    scan_pc_->pop_back();
   }
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
@@ -129,8 +130,13 @@ void Vlp32Decoder::reset_overflow(double time_stamp)
   overflow_pc_->reserve(max_pts_);
 }
 
-void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
+PacketDecodeStatus Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
 {
+  // Every fixed-offset access below assumes a full-size packet.
+  if (packet.size() != static_cast<size_t>(g_packet_size)) {
+    return PacketDecodeStatus::INVALID_PACKET_SIZE;
+  }
+
   check_and_handle_scan_complete(packet, packet_seconds, phase_);
 
   const raw_packet_t * raw = (const raw_packet_t *)packet.data();
@@ -368,7 +374,7 @@ void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
           current_point.z = z_coord;
           current_point.return_type = static_cast<uint8_t>(return_type);
           current_point.channel = corrections.laser_ring;
-          current_point.azimuth = rotation_radians_[block.rotation];
+          current_point.azimuth = azimuth_rad(block.rotation);
           current_point.elevation = sin_vert_angle;
           auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
           if (point_ts < 0) point_ts = 0;
@@ -380,6 +386,8 @@ void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
       }
     }
   }
+
+  return PacketDecodeStatus::OK;
 }
 
 bool Vlp32Decoder::parse_packet(

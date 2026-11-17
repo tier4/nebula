@@ -30,6 +30,8 @@
 
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace nebula::ros
 {
@@ -78,6 +80,14 @@ public:
   void receive_scan_msg_callback(const nebula_msgs::msg::NebulaPackets::SharedPtr scan_msg);
   Status get_status();
   void read_bag();
+
+  /// @brief Feed a raw packet to the decoder (used for malformed-packet tests)
+  bool process_packet(std::vector<uint8_t> data)
+  {
+    auto packet_msg = std::make_unique<nebula_msgs::msg::NebulaPacket>();
+    packet_msg->data = std::move(data);
+    return driver_ptr_->process_packet(std::move(packet_msg));
+  }
 
 private:
   std::string bag_path_{};

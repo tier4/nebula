@@ -2,6 +2,26 @@
 Changelog for package nebula_core_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2026-11-16)
+------------------
+* build(nebula_core_decoders): use own thread safety annotations, drop rcpputils (`#544 <https://github.com/tier4/nebula/issues/544>`_)
+  rcpputils was only needed for its thread safety annotation macros. nebula_core_common now
+  defines the ones Nebula uses as NEBULA_TSA\_*.
+* fix(nebula_core_common): reject negative throttle periods in Logger (`#542 <https://github.com/tier4/nebula/issues/542>`_)
+  A negative period wrapped around to a huge unsigned one, so that every message after the first
+  was dropped.
+* feat(nebula_core_common): add throttled and log-once logging to Logger (`#536 <https://github.com/tier4/nebula/issues/536>`_)
+  Add ``Logger::throttled(period)`` and ``Logger::once()``, with state kept per logger instance and
+  call site. ``NEBULA_LOG_STREAM`` no longer builds messages that are dropped.
+* Contributors: Max Schmeller
+
+1.4.0 (2026-11-11)
+------------------
+* fix(common): replace deprecated std::is_pod_v with non-deprecated traits (`#492 <https://github.com/tier4/nebula/issues/492>`_)
+  std::is_pod_v is deprecated since C++20. PointCloud and the PCD reader/writer now use a new
+  is_pod_like_v<T> trait (standard layout, trivially copyable and trivially default-constructible).
+* Contributors: Max Schmeller
+
 1.3.1 (2026-10-15)
 ------------------
 

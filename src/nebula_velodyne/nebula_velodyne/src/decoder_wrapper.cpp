@@ -4,6 +4,7 @@
 
 #include <nebula_core_common/util/string_conversions.hpp>
 #include <nebula_core_ros/point_cloud_conversions.hpp>
+#include <nebula_core_ros/rclcpp_logger.hpp>
 #include <rclcpp/time.hpp>
 
 #include <algorithm>
@@ -23,7 +24,7 @@ VelodyneDecoderWrapper::VelodyneDecoderWrapper(
   const std::shared_ptr<nebula::drivers::VelodyneHwInterface> & hw_interface,
   std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config)
 : status_(nebula::Status::NOT_INITIALIZED),
-  logger_(parent_node->get_logger().get_child("VelodyneDecoder")),
+  logger_(parent_node->get_logger().get_child("DecoderWrapper")),
   hw_interface_(hw_interface),
   sensor_cfg_(config)
 {
@@ -47,7 +48,9 @@ VelodyneDecoderWrapper::VelodyneDecoderWrapper(
 
   RCLCPP_INFO(logger_, "Starting Decoder");
 
-  driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(config, calibration_cfg_ptr_);
+  driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(
+    config, calibration_cfg_ptr_,
+    std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Decoder")));
   status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
@@ -86,7 +89,9 @@ void VelodyneDecoderWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & new_config)
 {
   std::lock_guard lock(mtx_driver_ptr_);
-  auto new_driver = std::make_shared<drivers::VelodyneDriver>(new_config, calibration_cfg_ptr_);
+  auto new_driver = std::make_shared<drivers::VelodyneDriver>(
+    new_config, calibration_cfg_ptr_,
+    std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Decoder")));
   driver_ptr_ = new_driver;
   sensor_cfg_ = new_config;
 }
@@ -95,7 +100,9 @@ void VelodyneDecoderWrapper::on_calibration_change(
   const std::shared_ptr<const nebula::drivers::VelodyneCalibrationConfiguration> & new_calibration)
 {
   std::lock_guard lock(mtx_driver_ptr_);
-  auto new_driver = std::make_shared<drivers::VelodyneDriver>(sensor_cfg_, new_calibration);
+  auto new_driver = std::make_shared<drivers::VelodyneDriver>(
+    sensor_cfg_, new_calibration,
+    std::make_shared<drivers::loggers::RclcppLogger>(logger_.get_child("Decoder")));
   driver_ptr_ = new_driver;
   calibration_cfg_ptr_ = new_calibration;
   calibration_file_path_ = calibration_cfg_ptr_->calibration_file;

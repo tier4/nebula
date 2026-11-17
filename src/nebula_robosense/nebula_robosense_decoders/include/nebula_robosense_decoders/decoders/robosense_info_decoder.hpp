@@ -17,10 +17,12 @@
 #include "nebula_robosense_common/robosense_common.hpp"
 #include "nebula_robosense_decoders/decoders/robosense_info_decoder_base.hpp"
 
-#include <rclcpp/rclcpp.hpp>
+#include <nebula_core_common/loggers/logger.hpp>
 
 #include <cstdint>
+#include <cstring>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -37,7 +39,7 @@ protected:
   /// @brief The last decoded packet
   typename SensorT::info_t packet_{};
 
-  rclcpp::Logger logger_;
+  std::shared_ptr<loggers::Logger> logger_;
 
 public:
   /// @brief Validates and parses DIFOP packet. Currently only checks size, not checksums etc.
@@ -47,9 +49,9 @@ public:
   {
     const auto packet_size = raw_packet.size();
     if (packet_size < sizeof(typename SensorT::info_t)) {
-      RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch: " << packet_size << " | Expected at least: "
-                                          << sizeof(typename SensorT::info_t));
+      NEBULA_LOG_STREAM(
+        logger_->error, "Packet size mismatch: " << packet_size << " | Expected at least: "
+                                                 << sizeof(typename SensorT::info_t));
       return false;
     }
     try {
@@ -57,16 +59,16 @@ public:
         return true;
       }
     } catch (const std::exception & e) {
-      RCLCPP_ERROR_STREAM(logger_, "Packet memcopy failed: " << e.what());
+      NEBULA_LOG_STREAM(logger_->error, "Packet memcopy failed: " << e.what());
     }
 
     return false;
   }
 
   /// @brief Constructor
-  RobosenseInfoDecoder() : logger_(rclcpp::get_logger("RobosenseInfoDecoder"))
+  /// @param logger Logger used by this decoder
+  explicit RobosenseInfoDecoder(const std::shared_ptr<loggers::Logger> & logger) : logger_(logger)
   {
-    logger_.set_level(rclcpp::Logger::Level::Debug);
   }
 
   /// @brief Get the sensor telemetry

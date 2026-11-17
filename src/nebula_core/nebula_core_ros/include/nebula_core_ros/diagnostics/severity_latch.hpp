@@ -63,6 +63,8 @@ public:
     // replaced with the new status, even if that new status has a lower severity.
     if (status.level >= current_status_->level || should_reset_) {
       current_status_ = status;
+      // The status of the previous cycle is gone, latch within the new cycle from here on.
+      should_reset_ = false;
     }
   }
 

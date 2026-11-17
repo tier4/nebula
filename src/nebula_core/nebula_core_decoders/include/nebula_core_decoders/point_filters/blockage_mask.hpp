@@ -21,7 +21,7 @@
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_common/util/expected.hpp>
 #include <nebula_core_common/util/string_conversions.hpp>
-#include <rcpputils/thread_safety_annotations.hpp>
+#include <nebula_core_common/util/thread_safety_annotations.hpp>
 
 #include <boost/range/algorithm/fill.hpp>
 
@@ -183,7 +183,7 @@ private:
   uint32_t bin_width_mdeg_;
 
   std::mutex callback_mutex_;
-  callback_t callback_ RCPPUTILS_TSA_GUARDED_BY(callback_mutex_);
+  callback_t callback_ NEBULA_TSA_GUARDED_BY(callback_mutex_);
 };
 
 }  // namespace nebula::drivers::point_filters
