@@ -51,7 +51,7 @@ Sensor options (apply to the latest --sensor; without --sensor there is one impl
   --return-mode R       e.g. Dual, Strongest, Last (default auto: read from the packets; Robosense
                         always takes it from the info packets)
   --calibration-file F  calibration file (default: the one shipped with the decoder package;
-                        for PandarAT128 set the correction file with -p correction_file:=F)
+                        for PandarAT128/AT128P set the correction file with -p correction_file:=F)
   --frame-id ID         frame_id of the output clouds (default: lidar)
   --params-file F       ROS param YAML (e.g. src/nebula_velodyne/nebula_velodyne/config/VLP16.param.yaml)
   -p name:=value        any other driver parameter (cut_angle, sync_angle, scan_phase,

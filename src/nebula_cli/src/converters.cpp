@@ -99,8 +99,9 @@ public:
     cfg.cloud_max_angle = static_cast<uint16_t>(p.get_int("cloud_max_angle", 360));
     cfg.hires_mode = p.get_string("hires_mode", "false") == "true";
 
-    // AT128 uses a correction file instead of a calibration file
-    const bool is_at128 = cfg.sensor_model == drivers::SensorModel::HESAI_PANDARAT128;
+    // AT128 and AT128P use a correction file instead of a calibration file
+    const bool is_at128 = cfg.sensor_model == drivers::SensorModel::HESAI_PANDARAT128 ||
+                          cfg.sensor_model == drivers::SensorModel::HESAI_AT128P;
     const auto model = p.get_string("sensor_model", "");
     std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calib;
     if (is_at128) {

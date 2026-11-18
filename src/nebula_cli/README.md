@@ -34,7 +34,7 @@ Input topic types: `PandarScan`, `VelodyneScan`, `RobosenseScan`, `NebulaPackets
 - Robosense needs `--info-topic` (`RobosenseInfoPacket`): calibration and return mode come from it.
   Scan packets before the first info packet are dropped.
 - Calibration files default to those shipped with the vendor `_decoders` package.
-  For PandarAT128 pass the correction file with `-p correction_file:=<path>`.
+  For PandarAT128 and AT128P (pass `--model AT128P`, it is detected as PandarAT128) pass the correction file with `-p correction_file:=<path>`.
 - Continental radars are not supported (they do not produce point clouds).
 
 ## Output point fields

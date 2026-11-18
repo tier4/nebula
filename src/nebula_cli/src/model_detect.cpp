@@ -57,7 +57,8 @@ constexpr HesaiSize hesai_size(const char * model)
   return {model, sizeof(PacketT), hesai_return_byte<PacketT>};
 }
 
-// Pandar128E3X is left out: it has the same size as Pandar128E4X and no `--model` name.
+// AT128P is left out: it has the AT128E2X packet format, so it is detected as PandarAT128 and
+// needs `--model AT128P`.
 constexpr HesaiSize kHesai[] = {
   hesai_size<Packet64>("Pandar64"),         hesai_size<Packet40P>("Pandar40P"),
   hesai_size<PacketQT64>("PandarQT64"),     hesai_size<PacketQT128C2X>("PandarQT128"),
