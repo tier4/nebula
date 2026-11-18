@@ -228,7 +228,7 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
       declare_parameter<double>("dual_return_distance_threshold", descriptor);
   }
 
-  std::string calibration_parameter_name = get_calibration_parameter_name(config.sensor_model);
+  std::string calibration_parameter_name = drivers::calibration_parameter_name(config.sensor_model);
   config.calibration_path =
     declare_parameter<std::string>(calibration_parameter_name, param_read_write());
   config.calibration_download_enabled =
@@ -463,7 +463,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
 
   std::string return_mode{};
   std::string calibration_parameter_name =
-    get_calibration_parameter_name(sensor_cfg_ptr_->sensor_model);
+    drivers::calibration_parameter_name(sensor_cfg_ptr_->sensor_model);
   std::string downsample_mask_path = new_cfg.downsample_mask_path.value_or("");
 
   int64_t blockage_mask_horizontal_bin_size_mdeg = 0;
@@ -603,30 +603,11 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
   }
 }
 
-std::string HesaiRosWrapper::get_calibration_parameter_name(drivers::SensorModel model) const
-{
-  if (
-    model == drivers::SensorModel::HESAI_PANDARAT128 ||
-    model == drivers::SensorModel::HESAI_AT128P) {
-    return "correction_file";
-  }
-
-  return "calibration_file";
-}
-
 HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
   const std::string & calibration_file_path, bool ignore_others)
 {
-  std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calib;
+  auto calib = drivers::make_calibration(sensor_cfg_ptr_->sensor_model);
   const auto & logger = get_logger();
-
-  if (
-    sensor_cfg_ptr_->sensor_model == drivers::SensorModel::HESAI_PANDARAT128 ||
-    sensor_cfg_ptr_->sensor_model == drivers::SensorModel::HESAI_AT128P) {
-    calib = std::make_shared<drivers::HesaiCorrection>();
-  } else {
-    calib = std::make_shared<drivers::HesaiCalibrationConfiguration>();
-  }
 
   std::filesystem::path calibration_from_sensor_path{calibration_file_path};
   calibration_from_sensor_path = calibration_from_sensor_path.replace_extension(

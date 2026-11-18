@@ -104,12 +104,6 @@ private:
   Status validate_and_set_config(
     std::shared_ptr<const drivers::HesaiSensorConfiguration> & new_config);
 
-  /// @brief The ROS 2 parameter holding the calibration file path is called differently depending
-  /// on the sensor model. This function returns the correct parameter name given a model.
-  /// @param model The sensor model
-  /// @return std::string The parameter name
-  std::string get_calibration_parameter_name(drivers::SensorModel model) const;
-
   /// @brief Load calibration data from the best available source:
   /// 1. If sensor connected, download and save from sensor
   /// 2. If downloaded file available, load that file

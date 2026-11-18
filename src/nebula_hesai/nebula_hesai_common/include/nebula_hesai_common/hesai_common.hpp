@@ -25,6 +25,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -830,6 +831,31 @@ inline bool supports_blockage_mask(const SensorModel & sensor_model)
     default:
       return false;
   }
+}
+
+/// @brief Whether the sensor model's angles are corrected with a correction file
+/// (HesaiCorrection) instead of a calibration file (HesaiCalibrationConfiguration)
+inline bool uses_correction_file(const SensorModel & sensor_model)
+{
+  return sensor_model == SensorModel::HESAI_PANDARAT128 ||
+         sensor_model == SensorModel::HESAI_AT128P;
+}
+
+/// @brief The parameter that holds the path of the sensor model's calibration data
+inline std::string calibration_parameter_name(const SensorModel & sensor_model)
+{
+  return uses_correction_file(sensor_model) ? "correction_file" : "calibration_file";
+}
+
+/// @brief Empty calibration data of the type that the sensor model uses, to be loaded from a file
+/// or from bytes
+inline std::shared_ptr<HesaiCalibrationConfigurationBase> make_calibration(
+  const SensorModel & sensor_model)
+{
+  if (uses_correction_file(sensor_model)) {
+    return std::make_shared<HesaiCorrection>();
+  }
+  return std::make_shared<HesaiCalibrationConfiguration>();
 }
 
 }  // namespace drivers
