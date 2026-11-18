@@ -20,6 +20,15 @@ target_link_libraries(
          nebula_core_decoders::nebula_core_decoders
          Boost::headers)
 
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+
+  ament_add_gtest(test_packet_loss_detector tests/test_packet_loss_detector.cpp)
+  target_link_libraries(test_packet_loss_detector nebula_hesai_decoders)
+endif()
+
 install(TARGETS nebula_hesai_decoders EXPORT export_nebula_hesai_decoders)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 

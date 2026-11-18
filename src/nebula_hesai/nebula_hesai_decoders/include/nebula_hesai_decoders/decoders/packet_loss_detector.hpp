@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <optional>
 #include <utility>
 
@@ -56,10 +57,14 @@ public:
       return;
     }
 
-    udp_sequence_t next_expected_sequence = *previous_udp_sequence_ + 1;
-    if (packet.tail.udp_sequence != next_expected_sequence) {
-      uint64_t n_lost = packet.tail.udp_sequence - next_expected_sequence;
-      if (on_lost_) on_lost_(n_lost);
+    // Sequence numbers wrap around, so the gap is taken modulo the range of udp_sequence_t. A gap
+    // in the upper half of that range means that the sequence number went backwards, e.g. because
+    // a packet was duplicated or reordered, or because the sensor restarted. That is not a loss.
+    const auto n_lost =
+      static_cast<udp_sequence_t>(packet.tail.udp_sequence - *previous_udp_sequence_ - 1);
+    const bool went_backwards = n_lost > std::numeric_limits<udp_sequence_t>::max() / 2;
+    if (n_lost != 0 && !went_backwards && on_lost_) {
+      on_lost_(n_lost);
     }
 
     previous_udp_sequence_.emplace(packet.tail.udp_sequence);
