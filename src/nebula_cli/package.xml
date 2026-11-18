@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>nebula_cli</name>
+  <version>1.3.1</version>
+  <description>Offline CLI converting recorded sensor packets in a rosbag to PointCloud2</description>
+  <maintainer email="abraham.cano@tier4.jp">Abraham Cano</maintainer>
+
+  <license>Apache 2</license>
+  <author>TIER IV</author>
+
+  <buildtool_depend>autoware_cmake</buildtool_depend>
+
+  <depend>ament_index_cpp</depend>
+  <depend>builtin_interfaces</depend>
+  <depend>nebula_core_common</depend>
+  <depend>nebula_core_ros</depend>
+  <depend>nebula_hesai_common</depend>
+  <depend>nebula_hesai_decoders</depend>
+  <depend>nebula_msgs</depend>
+  <depend>nebula_robosense_common</depend>
+  <depend>nebula_robosense_decoders</depend>
+  <depend>nebula_velodyne_common</depend>
+  <depend>nebula_velodyne_decoders</depend>
+  <depend>pandar_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>robosense_msgs</depend>
+  <depend>rosbag2_cpp</depend>
+  <depend>rosbag2_storage</depend>
+  <depend>sensor_msgs</depend>
+  <depend>velodyne_msgs</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
