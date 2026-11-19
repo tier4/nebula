@@ -18,7 +18,6 @@
 #include <cstdint>
 #include <ctime>
 #include <optional>
-#include <stdexcept>
 #include <type_traits>
 namespace nebula::drivers::hesai_packet
 {
@@ -199,7 +198,7 @@ struct PacketBase
 /// @brief Get the number of returns for a given return mode
 /// @param return_mode The return mode
 /// @return The number of returns, or nothing if the return mode is unknown
-inline std::optional<int> try_get_n_returns(uint8_t return_mode)
+inline std::optional<int> try_get_n_returns(uint8_t return_mode) noexcept
 {
   switch (return_mode) {
     case return_mode::SINGLE_FIRST:
@@ -218,18 +217,6 @@ inline std::optional<int> try_get_n_returns(uint8_t return_mode)
     default:
       return std::nullopt;
   }
-}
-
-/// @brief Get the number of returns for a given return mode
-/// @param return_mode The return mode
-/// @return The number of returns
-/// @throws std::runtime_error if the return mode is unknown
-inline int get_n_returns(uint8_t return_mode)
-{
-  if (const auto n_returns = try_get_n_returns(return_mode)) {
-    return *n_returns;
-  }
-  throw std::runtime_error("Unknown return mode");
 }
 
 /// @brief Get timestamp from packet in nanoseconds

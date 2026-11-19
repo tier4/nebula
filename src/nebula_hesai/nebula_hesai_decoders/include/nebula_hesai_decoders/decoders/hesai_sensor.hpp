@@ -101,26 +101,29 @@ public:
   /// of the point identified by the given block and channel, in nanoseconds
   /// @param block_id The point's block id
   /// @param channel_id The point's channel id
+  /// @param n_returns The number of returns of the packet's return mode
   /// @param packet The packet
   /// @return The relative time offset in nanoseconds
   virtual int get_packet_relative_point_time_offset(
-    uint32_t block_id, uint32_t channel_id, const PacketT & packet) = 0;
+    uint32_t block_id, uint32_t channel_id, uint32_t n_returns, const PacketT & packet) = 0;
 
   /// @brief For a given start block index, find the earliest (lowest) relative time offset of any
   /// point in the packet in or after the start block
   /// @param start_block_id The index of the block in and after which to consider points
+  /// @param n_returns The number of returns of the packet's return mode
   /// @param packet The packet
   /// @return The lowest point time offset (relative to the packet timestamp) of any point in or
   /// after the start block, in nanoseconds
-  int get_earliest_point_time_offset_for_block(uint32_t start_block_id, const PacketT & packet)
+  int get_earliest_point_time_offset_for_block(
+    uint32_t start_block_id, uint32_t n_returns, const PacketT & packet)
   {
-    unsigned int n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int min_offset_ns = 0x7FFFFFFF;  // MAXINT (max. positive value)
 
     for (uint32_t block_id = start_block_id; block_id < start_block_id + n_returns; ++block_id) {
       for (uint32_t channel_id = 0; channel_id < PacketT::n_channels; ++channel_id) {
         min_offset_ns = std::min(
-          min_offset_ns, get_packet_relative_point_time_offset(block_id, channel_id, packet));
+          min_offset_ns,
+          get_packet_relative_point_time_offset(block_id, channel_id, n_returns, packet));
       }
     }
 
