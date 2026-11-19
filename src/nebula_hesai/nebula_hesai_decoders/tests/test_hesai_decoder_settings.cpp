@@ -105,12 +105,13 @@ TEST(HesaiDecoderSettings, RejectsCutAngleOutsideOfWrappedFov)
 
 TEST(HesaiDecoderSettings, RejectsCutAngleOutsideOfFullCircle)
 {
-  const std::array<std::pair<uint16_t, uint16_t>, 3> fovs{{{0, 360}, {270, 90}, {90, 90}}};
+  const std::array<std::pair<uint16_t, uint16_t>, 3> fields_of_view{
+    {{0, 360}, {270, 90}, {90, 90}}};
   const std::array<double, 5> cut_angles{
     -1.0, 361.0, std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity(),
     -std::numeric_limits<double>::infinity()};
 
-  for (const auto & [fov_start, fov_end] : fovs) {
+  for (const auto & [fov_start, fov_end] : fields_of_view) {
     for (const double cut_angle : cut_angles) {
       auto config = valid_configuration();
       config.cloud_min_angle = fov_start;
