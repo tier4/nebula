@@ -18,6 +18,7 @@
 
 #include <array>
 #include <initializer_list>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -28,6 +29,8 @@ namespace
 {
 
 using nebula::drivers::AdvancedFunctionalSafetyConfiguration;
+using nebula::drivers::HesaiCalibrationConfiguration;
+using nebula::drivers::HesaiCorrection;
 using nebula::drivers::HesaiSensorConfiguration;
 using nebula::drivers::PtpProfile;
 using nebula::drivers::PtpSwitchType;
@@ -218,6 +221,32 @@ TEST(HesaiCommonTest, SupportPredicatesReflectVendorCapabilities)
 
   EXPECT_TRUE(nebula::drivers::supports_blockage_mask(SensorModel::HESAI_PANDAR128_E4X));
   EXPECT_FALSE(nebula::drivers::supports_blockage_mask(SensorModel::HESAI_PANDARQT128));
+}
+
+TEST(HesaiCommonTest, CalibrationTypeAndParameterFollowSensorModel)
+{
+  for (const auto sensor_model : {SensorModel::HESAI_PANDARAT128, SensorModel::HESAI_AT128P}) {
+    SCOPED_TRACE(testing::Message() << sensor_model);
+    EXPECT_TRUE(nebula::drivers::uses_correction_file(sensor_model));
+    EXPECT_EQ(nebula::drivers::calibration_parameter_name(sensor_model), "correction_file");
+    EXPECT_NE(
+      std::dynamic_pointer_cast<HesaiCorrection>(nebula::drivers::make_calibration(sensor_model)),
+      nullptr);
+  }
+
+  for (const auto sensor_model :
+       {SensorModel::HESAI_PANDAR64, SensorModel::HESAI_PANDAR40P, SensorModel::HESAI_PANDAR40M,
+        SensorModel::HESAI_PANDARQT64, SensorModel::HESAI_PANDARQT128,
+        SensorModel::HESAI_PANDARXT16, SensorModel::HESAI_PANDARXT32,
+        SensorModel::HESAI_PANDARXT32M, SensorModel::HESAI_PANDAR128_E4X}) {
+    SCOPED_TRACE(testing::Message() << sensor_model);
+    EXPECT_FALSE(nebula::drivers::uses_correction_file(sensor_model));
+    EXPECT_EQ(nebula::drivers::calibration_parameter_name(sensor_model), "calibration_file");
+    EXPECT_NE(
+      std::dynamic_pointer_cast<HesaiCalibrationConfiguration>(
+        nebula::drivers::make_calibration(sensor_model)),
+      nullptr);
+  }
 }
 
 TEST(HesaiCommonTest, AdvancedFunctionalSafetyConfigurationStreamingReflectsConfiguredValues)
