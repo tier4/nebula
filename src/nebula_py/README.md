@@ -21,6 +21,14 @@ for message in messages:  # e.g. read with rosbag2_py
             ...
 ```
 
+[`examples/decode_hesai_bag.py`](examples/decode_hesai_bag.py) is a runnable version that reads a
+rosbag and logs the points per scan, packet loss and decode errors. Without arguments, it decodes a
+recording from the test resources of `nebula_hesai`:
+
+```bash
+python3 src/nebula_py/examples/decode_hesai_bag.py [--bag BAG] [--params PARAMS] [--topic TOPIC]
+```
+
 - Packets are the unit of work, the messages are only containers. Scans do not have to be aligned
   with messages.
 - `lost_packets` is the number of packets lost since the previous scan. It is `None` for sensor

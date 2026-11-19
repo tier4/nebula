@@ -13,6 +13,8 @@
 # limitations under the License.
 
 from pathlib import Path
+import subprocess
+import sys
 
 from ament_index_python.packages import get_package_share_directory
 from nebula_msgs.msg import NebulaPacket
@@ -248,3 +250,13 @@ def test_rejects_invalid_parameters(xt32_parameters):
 def test_rejects_other_message_types(xt32_parameters):
     with pytest.raises(TypeError):
         HesaiDecoder(xt32_parameters).decode(b"")
+
+
+def test_example_runs():
+    example = Path(__file__).parents[1] / "examples" / "decode_hesai_bag.py"
+
+    output = subprocess.run(
+        [sys.executable, str(example)], check=True, capture_output=True, text=True
+    )
+
+    assert "points" in output.stderr
