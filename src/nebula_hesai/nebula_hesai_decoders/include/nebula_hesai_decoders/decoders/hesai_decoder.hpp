@@ -394,7 +394,18 @@ public:
     // past, and since the frame check sequence of the packet is already checked by the NIC, we skip
     // it here.
 
-    const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
+    // Unknown return modes, and ones with more returns than the packet has room for (which would
+    // read past its last block), cannot be decoded.
+    const auto n_returns_or_unknown = hesai_packet::try_get_n_returns(packet_.tail.return_mode);
+    if (
+      !n_returns_or_unknown ||
+      *n_returns_or_unknown > static_cast<int>(SensorT::packet_t::max_returns)) {
+      NEBULA_LOG_STREAM(
+        logger_->error, "Unsupported return mode: 0x" << std::hex << +packet_.tail.return_mode);
+      return {PerformanceCounters{decode_watch.elapsed_ns()}, DecodeError::PACKET_PARSE_FAILED};
+    }
+
+    const size_t n_returns = *n_returns_or_unknown;
     for (size_t block_id = 0; block_id < SensorT::packet_t::n_blocks; block_id += n_returns) {
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
