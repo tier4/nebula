@@ -18,6 +18,7 @@
 #include <nebula_core_decoders/angles.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 
+#include <cmath>
 #include <filesystem>
 #include <string>
 #include <variant>
@@ -36,6 +37,10 @@ inline util::expected<std::monostate, std::string> validate_decoder_settings(
 
   if (config.cloud_min_angle > 360 || config.cloud_max_angle > 360) {
     return std::string("The FoV has to be within 0 and 360 deg.");
+  }
+
+  if (!std::isfinite(config.cut_angle) || config.cut_angle < 0 || config.cut_angle > 360) {
+    return std::string("The cut angle has to be within 0 and 360 deg.");
   }
 
   if (!angle_is_between<double>(config.cloud_min_angle, config.cloud_max_angle, config.cut_angle)) {

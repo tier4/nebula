@@ -16,7 +16,11 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
+#include <cstdint>
+#include <limits>
 #include <string>
+#include <utility>
 
 namespace nebula::drivers
 {
@@ -81,6 +85,41 @@ TEST(HesaiDecoderSettings, RejectsCutAngleOutsideOfFov)
 
   config.cut_angle = 180.0;
   EXPECT_TRUE(validate_decoder_settings(config).has_value());
+}
+
+TEST(HesaiDecoderSettings, RejectsCutAngleOutsideOfWrappedFov)
+{
+  auto config = valid_configuration();
+  config.cloud_min_angle = 270;
+  config.cloud_max_angle = 90;
+
+  config.cut_angle = 180.0;
+  EXPECT_FALSE(validate_decoder_settings(config).has_value());
+
+  config.cut_angle = 0.0;
+  EXPECT_TRUE(validate_decoder_settings(config).has_value());
+
+  config.cut_angle = 90.0;
+  EXPECT_TRUE(validate_decoder_settings(config).has_value());
+}
+
+TEST(HesaiDecoderSettings, RejectsCutAngleOutsideOfFullCircle)
+{
+  const std::array<std::pair<uint16_t, uint16_t>, 3> fovs{{{0, 360}, {270, 90}, {90, 90}}};
+  const std::array<double, 5> cut_angles{
+    -1.0, 361.0, std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity(),
+    -std::numeric_limits<double>::infinity()};
+
+  for (const auto & [fov_start, fov_end] : fovs) {
+    for (const double cut_angle : cut_angles) {
+      auto config = valid_configuration();
+      config.cloud_min_angle = fov_start;
+      config.cloud_max_angle = fov_end;
+      config.cut_angle = cut_angle;
+      EXPECT_FALSE(validate_decoder_settings(config).has_value())
+        << "FoV " << fov_start << " to " << fov_end << " deg, cut angle " << cut_angle;
+    }
+  }
 }
 
 TEST(HesaiDecoderSettings, RejectsCutAtFovStartForPartialFov)
