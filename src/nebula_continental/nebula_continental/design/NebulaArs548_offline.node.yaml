@@ -57,8 +57,15 @@ override:
         - to_output: continental_detections
         - to_output: detection_points
         - to_output: scan_raw
-        - to_output: radar_info
         - to_queue: decode_status
+    - name: publish_radar_info
+      description: Publishes the radar info, subsampled from detection lists.
+      trigger_conditions:
+        - and:
+            - on_trigger: publish_detections
+            - periodic: $(eval 10 / ${parameter radar_info_rate_subsample}) # Hz
+      outcomes:
+        - to_output: radar_info
     - name: publish_objects
       description: Decodes and publishes object lists.
       trigger_conditions:
