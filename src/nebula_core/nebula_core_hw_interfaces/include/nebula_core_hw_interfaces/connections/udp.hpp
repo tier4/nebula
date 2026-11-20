@@ -82,25 +82,6 @@ class UdpSocket
     msghdr msg{};
   };
 
-  class DropMonitor
-  {
-    uint32_t last_drop_counter_{0};
-
-  public:
-    uint32_t get_drops_since_last_receive(uint32_t current_drop_counter)
-    {
-      uint32_t last = last_drop_counter_;
-      last_drop_counter_ = current_drop_counter;
-
-      bool counter_did_wrap = current_drop_counter < last;
-      if (counter_did_wrap) {
-        return (UINT32_MAX - last) + current_drop_counter;
-      }
-
-      return current_drop_counter - last;
-    }
-  };
-
   UdpSocket(SockFd sock_fd, SocketConfig config) : sock_fd_(std::move(sock_fd)), config_{config} {}
 
 public:
@@ -132,9 +113,6 @@ public:
 
       // Enable kernel-space receive time measurement
       sock_fd_.setsockopt(SOL_SOCKET, SO_TIMESTAMP, 1).value_or_throw();
-
-      // Enable reporting on packets dropped due to full UDP receive buffer
-      sock_fd_.setsockopt(SOL_SOCKET, SO_RXQ_OVFL, 1).value_or_throw();
     }
 
     /**
@@ -254,7 +232,6 @@ public:
   struct RxMetadata
   {
     std::optional<uint64_t> timestamp_ns;
-    uint64_t n_packets_dropped_since_last_receive{0};
     PerfCounters packet_perf_counters{};
     bool truncated{};
   };
@@ -342,7 +319,6 @@ private:
     running_ = true;
     std::function<void()> receive_loop = [this]() {
       std::vector<uint8_t> buffer;
-      DropMonitor drop_monitor{};
       PerfCounters current_packet_perf_counters{};
 
       while (running_) {
@@ -378,7 +354,7 @@ private:
         }
 
         RxMetadata metadata;
-        get_receive_metadata(msg_header.msg, metadata, drop_monitor);
+        get_receive_metadata(msg_header.msg, metadata);
         metadata.truncated = untruncated_packet_length > config_.buffer_size;
 
         // Resize down to match received data so callback sees correct size
@@ -403,7 +379,7 @@ private:
     }
   }
 
-  static void get_receive_metadata(msghdr & msg, RxMetadata & metadata, DropMonitor & drop_monitor)
+  static void get_receive_metadata(msghdr & msg, RxMetadata & metadata)
   {
     for (cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
       if (cmsg->cmsg_level != SOL_SOCKET) continue;
@@ -413,12 +389,6 @@ private:
           const auto * tv = (const timeval *)CMSG_DATA(cmsg);
           uint64_t timestamp_ns = tv->tv_sec * 1'000'000'000 + tv->tv_usec * 1000;
           metadata.timestamp_ns.emplace(timestamp_ns);
-          break;
-        }
-        case SO_RXQ_OVFL: {
-          const auto * drops = (const uint32_t *)CMSG_DATA(cmsg);
-          metadata.n_packets_dropped_since_last_receive =
-            drop_monitor.get_drops_since_last_receive(*drops);
           break;
         }
         default:
