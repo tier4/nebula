@@ -31,6 +31,7 @@ namespace
 using nebula::drivers::AdvancedFunctionalSafetyConfiguration;
 using nebula::drivers::HesaiCalibrationConfiguration;
 using nebula::drivers::HesaiCorrection;
+using nebula::drivers::HesaiFtxCalibration;
 using nebula::drivers::HesaiSensorConfiguration;
 using nebula::drivers::PtpProfile;
 using nebula::drivers::PtpSwitchType;
@@ -233,6 +234,15 @@ TEST(HesaiCommonTest, CalibrationTypeAndParameterFollowSensorModel)
       std::dynamic_pointer_cast<HesaiCorrection>(nebula::drivers::make_calibration(sensor_model)),
       nullptr);
   }
+
+  // The FTX140 has its own calibration type, but its file is also passed as a correction file
+  EXPECT_FALSE(nebula::drivers::uses_correction_file(SensorModel::HESAI_FTX140));
+  EXPECT_EQ(
+    nebula::drivers::calibration_parameter_name(SensorModel::HESAI_FTX140), "correction_file");
+  EXPECT_NE(
+    std::dynamic_pointer_cast<HesaiFtxCalibration>(
+      nebula::drivers::make_calibration(SensorModel::HESAI_FTX140)),
+    nullptr);
 
   for (const auto sensor_model :
        {SensorModel::HESAI_PANDAR64, SensorModel::HESAI_PANDAR40P, SensorModel::HESAI_PANDAR40M,
