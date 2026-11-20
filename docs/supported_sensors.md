@@ -20,9 +20,12 @@ The `sensor_model` parameter below decides which sensor driver is launched.
 | Pandar QT128 | PandarQT128    | PandarQT128.param.yaml  | ✅          |
 | Pandar AT128 | PandarAT128    | PandarAT128.param.yaml  | ✅\*        |
 | AT128P       | AT128P         | AT128P.param.yaml       | ⚠️          |
+| FTX140       | FTX140         | FTX140.param.yaml       | ⚠️\*\*      |
 | Pandar OT128 | Pandar128E4X   | Pandar128E4X.param.yaml | ✅          |
 
 \*: AT128 needs software version 3.50.8 or newer for the `scan_angle` setting to work correctly.
+
+\*\*: For the FTX140, only single return modes (`First`, `Last`, `Strongest`) are supported, and `setup_sensor` only sets the return mode, the destination and the PTP config (automotive profile). Points are output in the coordinate frame of the Hesai SDK.
 
 ## Velodyne LiDARs
 

@@ -91,6 +91,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   bool lidar_range_supported =
     sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128 &&
     sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_AT128P &&
+    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_FTX140 &&
     sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDAR64;
 
   if (hw_interface_wrapper_ && !use_udp_only && lidar_range_supported) {
@@ -557,7 +558,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
   if (
     new_calibration_ptr && hw_interface_wrapper_ &&
     sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128 &&
-    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_AT128P) {
+    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_AT128P &&
+    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_FTX140) {
     auto status =
       hw_interface_wrapper_->hw_interface()->check_and_set_lidar_range(*new_calibration_ptr);
     if (status != Status::OK) {

@@ -6,6 +6,7 @@
     <choice value="Pandar128E4X" />
     <choice value="PandarAT128" />
     <choice value="AT128P" />
+    <choice value="FTX140" />
     <choice value="PandarQT64" />
     <choice value="PandarQT128" />
     <choice value="PandarXT16" />
