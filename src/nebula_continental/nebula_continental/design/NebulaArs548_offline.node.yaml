@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaArs548_offline.node
+
+description: Nebula driver for the Continental ARS548, replaying recorded packets.
 
 base: NebulaArs548.node
 
@@ -37,24 +39,59 @@ override:
     - name: radar_info
       message_type: autoware_sensing_msgs/msg/RadarInfo
       remap_target: radar_info
+    - name: diagnostics
+      message_type: diagnostic_msgs/msg/DiagnosticArray
+      global: /diagnostics
   param_values:
     - name: launch_hw
       type: bool
       default: false
   processes:
-    - name: decoder
+    - name: publish_detections
+      description: Decodes and publishes detection lists.
+      trigger_conditions:
+        - and:
+            - on_input: nebula_packets
+            - periodic: 10 # Hz
+      outcomes:
+        - to_output: continental_detections
+        - to_output: detection_points
+        - to_output: scan_raw
+        - to_queue: decode_status
+    - name: publish_radar_info
+      description: Publishes the radar info, subsampled from detection lists.
+      trigger_conditions:
+        - and:
+            - on_trigger: publish_detections
+            - periodic: $(eval 10 / ${parameter radar_info_rate_subsample}) # Hz
+      outcomes:
+        - to_output: radar_info
+    - name: publish_objects
+      description: Decodes and publishes object lists.
       trigger_conditions:
         - and:
             - on_input: nebula_packets
             - periodic: 10 # Hz
       outcomes:
         - to_output: continental_objects
-        - to_output: continental_detections
-        - to_output: detection_points
         - to_output: object_points
         - to_output: radar_objects
-        - to_output: scan_raw
         - to_output: objects_raw
         - to_output: marker_array
+        - to_queue: decode_status
+    - name: publish_sensor_status
+      description: Decodes and publishes the sensor status.
+      trigger_conditions:
+        - and:
+            - on_input: nebula_packets
+            - periodic: 10 # Hz
+      outcomes:
         - to_output: diagnostics
-        - to_output: radar_info
+    - name: diagnose_decoder
+      description: Decoder diagnostics.
+      trigger_conditions:
+        - periodic: 10 # Hz
+      reads:
+        - from_queue: decode_status
+      outcomes:
+        - to_output: diagnostics

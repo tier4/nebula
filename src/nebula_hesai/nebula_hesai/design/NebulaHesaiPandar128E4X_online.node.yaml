@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaHesaiPandar128E4X_online.node
+
+description: Nebula driver for the Hesai Pandar128E4X, connected to the sensor.
 
 base: NebulaHesaiPandar128E4X.node
 
@@ -33,20 +35,58 @@ override:
     - name: blockage_mask
       message_type: sensor_msgs/msg/Image
       remap_target: blockage_mask
+    - name: diagnostics
+      message_type: diagnostic_msgs/msg/DiagnosticArray
+      global: /diagnostics
   param_values:
     - name: launch_hw
       type: bool
       default: true
   processes:
     - name: hw_interface
+      description: UDP packet receiver thread.
       trigger_conditions:
         - periodic: 10.0 # Hz
       outcomes:
-        - to_output: pandar_packets
+        - to_trigger: decoder
     - name: decoder
+      description: Decodes packets on the receiver thread and publishes each completed scan.
       trigger_conditions:
         - and:
             - on_trigger: hw_interface
             - periodic: 10 # Hz
       outcomes:
         - to_output: pandar_points
+        - to_output: aw_points
+        - to_output: aw_points_ex
+        - to_output: blockage_mask
+        - to_queue: decode_status
+        - to_trigger: packets_publisher
+    - name: packets_publisher
+      description: Publishes the packets of each scan.
+      trigger_conditions:
+        - on_trigger: decoder
+      outcomes:
+        - to_output: pandar_packets
+    - name: diagnose_decoder
+      description: Decoder diagnostics.
+      trigger_conditions:
+        - periodic: 10 # Hz
+      reads:
+        - from_queue: decode_status
+      outcomes:
+        - to_output: diagnostics
+    - name: fetch_sensor_status
+      description: Fetches the sensor status over TCP.
+      trigger_conditions:
+        - periodic: 1.0 # Hz
+      outcomes:
+        - to_queue: sensor_status
+    - name: diagnose_sensor
+      description: Sensor status diagnostics.
+      trigger_conditions:
+        - periodic: 1.0 # Hz
+      reads:
+        - from_queue: sensor_status
+      outcomes:
+        - to_output: diagnostics

@@ -1,6 +1,8 @@
-autoware_system_design_format: 0.3.0
+autoware_system_design_format: 0.4.1
 
 name: NebulaVelodyneVLP16_online.node
+
+description: Nebula driver for the Velodyne VLP-16, connected to the sensor.
 
 base: NebulaVelodyneVLP16.node
 
@@ -30,20 +32,42 @@ override:
       qos:
         depth: 10
         reliability: best_effort
+    - name: diagnostics
+      message_type: diagnostic_msgs/msg/DiagnosticArray
+      global: /diagnostics
   param_values:
     - name: launch_hw
       type: bool
       default: true
   processes:
     - name: hw_interface
+      description: UDP packet receiver thread.
       trigger_conditions:
         - periodic: 100 # Hz
       outcomes:
-        - to_output: velodyne_packets
+        - to_trigger: decoder
     - name: decoder
+      description: Decodes packets on the receiver thread and publishes each completed scan.
       trigger_conditions:
         - and:
             - on_trigger: hw_interface
             - periodic: 10 # Hz
       outcomes:
+        - to_output: velodyne_packets
         - to_output: velodyne_points
+        - to_output: aw_points
+        - to_output: aw_points_ex
+    - name: fetch_sensor_status
+      description: Fetches the sensor status over HTTP.
+      trigger_conditions:
+        - once: null
+      outcomes:
+        - to_queue: sensor_status
+    - name: diagnose_sensor
+      description: Sensor status diagnostics.
+      trigger_conditions:
+        - periodic: 1.0 # Hz
+      reads:
+        - from_queue: sensor_status
+      outcomes:
+        - to_output: diagnostics
