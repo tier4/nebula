@@ -143,7 +143,7 @@ public:
 private:
   static std::string get_hostname()
   {
-    std::array<char, HOST_NAME_MAX + 1> hostname_raw{};
+    std::array<char, _POSIX_HOST_NAME_MAX + 1> hostname_raw{};
     auto result = gethostname(hostname_raw.data(), hostname_raw.size());
 
     if (result == -1) {

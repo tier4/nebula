@@ -17,6 +17,7 @@
 #include <array>
 #include <cstring>
 #include <string>
+#include <type_traits>
 
 namespace nebula::util
 {
@@ -25,8 +26,15 @@ inline std::string errno_to_string(int err_no)
 {
   static constexpr size_t gnu_max_strerror_length = 1024;
   std::array<char, gnu_max_strerror_length> msg_buf{};  // NOLINT
-  std::string_view msg = strerror_r(err_no, msg_buf.data(), msg_buf.size());
-  return std::string{msg};
+  // strerror_r returns char * (GNU, glibc in C++) or int (XSI, e.g. macOS)
+  auto to_message = [&msg_buf](auto result) -> std::string {
+    if constexpr (std::is_same_v<decltype(result), int>) {
+      return msg_buf.data();
+    } else {
+      return result;
+    }
+  };
+  return to_message(strerror_r(err_no, msg_buf.data(), msg_buf.size()));
 }
 
 }  // namespace nebula::util
