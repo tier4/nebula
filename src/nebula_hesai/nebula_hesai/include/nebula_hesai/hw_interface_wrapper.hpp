@@ -36,6 +36,11 @@ public:
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
 
+  /// @brief Write the calibration-padded FoV once, retrying a PTC timeout the same way as
+  /// configure_sensor(). Throws if every attempt fails.
+  void configure_lidar_range(
+    const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration);
+
   nebula::Status status();
 
   [[nodiscard]] std::shared_ptr<drivers::HesaiHwInterface> hw_interface() const;
@@ -53,6 +58,7 @@ private:
 
   std::shared_ptr<drivers::HesaiHwInterface> hw_interface_;
   std::shared_ptr<const HesaiInventoryBase> inventory_;
+  std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> lidar_calibration_;
 
   rclcpp::Logger logger_;
   nebula::Status status_;
