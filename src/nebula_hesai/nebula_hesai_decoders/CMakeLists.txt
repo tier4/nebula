@@ -29,6 +29,12 @@ if(BUILD_TESTING)
                   tests/test_hesai_decoder_settings.cpp)
   target_link_libraries(test_hesai_decoder_settings
                         nebula_hesai_decoders)
+
+  ament_add_gtest(test_hesai_return_mode tests/test_hesai_return_mode.cpp)
+  target_link_libraries(test_hesai_return_mode nebula_hesai_decoders)
+  target_compile_definitions(
+    test_hesai_return_mode
+    PRIVATE _SRC_CALIBRATION_DIR_PATH="${CMAKE_CURRENT_SOURCE_DIR}/calibration/")
 endif()
 
 install(TARGETS nebula_hesai_decoders EXPORT export_nebula_hesai_decoders)

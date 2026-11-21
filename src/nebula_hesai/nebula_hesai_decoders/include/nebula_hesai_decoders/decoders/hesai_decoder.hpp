@@ -79,6 +79,8 @@ private:
   bool did_scan_complete_{false};
   /// @brief The current block being processed (used for timestamp reset calculation)
   size_t current_block_id_{0};
+  /// @brief The number of returns of the current packet (used for timestamp reset calculation)
+  size_t current_n_returns_{0};
 
   std::shared_ptr<loggers::Logger> logger_;
 
@@ -223,7 +225,8 @@ private:
         point.distance = distance;
         point.intensity = unit.reflectivity;
         point.time_stamp = get_point_time_relative(
-          frame.scan_timestamp_ns, packet_timestamp_ns, block_offset + start_block_id, channel_id);
+          frame.scan_timestamp_ns, packet_timestamp_ns, block_offset + start_block_id, channel_id,
+          n_blocks);
 
         point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
@@ -258,11 +261,13 @@ private:
   /// @param packet_timestamp_ns The timestamp of the current PandarPacket in nanoseconds
   /// @param block_id The block index of the point
   /// @param channel_id The channel index of the point
+  /// @param n_returns The number of returns of the packet's return mode
   uint32_t get_point_time_relative(
-    uint64_t scan_timestamp_ns, uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
+    uint64_t scan_timestamp_ns, uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id,
+    size_t n_returns)
   {
     auto point_to_packet_offset_ns =
-      sensor_.get_packet_relative_point_time_offset(block_id, channel_id, packet_);
+      sensor_.get_packet_relative_point_time_offset(block_id, channel_id, n_returns, packet_);
     auto packet_to_scan_offset_ns = static_cast<uint32_t>(packet_timestamp_ns - scan_timestamp_ns);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
   }
@@ -322,8 +327,8 @@ private:
   {
     auto & frame = frame_buffers_[buffer_index];
     frame.scan_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
-    frame.scan_timestamp_ns +=
-      sensor_.get_earliest_point_time_offset_for_block(current_block_id_, packet_);
+    frame.scan_timestamp_ns += sensor_.get_earliest_point_time_offset_for_block(
+      current_block_id_, current_n_returns_, packet_);
   }
 
 public:
@@ -394,7 +399,18 @@ public:
     // past, and since the frame check sequence of the packet is already checked by the NIC, we skip
     // it here.
 
-    const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
+    // Unknown return modes, and ones with more returns than the packet has room for (which would
+    // read past its last block), cannot be decoded.
+    const auto n_returns_or_unknown = hesai_packet::try_get_n_returns(packet_.tail.return_mode);
+    if (
+      !n_returns_or_unknown ||
+      *n_returns_or_unknown > static_cast<int>(SensorT::packet_t::max_returns)) {
+      return {PerformanceCounters{decode_watch.elapsed_ns()}, DecodeError::PACKET_PARSE_FAILED};
+    }
+
+    const size_t n_returns = *n_returns_or_unknown;
+    // Store the number of returns for use in on_set_timestamp() callback
+    current_n_returns_ = n_returns;
     for (size_t block_id = 0; block_id < SensorT::packet_t::n_blocks; block_id += n_returns) {
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
