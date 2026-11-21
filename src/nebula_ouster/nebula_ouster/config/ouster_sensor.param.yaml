@@ -1,0 +1,42 @@
+# Ouster Sensor ROS 2 Parameters
+# This file contains example parameters for the Ouster LiDAR sensor.
+# Copy and modify this file for your specific sensor model.
+
+/**:
+  ros__parameters:
+    # ROS wrapper configuration
+    launch_hw: true
+    frame_id: ouster_lidar
+
+    # Calibration: path to sensor metadata JSON file (used as fallback when sensor is unreachable)
+    # When launch_hw is true, metadata is fetched from the sensor and saved alongside this file.
+    # When launch_hw is false, this file (or a previously-saved _from_sensor_ variant) is required.
+    calibration_file: ""
+
+    # Network configuration
+    connection:
+      sensor_ip: 127.0.0.1
+      host_ip: 127.0.0.1
+      data_port: 7502
+
+    # Decoder configuration
+    fov:
+      azimuth:
+        min_deg: 0.0
+        max_deg: 360.0
+      elevation:
+        min_deg: -90.0
+        max_deg: 90.0
+
+    # Diagnostics configuration
+    diagnostics:
+      pointcloud_publish_rate:
+        frequency_ok:
+          min_hz: 9.0
+          max_hz: 11.0
+        frequency_warn:
+          min_hz: 8.0
+          max_hz: 12.0
+        num_frame_transition: 1
+      packet_liveness:
+        timeout_ms: 1000
