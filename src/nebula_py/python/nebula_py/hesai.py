@@ -14,14 +14,17 @@
 
 """Python interface to the Hesai decoder, for offline use.
 
-Messages are rclpy message objects; they are CDR-serialized and handed to the C++ decoder. No ROS
-node, executor or clock is involved, so results depend only on the inputs.
+Messages are passed serialized, as stored in rosbags, or as rclpy message objects, which this
+module serializes internally. The C++ decoder deserializes them. No ROS node, executor or clock is
+involved, so results depend only on the inputs.
 """
 
 import enum
 from types import MappingProxyType
 from typing import Any
 from typing import Dict
+from typing import Optional
+from typing import Type
 from typing import Union
 
 from nebula_msgs.msg import NebulaPacket
@@ -46,6 +49,32 @@ class DecodeError(enum.Enum):
     INVALID_PACKET_SIZE = 2
     PACKET_IGNORED = 3
     """A valid packet without point cloud data, e.g. an IMU or fault message."""
+
+
+_MESSAGE_TYPES = {
+    "pandar_msgs/msg/PandarScan": PandarScan,
+    "nebula_msgs/msg/NebulaPackets": NebulaPackets,
+    "nebula_msgs/msg/NebulaPacket": NebulaPacket,
+}
+"""The supported message types, by the type names that rosbags store."""
+
+_DECODE_FUNCTIONS = {
+    PandarScan: _ext.HesaiDecoder.decode_pandar_scan,
+    NebulaPackets: _ext.HesaiDecoder.decode_nebula_packets,
+    NebulaPacket: _ext.HesaiDecoder.decode_nebula_packet,
+}
+
+_MessageType = Union[str, Type[PandarScan], Type[NebulaPackets], Type[NebulaPacket]]
+
+
+def _decode_function(message_type: _MessageType):
+    try:
+        return _DECODE_FUNCTIONS[_MESSAGE_TYPES.get(message_type, message_type)]
+    except (KeyError, TypeError):
+        raise TypeError(
+            "message_type has to be one of "
+            f"{', '.join(_MESSAGE_TYPES)} or their classes, got {message_type!r}"
+        ) from None
 
 
 _DECODER_SETTINGS = (
@@ -107,7 +136,9 @@ class HesaiDecoder:
         self._impl = _ext.HesaiDecoder(config, calibration_file)
 
     def decode(
-        self, packets: Union[PandarScan, NebulaPackets, NebulaPacket]
+        self,
+        packets: Union[bytes, PandarScan, NebulaPackets, NebulaPacket],
+        message_type: Optional[_MessageType] = None,
     ) -> "Decoded[DecodeError]":
         """Decode a batch of packets.
 
@@ -116,30 +147,43 @@ class HesaiDecoder:
         output.
 
         Args:
-            packets: The packets, in the order they were received.
+            packets: The packets, in the order they were received: a serialized message in the
+                format that rosbags store (CDR), or a message object. This method serializes a
+                message object internally before decoding it, so passing the serialized message is
+                faster.
+            message_type: The type of a serialized message, as the name that rosbags store
+                (``"pandar_msgs/msg/PandarScan"``, ``"nebula_msgs/msg/NebulaPackets"`` or
+                ``"nebula_msgs/msg/NebulaPacket"``) or as the message class. It has to match
+                ``packets``: bytes of another type may be decoded as garbage instead of raising.
+                Not used for message objects.
 
         Returns:
             The completed scans, and the packets that could not be decoded.
 
         Raises:
-            TypeError: If ``packets`` is not a ``PandarScan``, ``NebulaPackets`` or
-                ``NebulaPacket``.
-            ValueError: If a packet's receive timestamp is older than that of the packet before
-                it. No packet of the batch is decoded in that case. Call :meth:`reset` before
-                feeding data from an earlier time.
+            TypeError: If the message is not one of the types above, or ``message_type`` is
+                missing for a serialized message (or given for a message object).
+            ValueError: If ``packets`` cannot be deserialized as ``message_type``, or a packet's
+                receive timestamp is older than that of the packet before it. No packet of the
+                batch is decoded in that case. Call :meth:`reset` before feeding data from an
+                earlier time.
         """
-        if isinstance(packets, PandarScan):
-            results, errors = self._impl.decode_pandar_scan(serialize_message(packets))
-        elif isinstance(packets, NebulaPackets):
-            results, errors = self._impl.decode_nebula_packets(serialize_message(packets))
-        elif isinstance(packets, NebulaPacket):
-            results, errors = self._impl.decode_nebula_packet(serialize_message(packets))
+        if isinstance(packets, bytes):
+            if message_type is None:
+                raise TypeError("message_type is required for a serialized message")
+            decode_function = _decode_function(message_type)
+        elif type(packets) in _DECODE_FUNCTIONS:
+            if message_type is not None:
+                raise TypeError("message_type is only for serialized messages")
+            decode_function = _DECODE_FUNCTIONS[type(packets)]
+            packets = serialize_message(packets)
         else:
             raise TypeError(
-                "expected PandarScan, NebulaPackets or NebulaPacket, "
-                f"got {type(packets).__name__}"
+                "expected a serialized message (bytes), or a PandarScan, NebulaPackets or "
+                f"NebulaPacket object, got {type(packets).__name__}"
             )
 
+        results, errors = decode_function(self._impl, packets)
         return Decoded(
             results=tuple(
                 DecodeResult(deserialize_message(pointcloud, PointCloud2), lost_packets)

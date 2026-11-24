@@ -24,19 +24,11 @@ import logging
 from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
-from nebula_msgs.msg import NebulaPackets
-from pandar_msgs.msg import PandarScan
-from rclpy.serialization import deserialize_message
 import rosbag2_py
 
 from nebula_py import DecodeError
 from nebula_py import HesaiDecoder
 from nebula_py import load_parameters
-
-MESSAGE_TYPES = {
-    "pandar_msgs/msg/PandarScan": PandarScan,
-    "nebula_msgs/msg/NebulaPackets": NebulaPackets,
-}
 
 logger = logging.getLogger("decode_hesai_bag")
 
@@ -65,12 +57,13 @@ def main() -> None:
         rosbag2_py.StorageOptions(uri=str(args.bag)), rosbag2_py.ConverterOptions("cdr", "cdr")
     )
     topic_types = {topic.name: topic.type for topic in reader.get_all_topics_and_types()}
-    message_type = MESSAGE_TYPES[topic_types[args.topic]]
+    message_type = topic_types[args.topic]  # e.g. "pandar_msgs/msg/PandarScan"
     reader.set_filter(rosbag2_py.StorageFilter(topics=[args.topic]))
 
     while reader.has_next():
+        # The messages are decoded as they are stored, without deserializing them in Python
         _, data, _ = reader.read_next()
-        decoded = decoder.decode(deserialize_message(data, message_type))
+        decoded = decoder.decode(data, message_type)
 
         for error, n_packets in decoded.errors.items():
             if error is DecodeError.PACKET_IGNORED:
