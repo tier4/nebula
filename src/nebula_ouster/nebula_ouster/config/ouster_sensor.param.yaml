@@ -5,7 +5,6 @@
 /**:
   ros__parameters:
     # ROS wrapper configuration
-    sensor_model: OS0-64
     launch_hw: true
     frame_id: ouster_lidar
     use_sensor_extrinsics: false

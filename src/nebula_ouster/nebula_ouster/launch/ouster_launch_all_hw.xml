@@ -4,9 +4,7 @@
 -->
 <launch>
     <arg name="launch_hw" default="true" description="Bind UDP and receive live packets"/>
-    <arg name="config_file"
-         default="$(find-pkg-share nebula_ouster)/config/ouster_sensor.param.yaml"/>
-    <arg name="sensor_model" default="ouster_sensor" description="Reported sensor model string"/>
+    <arg name="config_file" default="$(find-pkg-share nebula_ouster)/config/ouster_sensor.param.yaml"/>
 
     <node_container pkg="rclcpp_components" exec="component_container" name="nebula_ouster_container"
                     namespace="">
@@ -14,7 +12,6 @@
                          name="nebula_ouster_ros_wrapper">
             <param from="$(var config_file)" allow_substs="true"/>
             <param name="launch_hw" value="$(var launch_hw)"/>
-            <param name="sensor_model" value="$(var sensor_model)"/>
         </composable_node>
     </node_container>
 </launch>
