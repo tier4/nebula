@@ -91,7 +91,7 @@ struct OUSTER_API_CLASS FieldDescriptor
   OUSTER_API_FUNCTION
   size_t bytes() const;
 
-  // TODO: ideally we need something like llvm::SmallVector here -- Tim T.
+  // TODO(Tim T.): ideally we need something like llvm::SmallVector here
 
   /**
    * vector of array dimensions of the described field, if present
@@ -163,7 +163,7 @@ struct OUSTER_API_CLASS FieldDescriptor
   template <typename T>
   bool eligible_type() const
   {
-    // TODO: reinstate upon c++17 -- Tim T.
+    // TODO(Tim T.): reinstate upon c++17
     if /*constexpr*/ (std::is_same<void, std::remove_cv_t<T>>::value) {
       return true;
     }

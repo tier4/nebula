@@ -143,7 +143,7 @@ using img_t = Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 template <typename T>
 using rgb_img_t = Eigen::Tensor<T, 3, Eigen::RowMajor>;
 
-// TODO: deprecate mat4d in favor of Matrix4dR
+// TODO(UN): deprecate mat4d in favor of Matrix4dR
 /** Used for transformations. */
 using mat4d = Eigen::Matrix<double, 4, 4, Eigen::DontAlign>;
 

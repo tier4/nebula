@@ -15,9 +15,9 @@ namespace sdk
 {
 namespace core
 {
-// TODO: some of these values (e.g. error flags, trigger type etc) have to be
-//       clarified with firmware once sensor implementation gets stable, and
-//       we should add enums and/or documentation to explain them -- Tim T.
+// TODO(Tim T.): some of these values (e.g. error flags, trigger type etc) have
+//        to be clarified with firmware once sensor implementation gets stable,
+//        and we should add enums and/or documentation to explain them.
 #pragma pack(push, 1)
 
 /**

@@ -439,7 +439,7 @@ void scan_to_packets(
   uint32_t init_id, uint64_t prod_sn)
 {
   // this bit will not work with UDPProfileLidar::OFF
-  // TODO: fix if that is back on the menu -- Tim T.
+  // TODO(Tim T.): fix if that is back on the menu.
   size_t total_lidar_packets = ls.packet_timestamp().size();
 
   if (ls.w / pw.columns_per_packet != total_lidar_packets) {

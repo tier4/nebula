@@ -12,6 +12,8 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <utility>
+#include <vector>
 
 /// A threadpool capable of running arbitrary functions
 template <class T>

@@ -27,7 +27,7 @@ struct OUSTER_API_CLASS idx_range
   OUSTER_API_FUNCTION
   idx_range() = default;
   OUSTER_API_FUNCTION
-  idx_range(int start, int end) : start(start), end(end) {};
+  idx_range(int start, int end) : start(start), end(end) {}
 
   int start = 0;
   int end = 0;

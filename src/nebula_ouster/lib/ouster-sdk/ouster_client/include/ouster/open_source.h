@@ -42,16 +42,16 @@ struct OUSTER_API_CLASS ScanSourceOptions
 
   /// If true, accept packets/scans that don't match the init_id/sn of the
   /// metadata
-  impl::Parameter<bool> soft_id_check = false;
+  impl::Parameter<bool> soft_id_check = impl::Parameter<bool>(false);
 
   /// if true, ensure that this file is indexed, indexing in place if
   /// necessary
-  impl::Parameter<bool> index = false;
+  impl::Parameter<bool> index = impl::Parameter<bool>(false);
 
   /// if true, enable reuse ports on the sensor client sockets
   /// this enables multiple programs on the same computer to bind these ports
   /// which is useful for multi/broadcast but can lead to conflicts otherwise
-  impl::Parameter<bool> reuse_ports = false;
+  impl::Parameter<bool> reuse_ports = impl::Parameter<bool>(false);
 
   /// optional list of metadata files to load with some formats, if not
   /// provided files are attempted to be found automatically
@@ -64,29 +64,29 @@ struct OUSTER_API_CLASS ScanSourceOptions
   impl::Parameter<nonstd::optional<uint16_t>> imu_port;
 
   /// If true, do not change any settings on the sensor or reinitialize it
-  impl::Parameter<bool> do_not_reinitialize = false;
+  impl::Parameter<bool> do_not_reinitialize = impl::Parameter<bool>(false);
 
   /// If true, do not change the udp_dest configuration option on the sensor
-  impl::Parameter<bool> no_auto_udp_dest = false;
+  impl::Parameter<bool> no_auto_udp_dest = impl::Parameter<bool>(false);
 
   /// timeout for each sensor in seconds
   /// only applies to iterators, not get_scan
-  impl::Parameter<float> timeout = 1.0;
+  impl::Parameter<float> timeout = impl::Parameter<float>(1.0);
 
   /// timeout in seconds for http endpoints while configuring the sensor
-  impl::Parameter<float> config_timeout = 45.0;
+  impl::Parameter<float> config_timeout = impl::Parameter<float>(45.0);
 
   /// maximum number of scans to queue, useful for limiting buffer bloat
-  impl::Parameter<unsigned int> queue_size = 2;
+  impl::Parameter<unsigned int> queue_size = impl::Parameter<unsigned int>(2);
 
   /// Override sensor info. If provided used instead of talking to the sensor.
   impl::Parameter<std::vector<core::SensorInfo>> sensor_info;
 
   /// If true, batch raw_headers into each scan
-  impl::Parameter<bool> raw_headers = false;
+  impl::Parameter<bool> raw_headers = impl::Parameter<bool>(false);
 
   /// If true, batch raw_fields into each scan
-  impl::Parameter<bool> raw_fields = false;
+  impl::Parameter<bool> raw_fields = impl::Parameter<bool>(false);
 
   /// Configuration to apply to the sensors
   impl::Parameter<std::vector<core::SensorConfig>> sensor_config;
@@ -134,7 +134,7 @@ struct OUSTER_API_CLASS PacketSourceOptions
 
   /// If true, accept packets/scans that don't match the init_id/sn of the
   /// metadata
-  impl::Parameter<bool> soft_id_check = false;
+  impl::Parameter<bool> soft_id_check = impl::Parameter<bool>(false);
 
   /// optional list of metadata files to load with some formats, if not
   /// provided files are attempted to be found automatically
@@ -147,27 +147,27 @@ struct OUSTER_API_CLASS PacketSourceOptions
   impl::Parameter<nonstd::optional<uint16_t>> imu_port;
 
   /// timeout for http endpoints while configuring the sensor
-  impl::Parameter<float> config_timeout = 45.0;
+  impl::Parameter<float> config_timeout = impl::Parameter<float>(45.0);
 
   /// timeout for receiving packets from the sensor
-  impl::Parameter<float> timeout = 1.0;
+  impl::Parameter<float> timeout = impl::Parameter<float>(1.0);
 
   /// If > 0.0 buffer packets for this long internally
   /// Useful if you may not be retrieving packets from the source consistently
-  impl::Parameter<float> buffer_time_sec = 0.0;
+  impl::Parameter<float> buffer_time_sec = impl::Parameter<float>(0.0);
 
   /// if true, ensure that this file is indexed, indexing in place if
   /// necessary
-  impl::Parameter<bool> index = false;
+  impl::Parameter<bool> index = impl::Parameter<bool>(false);
 
   /// Override sensor info. If provided used instead of talking to the sensor.
   impl::Parameter<std::vector<core::SensorInfo>> sensor_info;
 
   /// If true, do not change any settings on the sensor or reinitialize it
-  impl::Parameter<bool> do_not_reinitialize = false;
+  impl::Parameter<bool> do_not_reinitialize = impl::Parameter<bool>(false);
 
   /// If true, do not change the udp_dest configuration option on the sensor
-  impl::Parameter<bool> no_auto_udp_dest = false;
+  impl::Parameter<bool> no_auto_udp_dest = impl::Parameter<bool>(false);
 
   /// Configuration to apply to the sensors
   impl::Parameter<std::vector<core::SensorConfig>> sensor_config;
@@ -175,7 +175,7 @@ struct OUSTER_API_CLASS PacketSourceOptions
   /// if true, enable reuse ports on the sensor client sockets
   /// this enables multiple programs on the same computer to bind these ports
   /// which is useful for multi/broadcast but can lead to conflicts otherwise
-  impl::Parameter<bool> reuse_ports = false;
+  impl::Parameter<bool> reuse_ports = impl::Parameter<bool>(false);
 
   /// Construct given the options in a ScanSourceOptions
   OUSTER_API_FUNCTION

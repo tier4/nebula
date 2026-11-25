@@ -10,6 +10,7 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -43,7 +44,7 @@ struct Parameter
   Parameter() = default;
 
 private:
-  Parameter(const T & v) { value_ = v; }
+  explicit Parameter(const T & v) { value_ = v; }
   void check(const char * name, const char * source_name) const
   {
     if (set_) {

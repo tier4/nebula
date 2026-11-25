@@ -78,7 +78,7 @@ static constexpr cf_type POSITION_STRING = "POSITION_STRING";            ///< nm
 static constexpr cf_type POSITION_LAT_LONG =
   "POSITION_LAT_LONG";  ///< parsed nmea coordinates timestamps
 static constexpr cf_type POSITION_TIMESTAMP = "POSITION_TIMESTAMP";  ///< nmea timestamps
-// TODO: check questionable naming -- Tim T.
+// TODO(Tim T.): check questionable naming
 static constexpr cf_type LIVE_ZONESET_HASH =
   "LIVE_ZONESET_HASH";  ///< cryptographic hash of all zone configs and output
                         ///< product hashes. used to simplifiy client

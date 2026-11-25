@@ -869,14 +869,13 @@ LidarScanFieldTypes get_field_types(const DataFormat & format, const Version & f
 
   size_t imu_measurements = format.imu_packets_per_frame * format.imu_measurements_per_packet;
 
-  /** TODO:
+  /** TODO(Tim T.):
    * Theoretically would be good to move this to static storage like
    * the rest of the lookup tables, but extra dimensions complicate
    * the issue.
    * Potentially we can refactor the whole thing out and stop using
    * get_field_types on naked profiles without DataFormat, thus
    * eliminating the need for FieldType and just use FieldDescriptor?
-   * -- Tim T.
    */
   using namespace ouster::sdk::core;
   using namespace ouster::sdk::core::ChanField;
@@ -1133,7 +1132,7 @@ struct ParseFieldCol
     // RGB is stored in LidarScan as H x W x 3 float16_t values, but the
     // packet helpers currently read/write each pixel as one packed 3x16-bit
     // element. This cast relies on those layouts matching.
-    // TODO: teach PacketFormat about multi-element fields directly.
+    // TODO(Matt): teach PacketFormat about multi-element fields directly.
     if (NDim == 3) {
       packet_format.col_field(
         col_buf, field_name, reinterpret_cast<float3x16_t *>(field.subview(keep(), m_id).data()),
@@ -1313,7 +1312,7 @@ struct ParseFieldBlock
     // RGB is stored in LidarScan as H x W x 3 float16_t values, but the
     // packet helpers currently read/write each pixel as one packed 3x16-bit
     // element. This cast relies on those layouts matching.
-    // TODO: teach PacketFormat about multi-element fields directly.
+    // TODO(Matt): teach PacketFormat about multi-element fields directly.
     if (NDim == 3) {
       packet_format.block_field<float3x16_t, BlockDim>(
         reinterpret_cast<impl::float3x16_t *>(field.data()), field.shape[1], field_name,
@@ -1421,7 +1420,7 @@ void ScanBatcher::batch_imu_packet(const ImuPacket & packet, LidarScan & lidar_s
   uint16_t packet_id = imu_first_m_id / (lidar_scan.w / pf.imu_packets_per_frame);
   size_t col_offset = packet_id * pf.imu_measurements_per_packet;
 
-  // TODO: this pattern could be a method -- Tim T.
+  // TODO(Tim T.): this pattern could be a method.
   FieldView imu_ts_fview =
     lidar_scan.has_field(IMU_TIMESTAMP) ? lidar_scan.field(IMU_TIMESTAMP) : FieldView{};
   FieldView imu_m_id_fview =
