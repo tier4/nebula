@@ -22,6 +22,7 @@ from typing import Optional
 from typing import Tuple
 from typing import TypeVar
 
+import numpy as np
 from sensor_msgs.msg import PointCloud2
 
 __all__ = ["DecodeResult", "Decoded"]
@@ -29,7 +30,7 @@ __all__ = ["DecodeResult", "Decoded"]
 ErrorT = TypeVar("ErrorT")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class DecodeResult:
     """A completed scan.
 
@@ -40,10 +41,23 @@ class DecodeResult:
             since the decoder was created or reset). A loss is noticed when the packet after it
             arrives, so a loss across the end of a scan counts towards the scan that ends. ``None``
             if the sensor model does not support packet loss detection.
+        keep_mask: For each point of ``pointcloud``, whether the downsample mask in the decoder's
+            parameters keeps it. ``None`` unless the decoder was created with
+            ``filters_as_mask=True`` and has a downsample mask.
     """
 
     pointcloud: PointCloud2
     lost_packets: Optional[int]
+    keep_mask: Optional[np.ndarray] = None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, DecodeResult):
+            return NotImplemented
+        # == on arrays compares their elements, and has no truth value
+        return (self.pointcloud, self.lost_packets) == (
+            other.pointcloud,
+            other.lost_packets,
+        ) and np.array_equal(self.keep_mask, other.keep_mask)
 
 
 @dataclass(frozen=True)

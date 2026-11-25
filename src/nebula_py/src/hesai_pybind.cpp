@@ -25,6 +25,7 @@
 #include <nebula_hesai_decoders/decoders/packet_loss_detector.hpp>
 #include <nebula_hesai_decoders/hesai_decoder_settings.hpp>
 #include <nebula_hesai_decoders/hesai_driver.hpp>
+#include <nebula_hesai_decoders/point_filters.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <rclcpp/time.hpp>
@@ -35,6 +36,7 @@
 #include <pandar_msgs/msg/pandar_scan.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -147,16 +149,26 @@ class HesaiDecoderWrapper
 {
 public:
   HesaiDecoderWrapper(
-    const HesaiSensorConfiguration & sensor_configuration, const std::string & calibration_file)
-  : sensor_configuration_(std::make_shared<const HesaiSensorConfiguration>(sensor_configuration))
+    const HesaiSensorConfiguration & sensor_configuration, const std::string & calibration_file,
+    bool filters_as_mask)
+  : logger_(std::make_shared<PythonLogger>("nebula_py.hesai"))
   {
-    const auto validation = nebula::drivers::validate_decoder_settings(*sensor_configuration_);
+    const auto validation = nebula::drivers::validate_decoder_settings(sensor_configuration);
     if (!validation.has_value()) {
       throw std::invalid_argument(validation.error());
     }
 
+    auto decoder_configuration = sensor_configuration;
+    if (filters_as_mask && sensor_configuration.downsample_mask_path) {
+      // Decode the points that the mask drops as well, and flag the ones it keeps
+      mask_filter_ = nebula::drivers::make_downsample_mask_filter(
+        sensor_configuration.sensor_model, *sensor_configuration.downsample_mask_path, logger_);
+      decoder_configuration.downsample_mask_path.reset();
+    }
+    sensor_configuration_ =
+      std::make_shared<const HesaiSensorConfiguration>(std::move(decoder_configuration));
+
     calibration_ = load_calibration(sensor_configuration_->sensor_model, calibration_file);
-    logger_ = std::make_shared<PythonLogger>("nebula_py.hesai");
     reset();
   }
 
@@ -249,10 +261,25 @@ private:
     msg.header.frame_id = sensor_configuration_->frame_id;
     msg.header.stamp = to_stamp(timestamp_s);
 
-    results_.append(py::make_tuple(serialize(msg), lost_packets_));
+    results_.append(py::make_tuple(serialize(msg), lost_packets_, keep_mask(*pointcloud)));
     if (lost_packets_) {
       lost_packets_ = 0;
     }
+  }
+
+  /// For each point, whether the downsample mask keeps it. None unless the mask is output as such.
+  [[nodiscard]] py::object keep_mask(const nebula::drivers::NebulaPointCloud & pointcloud) const
+  {
+    if (!mask_filter_) {
+      return py::none();
+    }
+
+    py::array_t<bool> mask(static_cast<py::ssize_t>(pointcloud.size()));
+    auto keeps = mask.mutable_unchecked<1>();
+    for (size_t i = 0; i < pointcloud.size(); ++i) {
+      keeps(static_cast<py::ssize_t>(i)) = !mask_filter_->excluded(pointcloud[i]);
+    }
+    return mask;
   }
 
   py::tuple take_result()
@@ -266,6 +293,8 @@ private:
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
   std::shared_ptr<const HesaiCalibrationConfigurationBase> calibration_;
   std::shared_ptr<PythonLogger> logger_;
+  /// With filters_as_mask, the downsample mask, which the decoder then does not apply
+  std::optional<nebula::drivers::point_filters::DownsampleMaskFilter> mask_filter_;
 
   std::optional<std::chrono::nanoseconds> last_stamp_;
   /// The packets lost since the last scan. Unset for sensor models without packet loss detection.
@@ -310,8 +339,8 @@ PYBIND11_MODULE(_hesai_pybind, m)
 
   py::class_<HesaiDecoderWrapper>(m, "HesaiDecoder")
     .def(
-      py::init<const HesaiSensorConfiguration &, const std::string &>(),
-      py::arg("sensor_configuration"), py::arg("calibration_file"))
+      py::init<const HesaiSensorConfiguration &, const std::string &, bool>(),
+      py::arg("sensor_configuration"), py::arg("calibration_file"), py::arg("filters_as_mask"))
     .def("reset", &HesaiDecoderWrapper::reset)
     .def("decode_pandar_scan", &HesaiDecoderWrapper::decode_pandar_scan, py::arg("scan"))
     .def("decode_nebula_packets", &HesaiDecoderWrapper::decode_nebula_packets, py::arg("packets"))
