@@ -44,11 +44,15 @@ util::expected<std::monostate, OusterHwInterface::Error> OusterHwInterface::sens
   }
 
   try {
-    udp_socket_.emplace(
-      connections::UdpSocket::Builder(
-        connection_configuration_.host_ip, connection_configuration_.data_port)
-        .limit_to_sender(connection_configuration_.sensor_ip, connection_configuration_.data_port)
-        .bind());
+    connections::UdpSocket::Builder builder(
+      connection_configuration_.host_ip, connection_configuration_.data_port);
+    builder.set_mtu(static_cast<size_t>(connection_configuration_.receiver_mtu_bytes));
+
+    if (connection_configuration_.filter_sender_ip) {
+      builder.limit_to_sender(
+        connection_configuration_.sensor_ip, connection_configuration_.data_port);
+    }
+    udp_socket_.emplace(std::move(builder).bind());
 
     // Callback can only be set while udp_socket_ is nullopt, so we don't need locking here
     udp_socket_->subscribe(
