@@ -234,8 +234,7 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
       publish_pointcloud_callback(pointcloud, timestamp_s);
     });
 
-  config_.connection.receiver_mtu_bytes =
-    static_cast<uint32_t>(decoder_->lidar_packet_size());
+  config_.connection.receiver_mtu_bytes = static_cast<uint32_t>(decoder_->lidar_packet_size());
 
   RCLCPP_INFO(
     get_logger(), "Ouster UDP: listening on %s:%u (sensor_ip=%s) receiver_mtu=%u",
@@ -489,8 +488,8 @@ OusterRosWrapper::get_calibration_result_t OusterRosWrapper::get_calibration_dat
   if (!calibration_file_path.empty()) {
     calibration_from_sensor_path = calibration_file_path;
     calibration_from_sensor_path = calibration_from_sensor_path.parent_path() /
-                                   (calibration_from_sensor_path.stem().string() +
-                                    "_from_sensor_" + config_.connection.sensor_ip + ".json");
+                                   (calibration_from_sensor_path.stem().string() + "_from_sensor_" +
+                                    config_.connection.sensor_ip + ".json");
   }
 
   // 1. If sensor is connected (launch_hw), fetch metadata via HTTP and save to file
@@ -498,7 +497,8 @@ OusterRosWrapper::get_calibration_result_t OusterRosWrapper::get_calibration_dat
     try {
       const auto sensor_metadata_json =
         fetch_ouster_metadata_via_http(config_.connection.sensor_ip);
-      auto calib_from_sensor = drivers::OusterCalibrationData::load_from_string(sensor_metadata_json);
+      auto calib_from_sensor =
+        drivers::OusterCalibrationData::load_from_string(sensor_metadata_json);
       if (calib_from_sensor.has_value()) {
         // Save to file for future offline use
         if (!calibration_from_sensor_path.empty()) {
@@ -506,8 +506,7 @@ OusterRosWrapper::get_calibration_result_t OusterRosWrapper::get_calibration_dat
             calib_from_sensor.value().save_to_file(calibration_from_sensor_path.string());
           if (save_result.has_value()) {
             RCLCPP_INFO(
-              get_logger(), "Saved sensor metadata to: %s",
-              calibration_from_sensor_path.c_str());
+              get_logger(), "Saved sensor metadata to: %s", calibration_from_sensor_path.c_str());
             calib_from_sensor.value().calibration_file = calibration_from_sensor_path.string();
           } else {
             RCLCPP_WARN(
@@ -519,8 +518,10 @@ OusterRosWrapper::get_calibration_result_t OusterRosWrapper::get_calibration_dat
       }
     } catch (const std::exception & e) {
       RCLCPP_WARN(
-        get_logger(), "Could not fetch metadata from sensor via HTTP: %s. "
-        "Falling back to calibration file.", e.what());
+        get_logger(),
+        "Could not fetch metadata from sensor via HTTP: %s. "
+        "Falling back to calibration file.",
+        e.what());
     }
   }
 
@@ -528,8 +529,8 @@ OusterRosWrapper::get_calibration_result_t OusterRosWrapper::get_calibration_dat
   if (
     !calibration_from_sensor_path.empty() &&
     std::filesystem::exists(calibration_from_sensor_path)) {
-    auto calib = drivers::OusterCalibrationData::load_from_file(
-      calibration_from_sensor_path.string());
+    auto calib =
+      drivers::OusterCalibrationData::load_from_file(calibration_from_sensor_path.string());
     if (calib.has_value()) {
       RCLCPP_INFO(
         get_logger(), "Loaded previously-downloaded sensor metadata from: %s",
@@ -550,8 +551,7 @@ OusterRosWrapper::get_calibration_result_t OusterRosWrapper::get_calibration_dat
 
   if (!std::filesystem::exists(calibration_file_path)) {
     return Error{
-      ErrorCode::OPEN_FOR_READ_FAILED,
-      "Calibration file does not exist: " + calibration_file_path};
+      ErrorCode::OPEN_FOR_READ_FAILED, "Calibration file does not exist: " + calibration_file_path};
   }
 
   auto calib = drivers::OusterCalibrationData::load_from_file(calibration_file_path);
