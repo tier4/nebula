@@ -4,9 +4,8 @@
 
 #include <nebula_ouster_common/ouster_calibration_data.hpp>
 
-#include <ouster/types.h>
-
 #include <gtest/gtest.h>
+#include <ouster/types.h>
 
 #include <atomic>
 #include <cstdint>
@@ -37,8 +36,7 @@ protected:
 TEST_F(TestOusterDecoder, TestEmptyPacketReturnsError)
 {
   auto decoder = OusterDecoder(
-    FieldOfView<float, Degrees>{}, calibration_,
-    [](const NebulaPointCloudPtr &, double) {});
+    FieldOfView<float, Degrees>{}, calibration_, [](const NebulaPointCloudPtr &, double) {});
 
   std::vector<uint8_t> empty_packet;
   auto result = decoder.unpack(empty_packet);
@@ -59,8 +57,7 @@ TEST_F(TestOusterDecoder, TestCallbackNotSetReturnsError)
 TEST_F(TestOusterDecoder, TestInvalidPacketSizeReturnsError)
 {
   auto decoder = OusterDecoder(
-    FieldOfView<float, Degrees>{}, calibration_,
-    [](const NebulaPointCloudPtr &, double) {});
+    FieldOfView<float, Degrees>{}, calibration_, [](const NebulaPointCloudPtr &, double) {});
 
   // A packet whose size does not match lidar, imu, or zone packet size
   std::vector<uint8_t> bad_packet(42, 0xAA);
@@ -109,8 +106,7 @@ TEST_F(TestOusterDecoder, TestSetPointcloudCallback)
 TEST_F(TestOusterDecoder, TestLidarPacketSizeIsNonZero)
 {
   auto decoder = OusterDecoder(
-    FieldOfView<float, Degrees>{}, calibration_,
-    [](const NebulaPointCloudPtr &, double) {});
+    FieldOfView<float, Degrees>{}, calibration_, [](const NebulaPointCloudPtr &, double) {});
 
   EXPECT_GT(decoder.lidar_packet_size(), 0U);
 }
@@ -125,8 +121,7 @@ TEST_F(TestOusterDecoder, TestDecodeErrorToCstr)
 TEST_F(TestOusterDecoder, TestPerformanceCountersRecorded)
 {
   auto decoder = OusterDecoder(
-    FieldOfView<float, Degrees>{}, calibration_,
-    [](const NebulaPointCloudPtr &, double) {});
+    FieldOfView<float, Degrees>{}, calibration_, [](const NebulaPointCloudPtr &, double) {});
 
   // Even for error paths, decode_time_ns should be recorded
   std::vector<uint8_t> empty_packet;
@@ -138,8 +133,7 @@ TEST_F(TestOusterDecoder, TestPerformanceCountersRecorded)
 TEST_F(TestOusterDecoder, TestMoveConstruction)
 {
   auto decoder = OusterDecoder(
-    FieldOfView<float, Degrees>{}, calibration_,
-    [](const NebulaPointCloudPtr &, double) {});
+    FieldOfView<float, Degrees>{}, calibration_, [](const NebulaPointCloudPtr &, double) {});
 
   size_t original_size = decoder.lidar_packet_size();
 
