@@ -5,15 +5,19 @@
 
 #pragma once
 
-#include <memory>
-
 #include "ouster/client.h"
 #include "ouster/visibility.h"
 
-namespace ouster {
-namespace sdk {
-namespace sensor {
-namespace impl {
+#include <memory>
+
+namespace ouster
+{
+namespace sdk
+{
+namespace sensor
+{
+namespace impl
+{
 
 /**
  * Poller used in multiclient scenarios
@@ -32,7 +36,7 @@ std::shared_ptr<ClientPoller> make_poller();
  * @param[in] poller ClientPoller to reset
  */
 OUSTER_API_FUNCTION
-void reset_poll(ClientPoller& poller);
+void reset_poll(ClientPoller & poller);
 
 /**
  * Set poller to watch client on the next poll call
@@ -41,7 +45,7 @@ void reset_poll(ClientPoller& poller);
  * @param[in] cli client to watch
  */
 OUSTER_API_FUNCTION
-void set_poll(ClientPoller& poller, const Client& cli);
+void set_poll(ClientPoller & poller, const Client & cli);
 
 /**
  * Polls clients previously set with `set_poll`
@@ -52,7 +56,7 @@ void set_poll(ClientPoller& poller, const Client& cli);
  * @return -1 for error, 0 for timeout, otherwise number of messages received
  */
 OUSTER_API_FUNCTION
-int poll(ClientPoller& poller, int timeout_sec = 1);
+int poll(ClientPoller & poller, int timeout_sec = 1);
 
 /**
  * Retrieves error state of the poller
@@ -63,7 +67,7 @@ int poll(ClientPoller& poller, int timeout_sec = 1);
  *         otherwise returning TIMEOUT if no error occurred
  */
 OUSTER_API_FUNCTION
-ClientState get_error(const ClientPoller& poller);
+ClientState get_error(const ClientPoller & poller);
 
 /**
  * Retrieve poll results for particular client
@@ -75,7 +79,7 @@ ClientState get_error(const ClientPoller& poller);
  *         if no data was received
  */
 OUSTER_API_FUNCTION
-ClientState get_poll(const ClientPoller& poller, const Client& cli);
+ClientState get_poll(const ClientPoller & poller, const Client & cli);
 
 }  // namespace impl
 }  // namespace sensor

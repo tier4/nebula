@@ -2,29 +2,33 @@
 #include <Eigen/Core>
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#if !EIGEN_VERSION_AT_LEAST(3,4,0)
-namespace Eigen {
+#if !EIGEN_VERSION_AT_LEAST(3, 4, 0)
+namespace Eigen
+{
 
-    template<typename Scalar, int Rows>
-    using Vector = Matrix<Scalar, Rows, 1>;
+template <typename Scalar, int Rows>
+using Vector = Matrix<Scalar, Rows, 1>;
 
-    template<typename Scalar>
-    using Vector3 = Vector<Scalar, 3>;
+template <typename Scalar>
+using Vector3 = Vector<Scalar, 3>;
 
-    template <typename Scalar>
-    using VectorX = Vector<Scalar, Eigen::Dynamic>;
+template <typename Scalar>
+using VectorX = Vector<Scalar, Eigen::Dynamic>;
 
-    template <typename Scalar>
-    using ArrayX = Array<Scalar, Eigen::Dynamic, 1>;
+template <typename Scalar>
+using ArrayX = Array<Scalar, Eigen::Dynamic, 1>;
 
-}   // namespace Eigen
-#endif   // !EIGEN_VERSION_AT_LEAST(3,4,0)
+}  // namespace Eigen
+#endif  // !EIGEN_VERSION_AT_LEAST(3,4,0)
 
 #include "ouster/visibility.h"
 
-namespace ouster {
-namespace sdk {
-namespace core {
+namespace ouster
+{
+namespace sdk
+{
+namespace core
+{
 
 /**
  * @brief Vector of 16 elements.
@@ -150,7 +154,7 @@ using mat4d = Eigen::Matrix<double, 4, 4, Eigen::DontAlign>;
  * @return mat4d matrix
  */
 OUSTER_API_FUNCTION
-mat4d mat4d_from_array(const std::array<double, mat4d::SizeAtCompileTime>& arr);
+mat4d mat4d_from_array(const std::array<double, mat4d::SizeAtCompileTime> & arr);
 
 /**
  * Convert a mat4d to a std::array<double, 16> (row-major)
@@ -158,7 +162,7 @@ mat4d mat4d_from_array(const std::array<double, mat4d::SizeAtCompileTime>& arr);
  * @return array of 16 doubles
  */
 OUSTER_API_FUNCTION
-std::array<double, mat4d::SizeAtCompileTime> mat4d_to_array(const mat4d& mat);
+std::array<double, mat4d::SizeAtCompileTime> mat4d_to_array(const mat4d & mat);
 
 /**
  * Point cloud with 3D coordinates, row-major layout (Nx3).
@@ -179,12 +183,9 @@ using PointCloudXYZd = PointCloudXYZ<double>;
 
 // Backward compatibility (will trigger a deprecation warning)
 template <typename T>
-using PointsT [[deprecated("Use PointCloudXYZ instead of PointsT")]] =
-    PointCloudXYZ<T>;
-using PointsD [[deprecated("Use PointCloudXYZd instead of PointsD")]] =
-    PointCloudXYZd;
-using PointsF [[deprecated("Use PointCloudXYZf instead of PointsF")]] =
-    PointCloudXYZf;
+using PointsT [[deprecated("Use PointCloudXYZ instead of PointsT")]] = PointCloudXYZ<T>;
+using PointsD [[deprecated("Use PointCloudXYZd instead of PointsD")]] = PointCloudXYZd;
+using PointsF [[deprecated("Use PointCloudXYZf instead of PointsF")]] = PointCloudXYZf;
 
 /**
  * A 16-bit floating-point scalar type stored as a raw uint16_t.
@@ -193,18 +194,19 @@ using PointsF [[deprecated("Use PointCloudXYZf instead of PointsF")]] =
  * LidarScan channels.
  */
 #pragma pack(push, 1)
-struct OUSTER_API_CLASS float16_t {
-    /** Raw bit pattern of the 16-bit float value. */
-    uint16_t data;
+struct OUSTER_API_CLASS float16_t
+{
+  /** Raw bit pattern of the 16-bit float value. */
+  uint16_t data;
 
-    /** Uninitialized construction of a 16-bit float. */
-    OUSTER_API_FUNCTION float16_t() {}
+  /** Uninitialized construction of a 16-bit float. */
+  OUSTER_API_FUNCTION float16_t() {}
 
-    /**
-     * Constructs a float16_t from a raw integer bit pattern.
-     * @param[in] i raw uint16 bit pattern.
-     */
-    OUSTER_API_FUNCTION explicit float16_t(uint16_t i) { data = i; }
+  /**
+   * Constructs a float16_t from a raw integer bit pattern.
+   * @param[in] i raw uint16 bit pattern.
+   */
+  OUSTER_API_FUNCTION explicit float16_t(uint16_t i) { data = i; }
 };
 #pragma pack(pop)
 

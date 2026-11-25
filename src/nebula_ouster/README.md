@@ -20,7 +20,6 @@ The ouster sensor consists of four packages:
 
 ## Building
 
-
 ```bash
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-up-to nebula_ouster
 ```

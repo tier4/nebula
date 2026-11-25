@@ -8,43 +8,48 @@
 
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <string>
-
 #include "ouster/defaults.h"
 #include "ouster/packet.h"
 #include "ouster/types.h"
 #include "ouster/version.h"
 #include "ouster/visibility.h"
 
-namespace ouster {
-namespace sdk {
-namespace sensor {
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <string>
+
+namespace ouster
+{
+namespace sdk
+{
+namespace sensor
+{
 
 struct OUSTER_API_CLASS Client;
 
 /**
  * @deprecated Use Client instead.
  */
-OUSTER_DEPRECATED_TYPE(client, Client,                         // NOLINT
-                       OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)  // NOLINT
+OUSTER_DEPRECATED_TYPE(
+  client, Client,                         // NOLINT
+  OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)  // NOLINT
 
 /** Returned by poll_client. */
 enum ClientState {
-    TIMEOUT = 0,     ///< Client has timed out
-    ERR = 1,         ///< Client has reported an error
-    LIDAR_DATA = 2,  ///< New lidar data available
-    IMU_DATA = 4,    ///< New IMU data available
-    EXIT = 8         ///< Client has exited
+  TIMEOUT = 0,     ///< Client has timed out
+  ERR = 1,         ///< Client has reported an error
+  LIDAR_DATA = 2,  ///< New lidar data available
+  IMU_DATA = 4,    ///< New IMU data available
+  EXIT = 8         ///< Client has exited
 };
 
 /**
  * @deprecated Use ClientState instead.
  */
-OUSTER_DEPRECATED_TYPE(client_state, ClientState,              // NOLINT
-                       OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)  // NOLINT
+OUSTER_DEPRECATED_TYPE(
+  client_state, ClientState,              // NOLINT
+  OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)  // NOLINT
 
 /** Minimum supported version. */
 const auto MIN_VERSION = ouster::sdk::core::Version(1, 12, 0);
@@ -56,7 +61,7 @@ OUSTER_DIAGNOSTIC_PUSH
 OUSTER_DIAGNOSTIC_IGNORE_UNUSED
 OUSTER_IGNORE_ATTRIBUTE
 OUSTER_DEPRECATED_MSG(MIN_VERSION, OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)
-static const ouster::sdk::core::Version& min_version = MIN_VERSION;
+static const ouster::sdk::core::Version & min_version = MIN_VERSION;
 OUSTER_DIAGNOSTIC_POP
 
 /**
@@ -83,9 +88,9 @@ OUSTER_DIAGNOSTIC_POP
  * @return true on success, otherwise false.
  */
 OUSTER_API_FUNCTION
-bool init_logger(const std::string& log_level,
-                 const std::string& log_file_path = "", bool rotating = false,
-                 int max_size_in_bytes = 0, int max_files = 0);
+bool init_logger(
+  const std::string & log_level, const std::string & log_file_path = "", bool rotating = false,
+  int max_size_in_bytes = 0, int max_files = 0);
 
 /** \defgroup ouster_client_init Ouster Client Client Initialization
  * @{
@@ -103,11 +108,9 @@ bool init_logger(const std::string& log_level,
 /**
  * @deprecated Use init_client with full configuration parameters instead.
  */
-OUSTER_DEPRECATED_MSG("Use ouster::sdk::open_source instead",
-                      OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)
+OUSTER_DEPRECATED_MSG("Use ouster::sdk::open_source instead", OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)
 OUSTER_API_FUNCTION
-std::shared_ptr<Client> init_client(const std::string& hostname, int lidar_port,
-                                    int imu_port);
+std::shared_ptr<Client> init_client(const std::string & hostname, int lidar_port, int imu_port);
 
 /**
  * Connect to and configure the sensor and start listening for data.
@@ -128,19 +131,15 @@ std::shared_ptr<Client> init_client(const std::string& hostname, int lidar_port,
  *
  * @return pointer owning the resources associated with the connection.
  */
-OUSTER_DEPRECATED_MSG("Use ouster::sdk::open_source instead",
-                      OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)
+OUSTER_DEPRECATED_MSG("Use ouster::sdk::open_source instead", OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)
 OUSTER_API_FUNCTION
 std::shared_ptr<Client> init_client(
-    const std::string& hostname, const std::string& udp_dest_host,
-    ouster::sdk::core::LidarMode ld_mode = ouster::sdk::core::LidarMode(0, 0),
-    ouster::sdk::core::TimestampMode ts_mode =
-        ouster::sdk::core::TimestampMode::UNSPECIFIED,
-    int lidar_port = 0, int imu_port = 0,
-    int timeout_sec = LONG_HTTP_REQUEST_TIMEOUT_SECONDS,
-    bool persist_config = false,
-    ouster::sdk::core::OperatingMode operating_mode =
-        ouster::sdk::core::OperatingMode::NORMAL);
+  const std::string & hostname, const std::string & udp_dest_host,
+  ouster::sdk::core::LidarMode ld_mode = ouster::sdk::core::LidarMode(0, 0),
+  ouster::sdk::core::TimestampMode ts_mode = ouster::sdk::core::TimestampMode::UNSPECIFIED,
+  int lidar_port = 0, int imu_port = 0, int timeout_sec = LONG_HTTP_REQUEST_TIMEOUT_SECONDS,
+  bool persist_config = false,
+  ouster::sdk::core::OperatingMode operating_mode = ouster::sdk::core::OperatingMode::NORMAL);
 
 /**
  * [BETA] Connect to and configure the sensor and start listening for data via
@@ -161,14 +160,12 @@ std::shared_ptr<Client> init_client(
  * the sensor, otherwise only the port values within the config object will be
  * used and the rest will be ignored.
  */
-OUSTER_DEPRECATED_MSG("Use ouster::sdk::open_source instead",
-                      OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)
+OUSTER_DEPRECATED_MSG("Use ouster::sdk::open_source instead", OUSTER_DEPRECATED_LAST_SUPPORTED_0_16)
 OUSTER_API_FUNCTION
 std::shared_ptr<Client> mtp_init_client(
-    const std::string& hostname, const ouster::sdk::core::SensorConfig& config,
-    const std::string& mtp_dest_host, bool main,
-    int timeout_sec = LONG_HTTP_REQUEST_TIMEOUT_SECONDS,
-    bool persist_config = false);
+  const std::string & hostname, const ouster::sdk::core::SensorConfig & config,
+  const std::string & mtp_dest_host, bool main, int timeout_sec = LONG_HTTP_REQUEST_TIMEOUT_SECONDS,
+  bool persist_config = false);
 
 /** @}*/
 
@@ -186,7 +183,7 @@ std::shared_ptr<Client> mtp_init_client(
  * true if imu data is ready to read.
  */
 OUSTER_API_FUNCTION
-ClientState poll_client(const Client& cli, int timeout_sec = 1);
+ClientState poll_client(const Client & cli, int timeout_sec = 1);
 
 /**
  * Read lidar data from the sensor. Will not block.
@@ -199,8 +196,8 @@ ClientState poll_client(const Client& cli, int timeout_sec = 1);
  * @return true if a lidar packet was successfully read.
  */
 OUSTER_API_FUNCTION
-bool read_lidar_packet(const Client& cli, uint8_t* buf,
-                       const ouster::sdk::core::PacketFormat& pf);
+bool read_lidar_packet(
+  const Client & cli, uint8_t * buf, const ouster::sdk::core::PacketFormat & pf);
 
 /**
  * Read lidar data from the sensor. Will not block.
@@ -213,7 +210,7 @@ bool read_lidar_packet(const Client& cli, uint8_t* buf,
  * @return true if a lidar packet was successfully read.
  */
 OUSTER_API_FUNCTION
-bool read_lidar_packet(const Client& cli, uint8_t* buf, size_t bytes);
+bool read_lidar_packet(const Client & cli, uint8_t * buf, size_t bytes);
 
 /**
  * Read lidar data from the sensor. Will not block.
@@ -226,8 +223,7 @@ bool read_lidar_packet(const Client& cli, uint8_t* buf, size_t bytes);
  * @return true if a lidar packet was successfully read.
  */
 OUSTER_API_FUNCTION
-bool read_lidar_packet(const Client& cli,
-                       ouster::sdk::core::LidarPacket& packet);
+bool read_lidar_packet(const Client & cli, ouster::sdk::core::LidarPacket & packet);
 
 /**
  * Read imu data from the sensor. Will not block.
@@ -240,7 +236,7 @@ bool read_lidar_packet(const Client& cli,
  * @return true if a lidar packet was successfully read.
  */
 OUSTER_API_FUNCTION
-bool read_imu_packet(const Client& cli, uint8_t* buf, size_t bytes);
+bool read_imu_packet(const Client & cli, uint8_t * buf, size_t bytes);
 
 /**
  * Read imu data from the sensor. Will not block.
@@ -253,8 +249,7 @@ bool read_imu_packet(const Client& cli, uint8_t* buf, size_t bytes);
  * @return true if an imu packet was successfully read.
  */
 OUSTER_API_FUNCTION
-bool read_imu_packet(const Client& cli, uint8_t* buf,
-                     const ouster::sdk::core::PacketFormat& pf);
+bool read_imu_packet(const Client & cli, uint8_t * buf, const ouster::sdk::core::PacketFormat & pf);
 
 /**
  * Read imu data from the sensor. Will not block.
@@ -267,7 +262,7 @@ bool read_imu_packet(const Client& cli, uint8_t* buf,
  * @return true if an imu packet was successfully read.
  */
 OUSTER_API_FUNCTION
-bool read_imu_packet(const Client& cli, ouster::sdk::core::ImuPacket& packet);
+bool read_imu_packet(const Client & cli, ouster::sdk::core::ImuPacket & packet);
 
 /**
  * Get metadata text blob from the sensor.
@@ -286,8 +281,7 @@ bool read_imu_packet(const Client& cli, ouster::sdk::core::ImuPacket& packet);
  * @return a text blob of metadata parseable into a sensor_info struct.
  */
 OUSTER_API_FUNCTION
-std::string get_metadata(Client& cli,
-                         int timeout_sec = LONG_HTTP_REQUEST_TIMEOUT_SECONDS);
+std::string get_metadata(Client & cli, int timeout_sec = LONG_HTTP_REQUEST_TIMEOUT_SECONDS);
 
 /**
  * Get sensor config from the sensor.
@@ -303,9 +297,9 @@ std::string get_metadata(Client& cli,
  * @return true if sensor config successfully populated.
  */
 OUSTER_API_FUNCTION
-bool get_config(const std::string& hostname,
-                ouster::sdk::core::SensorConfig& config, bool active = true,
-                int timeout_sec = LONG_HTTP_REQUEST_TIMEOUT_SECONDS);
+bool get_config(
+  const std::string & hostname, ouster::sdk::core::SensorConfig & config, bool active = true,
+  int timeout_sec = LONG_HTTP_REQUEST_TIMEOUT_SECONDS);
 
 // clang-format off
 /**
@@ -344,10 +338,9 @@ OUSTER_DEPRECATED_TYPE(config_flags, ConfigFlags,               // NOLINT
  * @return true if config params successfuly set on sensor.
  */
 OUSTER_API_FUNCTION
-bool set_config(const std::string& hostname,
-                const ouster::sdk::core::SensorConfig& config,
-                uint8_t config_flags = 0,
-                int timeout_sec = LONG_HTTP_REQUEST_TIMEOUT_SECONDS);
+bool set_config(
+  const std::string & hostname, const ouster::sdk::core::SensorConfig & config,
+  uint8_t config_flags = 0, int timeout_sec = LONG_HTTP_REQUEST_TIMEOUT_SECONDS);
 
 /**
  * Return the port used to listen for lidar UDP data.
@@ -357,7 +350,7 @@ bool set_config(const std::string& hostname,
  * @return the port number.
  */
 OUSTER_API_FUNCTION
-int get_lidar_port(const Client& cli);
+int get_lidar_port(const Client & cli);
 
 /**
  * Return the port used to listen for imu UDP data.
@@ -367,7 +360,7 @@ int get_lidar_port(const Client& cli);
  * @return the port number.
  */
 OUSTER_API_FUNCTION
-int get_imu_port(const Client& cli);
+int get_imu_port(const Client & cli);
 
 /**
  * Check if ip address in multicast range.
@@ -377,7 +370,7 @@ int get_imu_port(const Client& cli);
  * @return true if addr is in multicast range.
  */
 OUSTER_API_FUNCTION
-bool in_multicast(const std::string& addr);
+bool in_multicast(const std::string & addr);
 
 }  // namespace sensor
 }  // namespace sdk

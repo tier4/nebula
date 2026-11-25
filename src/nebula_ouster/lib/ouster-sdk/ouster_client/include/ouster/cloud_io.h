@@ -1,14 +1,18 @@
 #pragma once
 
-#include <Eigen/Core>
-#include <string>
-
 #include "ouster/typedefs.h"
 #include "ouster/visibility.h"
 
-namespace ouster {
-namespace sdk {
-namespace core {
+#include <Eigen/Core>
+
+#include <string>
+
+namespace ouster
+{
+namespace sdk
+{
+namespace core
+{
 
 /**
  * [BETA] Load the 3D X Y and Z points from a PCD or PLY file and returns
@@ -20,7 +24,7 @@ namespace core {
  * @remarks this is a beta feature and may change in future releases.
  */
 OUSTER_API_FUNCTION PointCloudXYZf read_pointcloud(
-    const std::string& filename  ///< [in] filename to load
+  const std::string & filename  ///< [in] filename to load
 );
 
 }  // namespace core
