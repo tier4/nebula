@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>nebula_py</name>
+  <version>1.5.0</version>
+  <description>Python bindings for decoding recorded sensor data with Nebula, without a ROS 2 node</description>
+  <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
+  <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
+
+  <license>Apache 2</license>
+  <author>TIER IV</author>
+
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <buildtool_depend>autoware_cmake</buildtool_depend>
+  <buildtool_depend>ros_environment</buildtool_depend>
+
+  <depend>nebula_core_common</depend>
+  <depend>nebula_core_ros</depend>
+  <depend>nebula_hesai_common</depend>
+  <depend>nebula_hesai_decoders</depend>
+  <depend>nebula_msgs</depend>
+  <depend>pandar_msgs</depend>
+  <depend>pybind11_vendor</depend>
+  <depend>python3-dev</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>nebula_hesai</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>rosbag2_py</test_depend>
+  <test_depend>rosbag2_storage_default_plugins</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

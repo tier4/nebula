@@ -193,8 +193,10 @@ macro(nebula_agnocast_wrapper_register_node target)
     add_executable(${ARGS_EXECUTABLE}
       ${PROJECT_BINARY_DIR}/nebula_agnocast_wrapper/node_main_${ARGS_EXECUTABLE}.cpp)
 
+    # glog is for the failure signal handler that the executable installs
     target_link_libraries(${ARGS_EXECUTABLE}
-      ${target})
+      ${target}
+      glog::glog)
 
     ament_target_dependencies(${ARGS_EXECUTABLE}
       rclcpp

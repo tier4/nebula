@@ -18,9 +18,12 @@ if(DEFINED ENV{ENABLE_AGNOCAST} AND "$ENV{ENABLE_AGNOCAST}" STREQUAL "1")
   # USE_AGNOCAST_ENABLED is PUBLIC because it picks which Node class this library compiles into
   # itself, and consumers must see the same one.
   target_compile_definitions(nebula_core_ros PUBLIC USE_AGNOCAST_ENABLED)
-  # glog is for the executables nebula_agnocast_wrapper_register_node() generates, which install
-  # a failure signal handler; this library is what carries it to them.
-  target_link_libraries(nebula_core_ros PUBLIC agnocastlib::agnocast glog::glog)
+  # glog is only for the executables nebula_agnocast_wrapper_register_node() generates, which
+  # install a failure signal handler, so the macro links it into them. It is not linked here, where
+  # it would reach every consumer: glog's target also links libunwind (glog 0.4, Ubuntu 22.04), and
+  # a consumer's calls to _Unwind_Resume can then bind to it while exceptions are raised through
+  # libgcc_s. Mixing the two aborts the process.
+  target_link_libraries(nebula_core_ros PUBLIC agnocastlib::agnocast)
 endif()
 
 target_include_directories(
