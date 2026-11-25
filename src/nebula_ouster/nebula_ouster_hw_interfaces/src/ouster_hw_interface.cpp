@@ -26,7 +26,6 @@ namespace nebula::drivers
 OusterHwInterface::OusterHwInterface(ConnectionConfiguration connection_configuration)
 : connection_configuration_(std::move(connection_configuration))
 {
-  // The ouster driver is UDP-only. Real integrations can initialize control/sync channels here.
 }
 
 util::expected<std::monostate, OusterHwInterface::Error> OusterHwInterface::sensor_interface_start()
