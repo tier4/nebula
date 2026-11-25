@@ -17,6 +17,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace ouster
@@ -775,7 +776,7 @@ public:
    * @param[in] field_class FieldClass
    */
   OUSTER_API_FUNCTION
-  Field(const FieldDescriptor & desc, FieldClass field_class = {});
+  explicit Field(const FieldDescriptor & desc, FieldClass field_class = {});
 
   /**
    * Copy constructor

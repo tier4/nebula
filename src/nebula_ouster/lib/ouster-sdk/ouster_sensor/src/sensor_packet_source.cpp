@@ -86,7 +86,7 @@ Sensor::Sensor(const std::string & hostname, const SensorConfig & config)
 
 SensorInfo Sensor::fetch_metadata(int timeout) const
 {
-  // TODO[tws] dedupe this method's logic with legacy iface
+  // TODO(tws) dedupe this method's logic with legacy iface
   auto http_client_ptr = http_client();
   auto data = collect_metadata(*http_client_ptr, timeout);
 

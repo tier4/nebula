@@ -156,7 +156,7 @@ void Zrb::save(const std::string & file_path) const
 
 Sha256 Zrb::hash() const
 {
-  // TODO[tws] compute the hash when we compute the blob,
+  // TODO(tws) compute the hash when we compute the blob,
   // cache it, and return the cached value here.
   // This prevents recomputing the blob if the API user
   // calls hash() and then blob() or save().

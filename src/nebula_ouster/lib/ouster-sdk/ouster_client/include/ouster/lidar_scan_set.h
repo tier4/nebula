@@ -234,7 +234,7 @@ public:
    * @param[in] scans vector of lidar scan shared pointers.
    */
   OUSTER_API_FUNCTION
-  LidarScanSet(const std::vector<std::shared_ptr<LidarScan>> & scans);
+  explicit LidarScanSet(const std::vector<std::shared_ptr<LidarScan>> & scans);
 
   /**
    * Initialize a LidarScanSet with a vector of lidar scans.
@@ -242,7 +242,7 @@ public:
    * @param[in] scans vector of lidar scan shared pointers to steal.
    */
   OUSTER_API_FUNCTION
-  LidarScanSet(std::vector<std::shared_ptr<LidarScan>> && scans);
+  explicit LidarScanSet(std::vector<std::shared_ptr<LidarScan>> && scans);
 
   /**
    * Initialize a LidarScanSet with an initializer list.
@@ -250,7 +250,7 @@ public:
    * @param[in] scans initializer list of lidar scan shared pointers.
    */
   OUSTER_API_FUNCTION
-  LidarScanSet(std::initializer_list<std::shared_ptr<LidarScan>> scans);
+  explicit LidarScanSet(std::initializer_list<std::shared_ptr<LidarScan>> scans);
 
   /**
    * @return iterator to the beginning of the lidar scans
