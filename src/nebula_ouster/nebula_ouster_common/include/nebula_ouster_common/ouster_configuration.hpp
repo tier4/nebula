@@ -35,8 +35,6 @@ struct ConnectionConfiguration
   uint16_t data_port;
   /// Maximum UDP payload we allocate for recv (Ouster frames are often 12k–64kB; default was 1500).
   uint32_t receiver_mtu_bytes{65527};
-  /// If true, require LiDAR packets from @c sensor_ip (Nebula UDP filter checks IP only).
-  bool filter_sender_ip{true};
 };
 
 // JSON: extra keys optional so older config files keep working.
@@ -47,7 +45,6 @@ inline void to_json(nlohmann::json & j, const ConnectionConfiguration & c)
     {"sensor_ip", c.sensor_ip},
     {"data_port", c.data_port},
     {"receiver_mtu_bytes", c.receiver_mtu_bytes},
-    {"filter_sender_ip", c.filter_sender_ip},
   };
 }
 
@@ -58,9 +55,6 @@ inline void from_json(const nlohmann::json & j, ConnectionConfiguration & c)
   j.at("data_port").get_to(c.data_port);
   if (j.contains("receiver_mtu_bytes")) {
     j.at("receiver_mtu_bytes").get_to(c.receiver_mtu_bytes);
-  }
-  if (j.contains("filter_sender_ip")) {
-    j.at("filter_sender_ip").get_to(c.filter_sender_ip);
   }
 }
 

@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LiDAR Ouster sensor parameters.",
+  "type": "object",
+  "definitions": {
+    "OusterSensor": {
+      "type": "object",
+      "properties": {
+        "sensor_model": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/sensor_model",
+          "description": "Ouster sensor model (e.g. OS0-64, OS1-128, OSDome-128)."
+        },
+        "launch_hw": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/launch_hw"
+        },
+        "frame_id": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/frame_id"
+        },
+        "use_sensor_extrinsics": {
+          "type": "boolean",
+          "default": false,
+          "readOnly": true,
+          "description": "If true, apply the sensor-supplied extrinsic calibration when building the XYZ LUT."
+        },
+        "connection": {
+          "type": "object",
+          "description": "Network connection parameters.",
+          "properties": {
+            "sensor_ip": {
+              "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/sensor_ip"
+            },
+            "host_ip": {
+              "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/host_ip"
+            },
+            "data_port": {
+              "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/data_port",
+              "default": 7502
+            }
+          },
+          "required": [
+            "sensor_ip",
+            "host_ip",
+            "data_port"
+          ],
+          "additionalProperties": false
+        },
+        "fov": {
+          "type": "object",
+          "description": "Field-of-view cropping applied to decoded point clouds.",
+          "properties": {
+            "azimuth": {
+              "type": "object",
+              "description": "Azimuth FOV bounds in degrees.",
+              "properties": {
+                "min_deg": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "exclusiveMaximum": 360.0,
+                  "default": 0.0,
+                  "description": "Minimum azimuth angle in degrees [0, 360)."
+                },
+                "max_deg": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "maximum": 360.0,
+                  "default": 360.0,
+                  "description": "Maximum azimuth angle in degrees (min_deg, 360]."
+                }
+              },
+              "required": ["min_deg", "max_deg"],
+              "additionalProperties": false
+            },
+            "elevation": {
+              "type": "object",
+              "description": "Elevation FOV bounds in degrees.",
+              "properties": {
+                "min_deg": {
+                  "type": "number",
+                  "minimum": -90.0,
+                  "exclusiveMaximum": 90.0,
+                  "default": -90.0,
+                  "description": "Minimum elevation angle in degrees [-90, 90)."
+                },
+                "max_deg": {
+                  "type": "number",
+                  "minimum": -90.0,
+                  "maximum": 90.0,
+                  "default": 90.0,
+                  "description": "Maximum elevation angle in degrees (min_deg, 90]."
+                }
+              },
+              "required": ["min_deg", "max_deg"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["azimuth", "elevation"],
+          "additionalProperties": false
+        },
+        "diagnostics": {
+          "type": "object",
+          "description": "Diagnostics configuration.",
+          "properties": {
+            "pointcloud_publish_rate": {
+              "$ref": "../../../nebula_core/nebula_core_ros/schema/diagnostics.json#/definitions/rate_bound_status",
+              "properties": {
+                "num_frame_transition": {
+                  "type": "integer",
+                  "description": "Number of frames to wait before transitioning diagnostic status.",
+                  "default": 1,
+                  "minimum": 1
+                }
+              }
+            },
+            "packet_liveness": {
+              "type": "object",
+              "description": "Liveness monitor for incoming UDP packets.",
+              "properties": {
+                "timeout_ms": {
+                  "type": "integer",
+                  "description": "Duration in milliseconds without a packet before the liveness diagnostic is set to ERROR.",
+                  "default": 1000,
+                  "minimum": 1
+                }
+              },
+              "required": ["timeout_ms"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["pointcloud_publish_rate", "packet_liveness"],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "sensor_model",
+        "launch_hw",
+        "frame_id",
+        "use_sensor_extrinsics",
+        "connection",
+        "fov",
+        "diagnostics"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/OusterSensor"
+        }
+      },
+      "required": ["ros__parameters"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["/**"],
+  "additionalProperties": false
+}
