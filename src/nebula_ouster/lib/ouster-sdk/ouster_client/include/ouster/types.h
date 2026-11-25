@@ -191,7 +191,6 @@ enum class OperatingMode {
  * documentation for the meaning of each option.
  */
 enum class MultipurposeIOMode {
-
   OFF = 1,  ///< Multipurpose IO is turned off (default)
 
   /**
@@ -987,40 +986,40 @@ public:
   SensorInfo & operator=(const SensorInfo &) = default;
 
   // clang-format off
-    uint64_t sn{};              ///< sensor serial number corresponding to prod_sn in
-                                ///< metadata.json
+    uint64_t sn{};                ///< sensor serial number corresponding to prod_sn in
+                                  ///< metadata.json
     std::string
-        fw_rev{};               ///< fw revision corresponding to build_rev in metadata.json
-    std::string prod_line{};    ///< prod line
+        fw_rev{};                 ///< fw revision corresponding to build_rev in metadata.json
+    std::string prod_line{};      ///< prod line
 
-    DataFormat format{};       ///< data format of sensor
+    DataFormat format{};          ///< data format of sensor
     std::vector<double>
-        beam_azimuth_angles{};  ///< beam azimuth angles for 3D projection
+        beam_azimuth_angles{};    ///< beam azimuth angles for 3D projection
     std::vector<double>
-        beam_altitude_angles{}; ///< beam altitude angles for 3D projection
+        beam_altitude_angles{};   ///< beam altitude angles for 3D projection
     double lidar_origin_to_beam_origin_mm{};  ///< distance between lidar origin
                                               ///< and beam origin in mm
     mat4d beam_to_lidar_transform =
-        mat4d::Zero();          ///< transform between beam and lidar frame
+        mat4d::Zero();            ///< transform between beam and lidar frame
     mat4d imu_to_sensor_transform =
-        mat4d::Zero();          ///< transform between sensor coordinate
-                                ///< frame and imu
+        mat4d::Zero();            ///< transform between sensor coordinate
+                                  ///< frame and imu
     mat4d lidar_to_sensor_transform =
-        mat4d::Zero();          ///< transform between lidar and sensor
-                                ///< coordinate frames
+        mat4d::Zero();            ///< transform between lidar and sensor
+                                  ///< coordinate frames
     mat4d extrinsic =
-        mat4d::Zero();          ///< user-convenience client-side assignable extrinsic
-                                ///< matrix, currently is not read from metadata.json
-    uint32_t init_id{};         ///< initialization ID updated every reinit
+        mat4d::Zero();            ///< user-convenience client-side assignable extrinsic
+                                  ///< matrix, currently is not read from metadata.json
+    uint32_t init_id{};           ///< initialization ID updated every reinit
 
-    std::string build_date{};   ///< build date from FW SensorInfo
-    std::string image_rev{};    ///< image rev from FW SensorInfo
-    std::string prod_pn{};      ///< prod pn
-    std::string status{};       ///< sensor status at time of pulling metadata
+    std::string build_date{};     ///< build date from FW SensorInfo
+    std::string image_rev{};      ///< image rev from FW SensorInfo
+    std::string prod_pn{};        ///< prod pn
+    std::string status{};         ///< sensor status at time of pulling metadata
 
-    CalibrationStatus cal{};   ///< sensor calibration
-    SensorConfig config{};     ///< parsed sensor config if available from metadata
-    std::string user_data{};    ///< userdata from sensor if available
+    CalibrationStatus cal{};      ///< sensor calibration
+    SensorConfig config{};        ///< parsed sensor config if available from metadata
+  std::string user_data{};        ///< userdata from sensor if available
     nonstd::optional<ZoneSet> zone_set{};  ///< zone monitor configuration, if present
 
     /**
@@ -1083,18 +1082,18 @@ public:
     /**
      * Retrieves the width of a frame
      *
-     * @return width of a frame.
+     * @return the width of a frame (equivalent to format.columns_per_frame)
      */
     OUSTER_API_FUNCTION
-    auto w() const -> decltype(format.columns_per_frame);  ///< returns the width of a frame (equivalent to format.columns_per_frame)
+    auto w() const -> decltype(format.columns_per_frame);
 
     /**
      * Retrieves the height of a frame
      *
-     * @return height of a frame.
+     * @return the height of a frame (equivalent to format.pixels_per_column).
      */
     OUSTER_API_FUNCTION
-    auto h() const -> decltype(format.pixels_per_column);  ///< returns the height of a frame (equivalent to format.pixels_per_column)
+    auto h() const -> decltype(format.pixels_per_column);
   // clang-format on
 };
 
