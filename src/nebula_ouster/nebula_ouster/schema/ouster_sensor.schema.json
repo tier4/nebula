@@ -12,6 +12,9 @@
         "frame_id": {
           "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/frame_id"
         },
+        "calibration_file": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/calibration_file"
+        },
         "connection": {
           "type": "object",
           "description": "Network connection parameters.",
@@ -123,6 +126,7 @@
       "required": [
         "launch_hw",
         "frame_id",
+        "calibration_file",
         "connection",
         "fov",
         "diagnostics"

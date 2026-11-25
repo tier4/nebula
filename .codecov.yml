@@ -11,6 +11,7 @@ ignore:
   - ^nebula_examples.* # not safety-related
   - (^|.*/)test/.* # unit test code
   - (^|.*/)tests/.* # unit test code
+  - (^|.*/)vendor/.* # third-party vendored code
 
 comment:
   layout: header, diff, flags, components
@@ -88,15 +89,27 @@ flag_management:
     - name: nebula_ouster
       paths:
         - src/nebula_ouster/nebula_ouster
+      statuses:
+        - type: patch
+          target: 0%
     - name: nebula_ouster_common
       paths:
         - src/nebula_ouster/nebula_ouster_common
+      statuses:
+        - type: patch
+          target: 0%
     - name: nebula_ouster_decoders
       paths:
         - src/nebula_ouster/nebula_ouster_decoders
+      statuses:
+        - type: patch
+          target: 0%
     - name: nebula_ouster_hw_interfaces
       paths:
         - src/nebula_ouster/nebula_ouster_hw_interfaces
+      statuses:
+        - type: patch
+          target: 0%
     - name: nebula_velodyne
       paths:
         - src/nebula_velodyne/nebula_velodyne
