@@ -10,8 +10,7 @@
 #include <cstring>
 #include <fstream>
 #include <ios>
-#include <jsoncons/json.hpp>
-#include <jsoncons_ext/jsonschema/jsonschema.hpp>
+#include <ouster_json.hpp>
 #include <ostream>
 #include <sstream>
 #include <string>

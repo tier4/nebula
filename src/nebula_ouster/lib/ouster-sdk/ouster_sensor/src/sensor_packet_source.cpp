@@ -14,7 +14,7 @@
 #include <cstdio>
 #include <cstring>
 #include <functional>
-#include <jsoncons/json.hpp>
+#include <ouster_json.hpp>
 #include <map>
 #include <memory>
 #include <mutex>

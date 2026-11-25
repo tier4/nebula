@@ -22,9 +22,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <functional>
-#include <jsoncons/json.hpp>
-#include <jsoncons/json_type.hpp>
-#include <jsoncons_ext/jsonpath/json_query.hpp>
+#include <ouster_json.hpp>
 #include <map>
 #include <nonstd/optional.hpp>
 #include <ostream>

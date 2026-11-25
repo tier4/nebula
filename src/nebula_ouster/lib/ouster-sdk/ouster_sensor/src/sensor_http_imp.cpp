@@ -1,8 +1,7 @@
 #include "sensor_http_imp.h"
 
 #include <cstdint>
-#include <jsoncons/json.hpp>
-#include <jsoncons/json_type.hpp>
+#include <ouster_json.hpp>
 #include <memory>
 #include <nonstd/optional.hpp>
 #include <string>

@@ -14,9 +14,7 @@
 #include <exception>
 #include <functional>
 #include <iomanip>
-#include <jsoncons/json.hpp>
-#include <jsoncons/json_type.hpp>
-#include <jsoncons_ext/jsonpath/json_query.hpp>
+#include <ouster_json.hpp>
 #include <locale>
 #include <memory>
 #include <sstream>
