@@ -1,0 +1,52 @@
+{
+    "name": "ouster-sdk",
+    "dependencies": [
+        { "name": "curl", "features": ["openssl"] },
+        "eigen3",
+        "libtins",
+        "flatbuffers",
+        "glfw3",
+        "libpng",
+        "gtest",
+        "zlib",
+        "openssl",
+        "tbb",
+        "zstd",
+        "libzip",
+        { "name": "ceres", "features": ["eigensparse"] }
+    ],
+    "features": {
+        "perception": {
+            "description": "Support perception dependencies",
+            "dependencies": ["cgal"]
+        }
+    },
+    "overrides": [
+        {
+            "name": "flatbuffers",
+            "version": "24.3.25"
+        },
+        {
+            "name": "ceres",
+            "version": "2.0.0"
+        },
+        {
+            "name": "gtest",
+            "version": "1.16.0"
+        },
+        {
+            "name": "eigen3",
+            "version": "3.4.1#1"
+        },
+        {
+            "name": "cgal",
+            "version": "6.0.1"
+        },
+        {
+            "name": "mpfr",
+            "version": "4.2.2#0"
+        }
+    ],
+    "builtin-baseline": "f3e10653cc27d62a37a3763cd84b38bca07c6075",
+    "version": "1.0.0"
+}
