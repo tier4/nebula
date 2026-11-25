@@ -42,6 +42,7 @@ override:
     - name: diagnostics
       message_type: diagnostic_msgs/msg/DiagnosticArray
       global: /diagnostics
+      remap_target: diagnostics
   param_values:
     - name: launch_hw
       type: bool
