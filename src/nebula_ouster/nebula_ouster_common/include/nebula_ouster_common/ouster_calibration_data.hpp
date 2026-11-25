@@ -20,8 +20,10 @@
 
 #include <cstdint>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <variant>
 
 namespace nebula::drivers
