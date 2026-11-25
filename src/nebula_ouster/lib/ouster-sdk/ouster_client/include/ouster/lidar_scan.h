@@ -216,7 +216,7 @@ public:
    * @param[in] format data format
    */
   OUSTER_API_FUNCTION
-  LidarScan(const DataFormat & format);
+  explicit LidarScan(const DataFormat & format);
 
   /**
    * Initialize a scan with fields configured for the LEGACY udp profile.
@@ -238,7 +238,7 @@ public:
    * @param[in] sensor_info description of sensor to create scan for
    */
   OUSTER_API_FUNCTION
-  LidarScan(const SensorInfo & sensor_info);
+  explicit LidarScan(const SensorInfo & sensor_info);
 
   /**
    * Initialize a scan configured as default for the provided
@@ -247,7 +247,7 @@ public:
    * @param[in] sensor_info a shared_ptr to the SensorInfo object
    */
   OUSTER_API_FUNCTION
-  LidarScan(std::shared_ptr<SensorInfo> sensor_info);
+  explicit LidarScan(std::shared_ptr<SensorInfo> sensor_info);
 
   /**
    * Initialize a scan for the given sensor info with either the default for
@@ -915,7 +915,7 @@ public:
    * @param[in] info sensor metadata returned from the client.
    */
   OUSTER_API_FUNCTION
-  ScanBatcher(const SensorInfo & info);
+  explicit ScanBatcher(const SensorInfo & info);
 
   /**
    * Create a batcher given information about the scan and packet format.
@@ -923,7 +923,7 @@ public:
    * @param[in] info sensor metadata returned from the client.
    */
   OUSTER_API_FUNCTION
-  ScanBatcher(const std::shared_ptr<SensorInfo> & info);
+  explicit ScanBatcher(const std::shared_ptr<SensorInfo> & info);
 
   /**
    * Add a packet to the scan.

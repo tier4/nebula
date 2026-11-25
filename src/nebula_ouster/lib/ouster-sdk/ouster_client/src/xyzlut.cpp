@@ -1,7 +1,12 @@
+/**
+ * Copyright (c) 2026, Ouster, Inc.  All rights reserved.  @file
+ */
 
 #include "ouster/xyzlut.h"
 
 #include "ouster/lidar_scan.h"
+
+#include <vector>
 
 namespace ouster
 {
