@@ -17,6 +17,7 @@
 #include <nmea/sentence.hpp>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <tuple>
 #include <utility>
 
@@ -58,7 +59,8 @@ struct FieldInfo {
      */
     template <typename T>
     T get(const uint8_t* buffer) const {
-        uint64_t word = *reinterpret_cast<const uint64_t*>(buffer + offset);
+        uint64_t word = 0;
+        std::memcpy(&word, buffer + offset, sizeof(word));
         word &= mask;
         if (shift > 0) {
             word >>= shift;
@@ -66,9 +68,13 @@ struct FieldInfo {
             word <<= std::abs(shift);
         }
 
-        T out{};
-        std::memcpy(&out, &word, sizeof(out));
-        return out;
+        if constexpr (std::is_same_v<T, float16_t>) {
+            return float16_t{static_cast<uint16_t>(word)};
+        } else {
+            T out{};
+            std::memcpy(&out, &word, sizeof(out));
+            return out;
+        }
     }
 
     /**
@@ -90,9 +96,12 @@ struct FieldInfo {
             word >>= std::abs(shift);
         }
         word &= mask;
-        uint64_t* ptr = reinterpret_cast<uint64_t*>(buffer + offset);
-        *ptr &= ~mask;
-        *ptr |= word;
+
+        uint64_t packed = 0;
+        std::memcpy(&packed, buffer + offset, sizeof(packed));
+        packed &= ~mask;
+        packed |= word;
+        std::memcpy(buffer + offset, &packed, sizeof(packed));
     }
 };
 
@@ -111,6 +120,7 @@ struct FieldInfo {
  * @return FieldInfo
  */
 FieldInfo field_info(size_t bit_start, size_t bit_size, size_t upshift = 0,
+                     [[maybe_unused]] size_t max_length = 0,
                      size_t num_elements = 1) {
     FieldInfo info{};
 
@@ -1112,7 +1122,7 @@ void PacketWriter::set_block(const T* data, int cols,
 
     std::array<uint8_t*, max_cols> col_buf{};
     std::array<bool, max_cols> valid{};
-    for (uint32_t i = 0; i < columns_per_packet; ++i) {
+    for (int i = 0; i < columns_per_packet; ++i) {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         col_buf[i] = nth_col(i, lidar_buf);
         valid[i] = col_status(col_buf[i]) & 0x01;
