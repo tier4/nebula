@@ -4,7 +4,7 @@
   "allowCompoundWords": true,
   "ignorePaths": [
     "*.drawio",
-    "nebula_ouster/**"
+    "src/nebula_ouster/**"
   ],
   "words": [
     "Adctp",
