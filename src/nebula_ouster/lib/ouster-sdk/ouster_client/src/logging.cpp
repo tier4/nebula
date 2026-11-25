@@ -23,8 +23,8 @@
 
 using ouster::sdk::core::impl::Logger;
 
-const char* Logger::LOGGER_NAME{"ouster::sdk::core"};
-const char* Logger::LOGGER_PATTERN{"[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v"};
+const char * Logger::LOGGER_NAME{"ouster::sdk::core"};
+const char * Logger::LOGGER_PATTERN{"[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v"};
 
 struct Logger::internal_logger
 {
