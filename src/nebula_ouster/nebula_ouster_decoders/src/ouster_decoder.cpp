@@ -45,12 +45,12 @@ struct OusterDecoder::Impl
 
   Impl(
     FieldOfView<float, Degrees> fov_in, std::shared_ptr<SensorInfo> & info,
-    bool apply_sensor_extrinsics, pointcloud_callback_t cb)
+    pointcloud_callback_t cb)
   : fov(fov_in),
     pointcloud_callback(std::move(cb)),
     batcher(info),
     lidar_scan(info),
-    xyz_lut(ouster::sdk::core::make_xyz_lut(*info, apply_sensor_extrinsics)),
+    xyz_lut(ouster::sdk::core::make_xyz_lut(*info, false)),
     packet_format(std::make_shared<ouster::sdk::core::PacketFormat>(*info))
   {
   }
@@ -72,8 +72,8 @@ const char * to_cstr(const DecodeError error)
 
 OusterDecoder::OusterDecoder(
   FieldOfView<float, Degrees> fov, std::shared_ptr<ouster::sdk::core::SensorInfo> & sensor_info,
-  bool apply_sensor_extrinsics, pointcloud_callback_t pointcloud_cb)
-: impl_(std::make_unique<Impl>(fov, sensor_info, apply_sensor_extrinsics, std::move(pointcloud_cb)))
+  pointcloud_callback_t pointcloud_cb)
+: impl_(std::make_unique<Impl>(fov, sensor_info, std::move(pointcloud_cb)))
 {
 }
 
