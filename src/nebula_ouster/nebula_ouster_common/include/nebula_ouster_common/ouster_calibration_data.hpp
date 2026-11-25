@@ -52,8 +52,6 @@ struct OusterCalibrationData
   /// @brief The path from which calibration was loaded (for diagnostics/logging).
   std::string calibration_file;
 
-  /// @brief Raw sensor metadata JSON string (Ouster SensorInfo serialization).
-  std::string metadata_json;
   /// @brief Ouster SensorInfo object constructed from the metadata JSON.
   std::shared_ptr<ouster::sdk::core::SensorInfo> sensor_info;
   /// @brief Ouster PacketFormat object constructed from the SensorInfo.
@@ -86,8 +84,7 @@ struct OusterCalibrationData
 
     OusterCalibrationData data;
     data.calibration_file = calibration_file;
-    data.metadata_json = std::move(json_content);
-    data.sensor_info = std::make_shared<ouster::sdk::core::SensorInfo>(data.metadata_json);
+    data.sensor_info = std::make_shared<ouster::sdk::core::SensorInfo>(json_content);
     data.packet_format = std::make_shared<ouster::sdk::core::PacketFormat>(*data.sensor_info);
     return data;
   }
@@ -103,7 +100,6 @@ struct OusterCalibrationData
     }
 
     OusterCalibrationData data;
-    data.metadata_json = metadata_json_str;
     data.sensor_info = std::make_shared<ouster::sdk::core::SensorInfo>(metadata_json_str);
     data.packet_format = std::make_shared<ouster::sdk::core::PacketFormat>(*data.sensor_info);
     return data;
@@ -126,7 +122,7 @@ struct OusterCalibrationData
         "Failed to open calibration file for writing: " + calibration_file + " Error: " + e.what()};
     }
 
-    file << metadata_json;
+    file << sensor_info->to_json_string();
     return std::monostate{};
   }
 };

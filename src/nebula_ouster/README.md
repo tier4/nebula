@@ -6,7 +6,7 @@ A module extends the support Nebula driver framework to Ouster lidars and sensor
 
 This package integrates support for Ouster lidars into the Nebula framework.
 
-The ouster decoder receive packets from the sensor converts them into a Lidar scan and then into
+The ouster decoder receive packets from the sensor converts them into a LidarFrame and then into
 a pointcloud of Nebula point type before publishing them as a rostopic.
 
 ## Package structure

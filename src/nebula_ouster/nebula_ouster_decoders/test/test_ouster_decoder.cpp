@@ -29,7 +29,6 @@ protected:
 
     calibration_.sensor_info = sensor_info;
     calibration_.packet_format = packet_format;
-    calibration_.metadata_json = "{}";  // not used by decoder directly
   }
 
   OusterCalibrationData calibration_;

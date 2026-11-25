@@ -227,8 +227,8 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
 
   RCLCPP_INFO(
     get_logger(), "Loaded Ouster calibration metadata (%zu bytes, source: %s)",
-    calibration.metadata_json.size(),
-    calibration.calibration_file.empty() ? "sensor HTTP" : calibration.calibration_file.c_str());
+    calibration.sensor_info->to_json_string().size(),
+    calibration.calibration_file.empty() ? "Sensor HTTP" : calibration.calibration_file.c_str());
 
   decoder_.emplace(
     config_.fov, calibration,
