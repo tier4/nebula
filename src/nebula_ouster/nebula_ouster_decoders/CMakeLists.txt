@@ -61,8 +61,10 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:include>
          $<BUILD_INTERFACE:${_nebula_ouster_sdk}/ouster_client/include>
+         $<BUILD_INTERFACE:${_nebula_ouster_sdk}/ouster_client/include/optional-lite>
          $<BUILD_INTERFACE:${_ouster_gen_includes}>
-         $<INSTALL_INTERFACE:include/nebula_vendor>)
+         $<INSTALL_INTERFACE:include/nebula_vendor>
+         $<INSTALL_INTERFACE:include/nebula_vendor/optional-lite>)
 
 target_compile_definitions(nebula_ouster_decoders PRIVATE EIGEN_MPL2_ONLY)
 
@@ -111,11 +113,13 @@ if(BUILD_TESTING)
     nebula_ouster_decoders
     nebula_core_common::nebula_core_common
     nebula_ouster_common::nebula_ouster_common
+    ouster_client
   )
   target_include_directories(
     test_ouster_decoder
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
             ${_nebula_ouster_sdk}/ouster_client/include
+            ${_nebula_ouster_sdk}/ouster_client/include/optional-lite
             ${_ouster_gen_includes}
   )
 endif()
