@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026, Ouster, Inc.  All rights reserved.  @file
+ */
+
 #include "ouster/stl.h"
 
 #include "ouster/sha256.h"
@@ -5,7 +9,9 @@
 
 #include <cstdint>
 #include <fstream>
+#include <string>
 #include <vector>
+#include <utility>
 
 namespace ouster
 {
@@ -110,7 +116,7 @@ std::string to_string(Stl::CoordinateFrame coordinate_frame)
       return "SENSOR";
     default:
       break;
-  };
+  }
   return "UNKNOWN";
 }
 

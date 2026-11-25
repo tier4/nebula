@@ -29,7 +29,7 @@ VectorStreamBuf::VectorStreamBuf(const ByteVector * buffer)
 
 VectorStreamBuf::int_type VectorStreamBuf::overflow(int_type character)
 {
-  // TODO(tws) consider writing at the current position instead of
+  // TODO(tws): consider writing at the current position instead of
   // appending. Override the overflow function to write one character at a
   // time.
   if (character != EOF) {
@@ -40,7 +40,7 @@ VectorStreamBuf::int_type VectorStreamBuf::overflow(int_type character)
 
 std::streamsize VectorStreamBuf::xsputn(const char * source, std::streamsize count)
 {
-  // TODO(tws) consider writing at the current position instead of
+  // TODO(tws): consider writing at the current position instead of
   // appending.
   buffer_->insert(
     buffer_->end(), reinterpret_cast<const uint8_t *>(source),
@@ -51,7 +51,7 @@ std::streamsize VectorStreamBuf::xsputn(const char * source, std::streamsize cou
 std::streampos VectorStreamBuf::seekoff(
   std::streamoff off, std::ios_base::seekdir way, std::ios_base::openmode openmode)
 {
-  // TODO(tws) consider updating this method to support write mode.
+  // TODO(tws): consider updating this method to support write mode.
   // Support seeking in input (read-only) mode
   if ((openmode & std::ios_base::in) == 0) {
     return -1;

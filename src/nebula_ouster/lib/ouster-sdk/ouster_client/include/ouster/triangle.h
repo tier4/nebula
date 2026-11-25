@@ -22,7 +22,7 @@ namespace core
  */
 struct OUSTER_API_CLASS Triangle
 {
-  // TODO(tws) encapsulate and enforce invariants.
+  // TODO(tws): encapsulate and enforce invariants.
   std::array<Coord, 3> coords;  ///< Coords representing the corners of the Triangle.
   std::array<Coord, 3> edges;   ///< Coords representing the edges of the Triangle.
   Coord normal;                 ///< A Coord representing the normal of the Triangle;
@@ -63,7 +63,7 @@ public:
   OUSTER_API_FUNCTION
   bool operator==(const Triangle & rhs) const
   {
-    // TODO(tws) comparing edges and normal would be unnecesary if they're
+    // TODO(tws): comparing edges and normal would be unnecesary if they're
     // derived
     return coords == rhs.coords && edges == rhs.edges && normal == rhs.normal;
   }

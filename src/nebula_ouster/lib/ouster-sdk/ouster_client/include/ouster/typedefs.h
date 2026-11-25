@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026, Ouster, Inc.  All rights reserved.  @file
+ */
+
 #pragma once
 #include <Eigen/Core>
 #include <unsupported/Eigen/CXX11/Tensor>
@@ -147,7 +151,7 @@ using rgb_img_t = Eigen::Tensor<T, 3, Eigen::RowMajor>;
 /** Used for transformations. */
 using mat4d = Eigen::Matrix<double, 4, 4, Eigen::DontAlign>;
 
-// TODO(tws) use non-deprecated type names
+// TODO(tws): use non-deprecated type names
 /**
  * Construct a mat4d from a std::array<double, 16> (assumed row-major)
  * @param[in] arr array of 16 doubles
