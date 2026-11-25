@@ -125,4 +125,5 @@ repos:
       - id: hadolint
         exclude: .svg$
 
-exclude: '(?:^|/)vendor/)'
+exclude: vendor/
+
