@@ -36,14 +36,17 @@ ros2 launch nebula_ouster ouster_launch_all_hw.xml launch_hw:=false
 
 ## Maintenance
 
+The vendored ouster-sdk is currently version 1.0.1 (see `vendor/ouster-sdk/VERSION`).
+
 To update ouster-sdk to the latest release, monitor the repo <http://github.com/ouster-lidar/ouster-sdk>
 for any new releases. When a new release is published, download the new sdk into a separate external
 folder, then go to the folder `nebula_ouster/vendor` in **nebula** and delete the entire contents of
 `ouster-sdk/*` except the `thirdparty` folder, then selectively copy the following list of files and folders:
 
-- ouster-sdk/ouster_client/
+- ouster-sdk/ouster_core/
 - ouster-sdk/ouster_sensor/
 - ouster-sdk/cmake/
+- CHANGELOG.rst
 - CMakeLists.txt
 - CMakeSettings.json
 - COPYRIGHT
@@ -54,13 +57,27 @@ folder, then go to the folder `nebula_ouster/vendor` in **nebula** and delete th
 - vcpkg.json
 - VERSION
 
-The reason we maintain the current `thirdparty` under `vendor/ouster-sdk/thirdparty` because it removes the
-the majority of the non-essential dependencies such as jsoncons, zpng, spdlog, etc. It replaces ouster-sdk's
-json parser based of jsoncons with an implementation based nebula's integrated `nlohmann/json` library through
-the `ouster_json.hpp` header. Another thing to watch for is the current implementation drops the spdlog from
-the dependencies by manually editing the `./vendor/ouster-sdk/ouster_client/src/logging.cpp` to disable spdlog.
+Under `thirdparty`, refresh `nmea` and `robin-map` (only its `CMakeLists.txt`, `cmake/`, `include/`,
+`LICENSE` and `README.md`) from the new release, and keep `ouster_json.hpp`. The other ouster-sdk
+modules (`ouster_algorithm`, `ouster_perception`, `ouster_pcap`, `ouster_osf`, `ouster_viz`,
+`ouster_mapping`, ...) and third-party libraries (jsoncons, spdlog, zpng, sophus, glad) are not needed by
+**nebula_ouster** and are not vendored.
 
-As of ouster-sdk 0.16.2 only `nmea` and `ouster_json.hpp` are deemed necessary to build the **nebula_ouster** driver.
+After copying, re-apply the following changes to the vendored sources (each is marked with a `nebula:`
+comment):
+
+- `CMakeLists.txt`: guard `add_subdirectory(ouster_algorithm)` and `add_subdirectory(ouster_perception)`
+  with an `if(EXISTS ...)` check, since those modules are not vendored.
+- Replace every `#include <jsoncons/...>` / `#include <jsoncons_ext/...>` in `ouster_core` and
+  `ouster_sensor` with a single `#include <ouster_json.hpp>`. This header is a drop-in replacement for the
+  subset of jsoncons used by ouster-sdk, backed by the `nlohmann/json` library already used by nebula.
+  Extend it if a new release uses jsoncons APIs that it does not cover yet.
+- `ouster_core/src/logging.cpp`: wrap all spdlog usage in `#if defined(ENABLE_SPDLOG)` and provide no-op
+  fallbacks in the `#else` branches, so that spdlog is not needed.
+- `COPYRIGHT`: remove the jsoncons entry. `LICENSE-bin`: replace the jsoncons entry with nlohmann/json.
+
+Compiler warnings raised by the vendored sources are suppressed for the `ouster_core` target in the
+`CMakeLists.txt` of each package that adds the SDK via `add_subdirectory`.
 
 ## Key components
 

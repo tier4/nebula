@@ -22,11 +22,12 @@ set(BUILD_PYTHON_MODULE OFF CACHE BOOL "Ouster SDK: python" FORCE)
 
 add_subdirectory("${_nebula_ouster_sdk}" "${CMAKE_CURRENT_BINARY_DIR}/ouster-sdk-build")
 
-if(TARGET ouster_client)
+if(TARGET ouster_core)
   # ouster-sdk has few C++ warnings which are treated as errors by the CI. Disable them for now.
-  target_compile_options(ouster_client PRIVATE -Wno-pedantic)
+  target_compile_options(ouster_core PRIVATE -Wno-pedantic)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(ouster_client PRIVATE -Wno-error=stringop-overflow)  # cspell:ignore stringop
+    # cspell:ignore stringop memaccess
+    target_compile_options(ouster_core PRIVATE -Wno-error=stringop-overflow -Wno-class-memaccess)
   endif()
 endif()
 if(TARGET ouster_sensor)
@@ -36,7 +37,7 @@ endif()
 target_include_directories(
   ouster_ros_wrapper
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-         $<BUILD_INTERFACE:${_nebula_ouster_sdk}/ouster_client/include/optional-lite>
+         $<BUILD_INTERFACE:${_nebula_ouster_sdk}/ouster_core/include/optional-lite>
          $<BUILD_INTERFACE:${_nebula_ouster_sdk}/ouster_sensor/include>
          $<INSTALL_INTERFACE:include>)
 
@@ -46,7 +47,7 @@ target_link_libraries(
          nebula_ouster_decoders::nebula_ouster_decoders
          nebula_ouster_hw_interfaces::nebula_ouster_hw_interfaces
          nebula_core_ros::nebula_core_ros
-  PRIVATE ouster_client
+  PRIVATE ouster_core
           ouster_sensor)
 ament_target_dependencies(
   ouster_ros_wrapper

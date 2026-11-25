@@ -5,7 +5,7 @@
 #include <nebula_ouster_common/ouster_calibration_data.hpp>
 
 #include <gtest/gtest.h>
-#include <ouster/types.h>
+#include <ouster/core/types.h>
 
 #include <atomic>
 #include <cstdint>
@@ -22,9 +22,9 @@ class TestOusterDecoder : public ::testing::Test
 protected:
   void SetUp() override
   {
-    // Use the SDK's default_sensor_info to get a valid SensorInfo for testing
-    auto info = ouster::sdk::core::default_sensor_info(ouster::sdk::core::LidarMode::_512x10);
-    auto sensor_info = std::make_shared<ouster::sdk::core::SensorInfo>(info);
+    // Use the SDK's default SensorInfo to get a valid SensorInfo for testing
+    auto sensor_info =
+      ouster::sdk::core::SensorInfo::from_default(ouster::sdk::core::LidarMode::_512x10);
     auto packet_format = std::make_shared<ouster::sdk::core::PacketFormat>(*sensor_info);
 
     calibration_.sensor_info = sensor_info;

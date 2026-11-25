@@ -26,7 +26,7 @@
 
 #include <std_msgs/msg/float64.hpp>
 
-#include <ouster/sensor_http.h>
+#include <ouster/sensor/sensor_http.h>
 
 #include <algorithm>
 #include <chrono>
@@ -205,8 +205,10 @@ OusterRosWrapper::OusterRosWrapper(const rclcpp::NodeOptions & options)
   }
   config_ = config_or_error.value();
 
-  publishers_.points =
-    create_publisher<sensor_msgs::msg::PointCloud2>("points", rclcpp::SensorDataQoS());
+  const auto qos_profile = rmw_qos_profile_sensor_data;
+  const auto pointcloud_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
+  publishers_.points = create_publisher<sensor_msgs::msg::PointCloud2>("points", pointcloud_qos);
   publishers_.receive_duration_ms =
     create_publisher<std_msgs::msg::Float64>("debug/receive_duration_ms", 10);
   publishers_.decode_duration_ms =
@@ -343,13 +345,15 @@ void OusterRosWrapper::publish_pointcloud_callback(
     return;
   }
 
-  // Always publish: subscription_count can be 0 briefly after startup or in some executor
-  // setups, which makes `ros2 topic echo /points` miss data unexpectedly.
-  auto ros_pc_msg_ptr =
-    std::make_unique<sensor_msgs::msg::PointCloud2>(nebula::ros::to_ros_msg(*pointcloud));
-  ros_pc_msg_ptr->header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp_s * 1e9));
-  ros_pc_msg_ptr->header.frame_id = frame_id_;
-  publishers_.points->publish(std::move(ros_pc_msg_ptr));
+  if (
+    publishers_.points->get_subscription_count() > 0 ||
+    publishers_.points->get_intra_process_subscription_count() > 0) {
+    auto ros_pc_msg_ptr =
+      std::make_unique<sensor_msgs::msg::PointCloud2>(nebula::ros::to_ros_msg(*pointcloud));
+    ros_pc_msg_ptr->header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp_s * 1e9));
+    ros_pc_msg_ptr->header.frame_id = frame_id_;
+    publishers_.points->publish(std::move(ros_pc_msg_ptr));
+  }
 
   diagnostics_.publish_rate->tick();
 }

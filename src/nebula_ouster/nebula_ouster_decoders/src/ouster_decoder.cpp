@@ -16,10 +16,10 @@
 
 #include "nebula_ouster_decoders/ouster_lidar_scan_conversions.hpp"
 
-#include <ouster/lidar_scan.h>
-#include <ouster/packet.h>
-#include <ouster/types.h>
-#include <ouster/xyzlut.h>
+#include <ouster/core/lidar_frame.h>
+#include <ouster/core/packet.h>
+#include <ouster/core/types.h>
+#include <ouster/core/xyzlut.h>
 
 #include <chrono>
 #include <cstring>
@@ -41,8 +41,8 @@ struct OusterDecoder::Impl
   pointcloud_callback_t pointcloud_callback;
   std::shared_ptr<SensorInfo> sensor_info;
   std::shared_ptr<PacketFormat> packet_format;
-  ouster::sdk::core::ScanBatcher batcher;
-  ouster::sdk::core::LidarScan lidar_scan;
+  ouster::sdk::core::FrameBatcher batcher;
+  ouster::sdk::core::LidarFrame lidar_scan;
   ouster::sdk::core::XYZLut xyz_lut;
 
   Impl(
@@ -54,7 +54,7 @@ struct OusterDecoder::Impl
     packet_format(calibration.packet_format),
     batcher(sensor_info),
     lidar_scan(sensor_info),
-    xyz_lut(ouster::sdk::core::make_xyz_lut(*sensor_info, false))
+    xyz_lut(*sensor_info, false)
   {
   }
 };
@@ -123,20 +123,17 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
   bool complete = false;
   // TODO(unaal) refactor the code so we don't have to copy packet data.
   if (packet.size() == pf.lidar_packet_size) {
-    ouster::sdk::core::LidarPacket lidar_pkt(static_cast<int>(packet.size()));
+    ouster::sdk::core::LidarPacket lidar_pkt(impl_->packet_format);
     std::memcpy(lidar_pkt.buf.data(), packet.data(), packet.size());
-    lidar_pkt.format = impl_->packet_format;
-    complete = impl_->batcher(lidar_pkt, impl_->lidar_scan);
+    complete = impl_->batcher.batch(lidar_pkt, impl_->lidar_scan);
   } else if (packet.size() == pf.imu_packet_size) {
-    ouster::sdk::core::ImuPacket imu_pkt(static_cast<int>(packet.size()));
+    ouster::sdk::core::ImuPacket imu_pkt(impl_->packet_format);
     std::memcpy(imu_pkt.buf.data(), packet.data(), packet.size());
-    imu_pkt.format = impl_->packet_format;
-    complete = impl_->batcher(imu_pkt, impl_->lidar_scan);
+    complete = impl_->batcher.batch(imu_pkt, impl_->lidar_scan);
   } else if (packet.size() == pf.zone_packet_size) {
-    ouster::sdk::core::ZonePacket zone_pkt(static_cast<int>(packet.size()));
+    ouster::sdk::core::ZonePacket zone_pkt(impl_->packet_format);
     std::memcpy(zone_pkt.buf.data(), packet.data(), packet.size());
-    zone_pkt.format = impl_->packet_format;
-    complete = impl_->batcher(zone_pkt, impl_->lidar_scan);
+    complete = impl_->batcher.batch(zone_pkt, impl_->lidar_scan);
   }
 
   PacketMetadata metadata{};
@@ -150,7 +147,12 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
     const auto callback_begin = std::chrono::steady_clock::now();
     NebulaPointCloudPtr cloud =
       nebula_point_cloud_from_lidar_scan(impl_->lidar_scan, impl_->xyz_lut, impl_->fov);
-    const uint64_t scan_ts = impl_->lidar_scan.get_first_valid_column_timestamp();
+    uint64_t scan_ts = 0U;
+    try {
+      scan_ts = impl_->lidar_scan.timestamp()(impl_->lidar_scan.get_first_valid_column());
+    } catch (const std::runtime_error &) {
+      // No valid columns in this scan; leave the timestamp at zero.
+    }
     const double timestamp_s = scan_ts != 0U ? static_cast<double>(scan_ts) * 1e-9 : 0.0;
     impl_->pointcloud_callback(cloud, timestamp_s);
     result.performance_counters.callback_time_ns =

@@ -17,8 +17,8 @@ protected:
   void SetUp() override
   {
     // Generate a valid metadata JSON from the SDK's default sensor info
-    auto info = ouster::sdk::core::default_sensor_info(ouster::sdk::core::LidarMode::_512x10);
-    valid_metadata_json_ = info.to_json_string();
+    auto info = ouster::sdk::core::SensorInfo::from_default(ouster::sdk::core::LidarMode::_512x10);
+    valid_metadata_json_ = info->to_json_string();
   }
 
   std::string valid_metadata_json_;
