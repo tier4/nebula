@@ -11,11 +11,15 @@ set(BUILD_PCAP OFF CACHE BOOL "Ouster SDK: pcap" FORCE)
 set(BUILD_OSF OFF CACHE BOOL "Ouster SDK: osf" FORCE)
 set(BUILD_VIZ OFF CACHE BOOL "Ouster SDK: visualizer" FORCE)
 set(BUILD_MAPPING OFF CACHE BOOL "Ouster SDK: mapping" FORCE)
+set(_PARENT_BUILD_TESTING ${BUILD_TESTING})
 set(BUILD_TESTING OFF CACHE BOOL "Ouster SDK: tests" FORCE)
 set(BUILD_EXAMPLES OFF CACHE BOOL "Ouster SDK: examples" FORCE)
 set(BUILD_PYTHON_MODULE OFF CACHE BOOL "Ouster SDK: python" FORCE)
 
 add_subdirectory("${_nebula_ouster_sdk}" "${CMAKE_CURRENT_BINARY_DIR}/ouster-sdk-build")
+
+# Restore BUILD_TESTING after ouster-sdk subdirectory
+set(BUILD_TESTING ${_PARENT_BUILD_TESTING} CACHE BOOL "Build tests" FORCE)
 
 if(TARGET ouster_client)
   # ouster-sdk has few C++ warnings which are treated as errors by the CI. Disable them for now.
@@ -93,5 +97,27 @@ ament_export_dependencies(
   nebula_ouster_common
   nebula_core_decoders
   OpenSSL)
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(
+    test_ouster_decoder
+    test/test_ouster_decoder.cpp
+  )
+  target_link_libraries(
+    test_ouster_decoder
+    nebula_ouster_decoders
+    nebula_core_common::nebula_core_common
+    nebula_ouster_common::nebula_ouster_common
+  )
+  target_include_directories(
+    test_ouster_decoder
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${_nebula_ouster_sdk}/ouster_client/include
+            ${_ouster_gen_includes}
+  )
+endif()
 
 ament_package()
