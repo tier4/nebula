@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_OUSTER_ROS_WRAPPER_HPP
-#define NEBULA_OUSTER_ROS_WRAPPER_HPP
+#ifndef NEBULA_OUSTER__OUSTER_ROS_WRAPPER_HPP_
+#define NEBULA_OUSTER__OUSTER_ROS_WRAPPER_HPP_
 
 #include "nebula_ouster_decoders/ouster_decoder.hpp"
 #include "nebula_ouster_hw_interfaces/ouster_hw_interface.hpp"
@@ -184,4 +184,4 @@ private:
 
 }  // namespace nebula::ros
 
-#endif  // NEBULA_OUSTER_ROS_WRAPPER_HPP
+#endif  // NEBULA_OUSTER__OUSTER_ROS_WRAPPER_HPP_

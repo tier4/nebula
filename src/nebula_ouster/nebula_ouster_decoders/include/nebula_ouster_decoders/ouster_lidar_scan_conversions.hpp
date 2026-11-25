@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_OUSTER_LIDAR_SCAN_CONVERSIONS_HPP
-#define NEBULA_OUSTER_LIDAR_SCAN_CONVERSIONS_HPP
+#ifndef NEBULA_OUSTER_DECODERS__OUSTER_LIDAR_SCAN_CONVERSIONS_HPP_
+#define NEBULA_OUSTER_DECODERS__OUSTER_LIDAR_SCAN_CONVERSIONS_HPP_
 
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_decoders/angles.hpp>
@@ -38,4 +38,4 @@ NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
 
 }  // namespace nebula::drivers
 
-#endif
+#endif  // NEBULA_OUSTER_DECODERS__OUSTER_LIDAR_SCAN_CONVERSIONS_HPP_

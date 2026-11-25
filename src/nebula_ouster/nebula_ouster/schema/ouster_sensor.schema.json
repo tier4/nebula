@@ -30,11 +30,7 @@
               "default": 7502
             }
           },
-          "required": [
-            "sensor_ip",
-            "host_ip",
-            "data_port"
-          ],
+          "required": ["sensor_ip", "host_ip", "data_port"],
           "additionalProperties": false
         },
         "fov": {
@@ -123,14 +119,7 @@
           "additionalProperties": false
         }
       },
-      "required": [
-        "launch_hw",
-        "frame_id",
-        "calibration_file",
-        "connection",
-        "fov",
-        "diagnostics"
-      ],
+      "required": ["launch_hw", "frame_id", "calibration_file", "connection", "fov", "diagnostics"],
       "additionalProperties": false
     }
   },
