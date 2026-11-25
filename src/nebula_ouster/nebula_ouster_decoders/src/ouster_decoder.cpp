@@ -19,7 +19,6 @@
 #include <ouster/core/lidar_frame.h>
 #include <ouster/core/packet.h>
 #include <ouster/core/types.h>
-#include <ouster/core/xyzlut.h>
 
 #include <chrono>
 #include <cstring>
@@ -37,24 +36,22 @@ using ouster::sdk::core::SensorInfo;
 
 struct OusterDecoder::Impl
 {
-  FieldOfView<float, Degrees> fov;
   pointcloud_callback_t pointcloud_callback;
   std::shared_ptr<SensorInfo> sensor_info;
   std::shared_ptr<PacketFormat> packet_format;
   ouster::sdk::core::FrameBatcher batcher;
   ouster::sdk::core::LidarFrame lidar_scan;
-  ouster::sdk::core::XYZLut xyz_lut;
+  OusterPointCloudConverter converter;
 
   Impl(
     FieldOfView<float, Degrees> fov_in, const OusterCalibrationData & calibration,
     pointcloud_callback_t cb)
-  : fov(fov_in),
-    pointcloud_callback(std::move(cb)),
+  : pointcloud_callback(std::move(cb)),
     sensor_info(calibration.sensor_info),
     packet_format(calibration.packet_format),
     batcher(sensor_info),
     lidar_scan(sensor_info),
-    xyz_lut(*sensor_info, false)
+    converter(*sensor_info, fov_in)
   {
   }
 };
@@ -145,8 +142,7 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
 
   if (complete) {
     const auto callback_begin = std::chrono::steady_clock::now();
-    NebulaPointCloudPtr cloud =
-      nebula_point_cloud_from_lidar_scan(impl_->lidar_scan, impl_->xyz_lut, impl_->fov);
+    NebulaPointCloudPtr cloud = impl_->converter.convert(impl_->lidar_scan);
     uint64_t scan_ts = 0U;
     try {
       scan_ts = impl_->lidar_scan.timestamp()(impl_->lidar_scan.get_first_valid_column());

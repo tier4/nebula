@@ -117,6 +117,23 @@ if(BUILD_TESTING)
             ${_nebula_ouster_sdk}/ouster_core/include
             ${_nebula_ouster_sdk}/ouster_core/include/optional-lite
   )
+
+  ament_add_gtest(
+    test_ouster_lidar_scan_conversions
+    test/test_ouster_lidar_scan_conversions.cpp
+  )
+  target_link_libraries(
+    test_ouster_lidar_scan_conversions
+    nebula_ouster_decoders
+    nebula_core_common::nebula_core_common
+    ouster_core
+  )
+  target_include_directories(
+    test_ouster_lidar_scan_conversions
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${_nebula_ouster_sdk}/ouster_core/include
+            ${_nebula_ouster_sdk}/ouster_core/include/optional-lite
+  )
 endif()
 
 ament_package()
