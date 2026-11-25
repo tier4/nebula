@@ -18,7 +18,15 @@
 #include <utility>
 #include <vector>
 
-using namespace ouster::sdk::core;
+using ouster::sdk::core::LidarScan;
+using ouster::sdk::core::LidarScanSet;
+using ouster::sdk::core::ScanBatcher;
+using ouster::sdk::core::Collator;
+using ouster::sdk::core::Singler;
+using ouster::sdk::core::ScanSource;
+using ouster::sdk::core::SensorInfo;
+using ouster::sdk::core::LidarScanFieldTypes;
+using ouster::sdk::core::PacketValidationFailure;
 
 namespace ouster
 {
@@ -296,11 +304,11 @@ core::ScanIterator SensorScanSource::begin(int sensor_index) const
     this, new SensorScanIteratorImpl(const_cast<SensorScanSource *>(this), sensor_index));
 }
 
-std::unique_ptr<core::ScanSource> SensorScanSource::create(
+std::unique_ptr<ScanSource> SensorScanSource::create(
   const std::vector<std::string> & sources, const ScanSourceOptions & options, bool collate,
   int sensor_idx)
 {
-  std::unique_ptr<core::ScanSource> source = std::make_unique<SensorScanSource>(sources, options);
+  std::unique_ptr<ScanSource> source = std::make_unique<SensorScanSource>(sources, options);
   if (sensor_idx >= 0) {
     source = std::make_unique<Singler>(std::move(source), sensor_idx);
   } else if (collate) {

@@ -1507,8 +1507,7 @@ void ScanBatcher::batch_zone_packet(const ZonePacket & packet, LidarScan & lidar
   }
   if (lidar_scan.has_field(ChanField::LIVE_ZONESET_HASH)) {
     std::array<uint8_t, 32> hash = pf.live_zoneset_hash(buf);
-    std::memcpy(
-      lidar_scan.field(ChanField::LIVE_ZONESET_HASH), hash.data(), sizeof(uint8_t) * hash.size());
+    std::memcpy(lidar_scan.field(ChanField::LIVE_ZONESET_HASH), hash.data(), sizeof(uint8_t) * hash.size());
   }
   if (lidar_scan.has_field(ChanField::ZONE_STATES)) {
     ArrayView1<ZoneState> zones = lidar_scan.field(ChanField::ZONE_STATES);

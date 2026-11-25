@@ -39,19 +39,19 @@
 #include <vector>
 
 namespace chrono = std::chrono;
-using ouster::sdk::core::check_signal_multiplier;
-using ouster::sdk::core::ImuPacket;
-using ouster::sdk::core::LidarMode;
-using ouster::sdk::core::LidarPacket;
 using ouster::sdk::core::logger;
-using ouster::sdk::core::OperatingMode;
-using ouster::sdk::core::PacketFormat;
-using ouster::sdk::core::SensorConfig;
-using ouster::sdk::core::TimestampMode;
-using ouster::sdk::core::to_string;
-using ouster::sdk::core::ValidatorIssues;
 using ouster::sdk::core::impl::Logger;
 using ouster::sdk::sensor::SensorHttp;
+using ouster::sdk::core::ValidatorIssues;
+using ouster::sdk::core::SensorConfig;
+using ouster::sdk::core::LidarMode;
+using ouster::sdk::core::TimestampMode;
+using ouster::sdk::core::OperatingMode;
+using ouster::sdk::core::PacketFormat;
+using ouster::sdk::core::LidarPacket;
+using ouster::sdk::core::ImuPacket;
+using ouster::sdk::core::check_signal_multiplier;
+using ouster::sdk::core::to_string;
 
 namespace ouster
 {
