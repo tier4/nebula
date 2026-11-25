@@ -46,7 +46,8 @@ namespace
 {
 constexpr double k_ns_to_ms = 1e-6;
 
-/// Fetch Ouster `SensorInfo` JSON from a sensor or replay HTTP API. Respects `http_proxy` / `https_proxy`.
+/// Fetch Ouster `SensorInfo` JSON from a sensor or replay HTTP API. Respects `http_proxy` /
+/// `https_proxy`.
 std::string fetch_ouster_metadata_via_http(const std::string & sensor_url)
 {
   auto sensor_http = ouster::sdk::sensor::SensorHttp::create(sensor_url);
@@ -425,8 +426,8 @@ void OusterRosWrapper::process_packet(
 
   if (!decode_result.metadata_or_error.has_value()) {
     RCLCPP_DEBUG_THROTTLE(
-        get_logger(), *get_clock(), 1000, "Packet decode failed: %s.",
-        drivers::to_cstr(decode_result.metadata_or_error.error()));
+      get_logger(), *get_clock(), 1000, "Packet decode failed: %s.",
+      drivers::to_cstr(decode_result.metadata_or_error.error()));
     return;
   }
 

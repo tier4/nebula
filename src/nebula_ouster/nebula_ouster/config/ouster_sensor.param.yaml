@@ -23,8 +23,8 @@
         min_deg: 0.0
         max_deg: 360.0
       elevation:
-        min_deg: -15.0
-        max_deg: 15.0
+        min_deg: -90.0
+        max_deg: 90.0
 
     # Diagnostics configuration
     diagnostics:

@@ -85,6 +85,17 @@ flag_management:
     - name: nebula_robosense_hw_interfaces
       paths:
         - src/nebula_robosense/nebula_robosense_hw_interfaces
+      paths:
+        - src/nebula_ouster/nebula_ouster
+    - name: nebula_ouster_common
+      paths:
+        - src/nebula_ouster/nebula_ouster_common
+    - name: nebula_ouster_decoders
+      paths:
+        - src/nebula_ouster/nebula_ouster_decoders
+    - name: nebula_ouster_hw_interfaces
+      paths:
+        - src/nebula_ouster/nebula_ouster_hw_interfaces
     - name: nebula_velodyne
       paths:
         - src/nebula_velodyne/nebula_velodyne

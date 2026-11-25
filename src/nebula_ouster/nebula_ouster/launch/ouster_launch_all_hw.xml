@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 <!--
   Full hardware launch for Nebula Ouster (component container + parameters).
-
-  Ensure connection.* matches udp_port_lidar and sensor_http_base_url matches the replay HTTP API
-  so PacketFormat (e.g. DUAL vs LEGACY) matches the UDP stream.
 -->
 <launch>
     <arg name="launch_hw" default="true" description="Bind UDP and receive live packets"/>
