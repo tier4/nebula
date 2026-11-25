@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026, Ouster, Inc.  All rights reserved.  @file
+ */
+
 #include "ouster/impl/logging.h"
 
 #if defined(ENABLE_SPDLOG)

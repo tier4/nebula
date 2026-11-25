@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026, Ouster, Inc.  All rights reserved.  @file
+ */
+
 #include "ouster/error_handler.h"
 
 #include "ouster/impl/logging.h"
