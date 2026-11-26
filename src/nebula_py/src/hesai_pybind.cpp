@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Python bindings for the Hesai decoder. Messages cross the boundary as CDR bytes
-// (rclpy.serialization on the Python side). All decoding logic stays in the decoder.
+// Python bindings for the Hesai decoder. Messages cross the boundary as CDR bytes, as stored in
+// rosbags. All decoding logic stays in the decoder.
 
 #include <builtin_interfaces/msg/time.hpp>
 #include <nebula_core_common/loggers/logger.hpp>
@@ -28,6 +28,7 @@
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <rclcpp/time.hpp>
+#include <rosidl_runtime_cpp/traits.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
@@ -58,17 +59,29 @@ using nebula::drivers::HesaiDriver;
 using nebula::drivers::HesaiSensorConfiguration;
 using nebula_msgs::msg::NebulaPacket;
 
+/// @throws std::invalid_argument (ValueError in Python) if `data` is not a valid serialized MsgT
 template <typename MsgT>
 MsgT deserialize(const py::bytes & data)
 {
+  const std::string error_prefix =
+    std::string("Could not deserialize ") + rosidl_generator_traits::name<MsgT>() + ": ";
+
   const std::string_view buffer = data;
+  if (buffer.empty()) {
+    throw std::invalid_argument(error_prefix + "the serialized message is empty");
+  }
+
   rclcpp::SerializedMessage serialized(buffer.size());
   auto & rcl_msg = serialized.get_rcl_serialized_message();
   std::memcpy(rcl_msg.buffer, buffer.data(), buffer.size());
   rcl_msg.buffer_length = buffer.size();
 
   MsgT msg;
-  rclcpp::Serialization<MsgT>().deserialize_message(&serialized, &msg);
+  try {
+    rclcpp::Serialization<MsgT>().deserialize_message(&serialized, &msg);
+  } catch (const std::runtime_error & e) {
+    throw std::invalid_argument(error_prefix + e.what());
+  }
   return msg;
 }
 

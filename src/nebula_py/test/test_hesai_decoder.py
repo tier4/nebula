@@ -22,7 +22,9 @@ from nebula_msgs.msg import NebulaPackets
 from pandar_msgs.msg import PandarScan
 import pytest
 from rclpy.serialization import deserialize_message
+from rclpy.serialization import serialize_message
 import rosbag2_py
+from sensor_msgs.msg import PointCloud2
 
 from nebula_py import DecodeError
 from nebula_py import HesaiDecoder
@@ -37,18 +39,24 @@ OT128_BAG = GROUND_TRUTH / "ot128" / "1730271167765338806"
 AT128_BAG = GROUND_TRUTH / "at128" / "1679653308406038376"
 
 
-def read_scans(bag_path):
+def read_messages(bag_path):
+    """Return the serialized messages of /pandar_packets, each with its type name."""
     reader = rosbag2_py.SequentialReader()
     reader.open(
         rosbag2_py.StorageOptions(uri=str(bag_path), storage_id="sqlite3"),
         rosbag2_py.ConverterOptions("cdr", "cdr"),
     )
-    scans = []
+    topic_types = {topic.name: topic.type for topic in reader.get_all_topics_and_types()}
+    messages = []
     while reader.has_next():
         topic, data, _ = reader.read_next()
         if topic == "/pandar_packets":
-            scans.append(deserialize_message(data, PandarScan))
-    return scans
+            messages.append((data, topic_types[topic]))
+    return messages
+
+
+def read_scans(bag_path):
+    return [deserialize_message(data, PandarScan) for data, _ in read_messages(bag_path)]
 
 
 def to_nebula_packets(scan):
@@ -68,6 +76,10 @@ def pcd_point_count(pcd_path):
 
 def decode_all(decoder, messages):
     return [result for message in messages for result in decoder.decode(message)]
+
+
+def decode_serialized(decoder, messages):
+    return [result for data, type_name in messages for result in decoder.decode(data, type_name)]
 
 
 def packets_of(scans):
@@ -127,6 +139,20 @@ def test_results_do_not_depend_on_how_packets_are_batched(ot128_parameters):
 
     everything_at_once = NebulaPackets(packets=one_by_one)
     assert decode_all(HesaiDecoder(ot128_parameters), [everything_at_once]) == expected
+
+
+def test_serialized_messages_decode_like_message_objects(ot128_parameters):
+    scans = read_scans(OT128_BAG)
+    expected = decode_all(HesaiDecoder(ot128_parameters), scans)
+    assert expected
+
+    # As rosbags store them, with the type name that the bag stores
+    assert decode_serialized(HesaiDecoder(ot128_parameters), read_messages(OT128_BAG)) == expected
+
+    # With the message class, for the other message types
+    for messages in ([to_nebula_packets(scan) for scan in scans], packets_of(scans)):
+        serialized = [(serialize_message(message), type(message)) for message in messages]
+        assert decode_serialized(HesaiDecoder(ot128_parameters), serialized) == expected
 
 
 def test_a_batch_can_result_in_no_scan(xt32_parameters):
@@ -248,8 +274,39 @@ def test_rejects_invalid_parameters(xt32_parameters):
 
 
 def test_rejects_other_message_types(xt32_parameters):
-    with pytest.raises(TypeError):
-        HesaiDecoder(xt32_parameters).decode(b"")
+    decoder = HesaiDecoder(xt32_parameters)
+    data, _ = read_messages(XT32_BAG)[0]
+
+    with pytest.raises(TypeError, match="sensor_msgs/msg/PointCloud2"):
+        decoder.decode(data, "sensor_msgs/msg/PointCloud2")
+    with pytest.raises(TypeError, match="PointCloud2"):
+        decoder.decode(data, PointCloud2)
+    with pytest.raises(TypeError, match="PointCloud2"):
+        decoder.decode(PointCloud2())
+
+
+def test_message_type_is_only_for_serialized_messages(xt32_parameters):
+    decoder = HesaiDecoder(xt32_parameters)
+    data, message_type = read_messages(XT32_BAG)[0]
+
+    with pytest.raises(TypeError, match="message_type"):
+        decoder.decode(data)
+    with pytest.raises(TypeError, match="message_type"):
+        decoder.decode(deserialize_message(data, PandarScan), message_type)
+
+
+def test_rejects_malformed_serialized_messages(xt32_parameters):
+    messages = read_messages(XT32_BAG)
+    data, message_type = messages[0]
+    decoder = HesaiDecoder(xt32_parameters)
+
+    for malformed in (b"", data[:4], data[: len(data) // 2]):
+        with pytest.raises(ValueError, match="Could not deserialize pandar_msgs/msg/PandarScan"):
+            decoder.decode(malformed, message_type)
+
+    # The rejected calls left the decoder as it was
+    expected = decode_serialized(HesaiDecoder(xt32_parameters), messages)
+    assert decode_serialized(decoder, messages) == expected
 
 
 def test_example_runs():

@@ -14,8 +14,9 @@ from nebula_py import HesaiDecoder, load_parameters
 
 decoder = HesaiDecoder(load_parameters("Pandar128E4X.param.yaml"))
 
-for message in messages:  # e.g. read with rosbag2_py
-    for result in decoder.decode(message):  # one result per completed scan, possibly none
+for data in messages:  # serialized messages, e.g. read with rosbag2_py
+    # One result per completed scan, possibly none
+    for result in decoder.decode(data, "pandar_msgs/msg/PandarScan"):
         cloud = result.pointcloud  # sensor_msgs.msg.PointCloud2
         if result.lost_packets:
             ...
@@ -29,6 +30,9 @@ recording from the test resources of `nebula_hesai`:
 python3 src/nebula_py/examples/decode_hesai_bag.py [--bag BAG] [--params PARAMS] [--topic TOPIC]
 ```
 
+- Messages can be passed serialized, as rosbags store them, together with their type: the type
+  name that the bag stores, or the message class. Message objects (`decoder.decode(message)`) work
+  as well, but are slower, since the decoder serializes them internally before decoding them.
 - Packets are the unit of work, the messages are only containers. Scans do not have to be aligned
   with messages.
 - `lost_packets` is the number of packets lost since the previous scan. It is `None` for sensor
