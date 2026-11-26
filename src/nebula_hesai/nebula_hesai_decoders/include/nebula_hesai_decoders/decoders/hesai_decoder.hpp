@@ -23,6 +23,7 @@
 #include "nebula_hesai_decoders/decoders/hesai_packet.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_scan_decoder.hpp"
 #include "nebula_hesai_decoders/decoders/packet_loss_detector.hpp"
+#include "nebula_hesai_decoders/point_filters.hpp"
 
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/nebula_common.hpp>
@@ -354,10 +355,9 @@ public:
     blockage_mask_plugin_(std::move(blockage_mask_plugin))
   {
     if (sensor_configuration->downsample_mask_path) {
-      mask_filter_ = point_filters::DownsampleMaskFilter(
-        sensor_configuration->downsample_mask_path.value(), SensorT::fov_mdeg.azimuth,
-        SensorT::peak_resolution_mdeg.azimuth, SensorT::packet_t::n_channels,
-        logger_->child("Downsample Mask"), true, sensor_.get_dither_transform());
+      mask_filter_ = make_downsample_mask_filter<SensorT>(
+        sensor_configuration->downsample_mask_path.value(), logger_->child("Downsample Mask"),
+        true);
     }
   }
 

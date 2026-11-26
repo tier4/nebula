@@ -40,6 +40,10 @@ python3 src/nebula_py/examples/decode_hesai_bag.py [--bag BAG] [--params PARAMS]
 - Packets have to be fed in the order they were received. Call `decoder.reset()` before feeding
   data from an earlier time.
 - `decoder.decode(...).errors` counts the packets that could not be decoded.
+- With `HesaiDecoder(parameters, filters_as_mask=True)`, the downsample mask in `parameters` does
+  not drop points. Instead, `result.keep_mask`, a NumPy bool array, flags the points that it keeps.
+  These are exactly the points that decoding without `filters_as_mask` outputs. The FoV applies as
+  usual. Without a downsample mask, `keep_mask` is `None`.
 - Log messages go to Python's `logging`, under `nebula_py`.
 
 `load_parameters` removes the `/**: ros__parameters:` root of a parameter file and resolves the

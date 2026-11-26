@@ -118,7 +118,7 @@ class HesaiDecoder:
     have to be aligned with messages, and packets are accumulated across calls.
     """
 
-    def __init__(self, parameters: Dict[str, Any]) -> None:
+    def __init__(self, parameters: Dict[str, Any], filters_as_mask: bool = False) -> None:
         """Create a decoder.
 
         Args:
@@ -127,13 +127,16 @@ class HesaiDecoder:
                 :func:`nebula_py.load_parameters`). Parameters that the decoder does not use are
                 ignored. ``calibration_file`` (``correction_file`` for AT128 models) has to be the
                 path of an existing file.
+            filters_as_mask: Instead of dropping the points that the downsample mask in
+                ``parameters`` filters out, output all decoded points, and a mask of what would
+                have been filtered in the result's ``keep_mask``. The FoV applies as usual.
 
         Raises:
             ValueError: If a parameter is missing, or has the wrong type or an invalid value.
         """
         config = _sensor_configuration(parameters)
         calibration_file = _parameter(parameters, _ext.calibration_parameter_name(config))
-        self._impl = _ext.HesaiDecoder(config, calibration_file)
+        self._impl = _ext.HesaiDecoder(config, calibration_file, filters_as_mask)
 
     def decode(
         self,
@@ -186,8 +189,8 @@ class HesaiDecoder:
         results, errors = decode_function(self._impl, packets)
         return Decoded(
             results=tuple(
-                DecodeResult(deserialize_message(pointcloud, PointCloud2), lost_packets)
-                for pointcloud, lost_packets in results
+                DecodeResult(deserialize_message(pointcloud, PointCloud2), lost_packets, keep_mask)
+                for pointcloud, lost_packets, keep_mask in results
             ),
             errors=MappingProxyType({DecodeError(code): n for code, n in errors.items()}),
         )

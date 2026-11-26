@@ -6,7 +6,7 @@ find_package(Boost REQUIRED)
 autoware_package()
 
 # Hesai Decoder
-add_library(nebula_hesai_decoders SHARED src/hesai_driver.cpp)
+add_library(nebula_hesai_decoders SHARED src/hesai_driver.cpp src/point_filters.cpp)
 
 target_include_directories(
   nebula_hesai_decoders
@@ -29,6 +29,9 @@ if(BUILD_TESTING)
                   tests/test_hesai_decoder_settings.cpp)
   target_link_libraries(test_hesai_decoder_settings
                         nebula_hesai_decoders)
+
+  ament_add_gtest(test_point_filters tests/test_point_filters.cpp)
+  target_link_libraries(test_point_filters nebula_hesai_decoders)
 endif()
 
 install(TARGETS nebula_hesai_decoders EXPORT export_nebula_hesai_decoders)

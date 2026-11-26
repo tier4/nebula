@@ -13,8 +13,10 @@
 # limitations under the License.
 
 from pathlib import Path
+import struct
 import subprocess
 import sys
+import zlib
 
 from ament_index_python.packages import get_package_share_directory
 from nebula_msgs.msg import NebulaPacket
@@ -37,6 +39,9 @@ XT32_BAG = GROUND_TRUTH / "xt32" / "1673400677802009732"
 XT32_PCD = GROUND_TRUTH / "xt32" / "1673400678101968885.pcd"
 OT128_BAG = GROUND_TRUTH / "ot128" / "1730271167765338806"
 AT128_BAG = GROUND_TRUTH / "at128" / "1679653308406038376"
+
+MASK_SIZES = {"PandarXT32": (2000, 32), "Pandar128E4X": (3600, 128)}
+"""The size of downsample masks, as (azimuth steps, channels), by sensor model"""
 
 
 def read_messages(bag_path):
@@ -307,6 +312,72 @@ def test_rejects_malformed_serialized_messages(xt32_parameters):
     # The rejected calls left the decoder as it was
     expected = decode_serialized(HesaiDecoder(xt32_parameters), messages)
     assert decode_serialized(decoder, messages) == expected
+
+
+def write_mask(path, size):
+    """Write a downsample mask that drops the first half of the channels, and keeps the rest."""
+    width, height = size
+    # Each row is a channel, and starts with the PNG filter type (none)
+    rows = b"".join(b"\0" + bytes([0 if y < height // 2 else 255]) * width for y in range(height))
+
+    def chunk(tag, data):
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data))
+
+    # cspell:ignore IHDR IIBBBBB IEND
+    path.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 0, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(rows))
+        + chunk(b"IEND", b"")
+    )
+    return str(path)
+
+
+def points_of(cloud):
+    """Return the points as bytes."""
+    data = bytes(cloud.data)
+    return [
+        data[start : start + cloud.point_step] for start in range(0, len(data), cloud.point_step)
+    ]
+
+
+@pytest.mark.parametrize(
+    "bag, parameters_file",
+    [(XT32_BAG, "PandarXT32.param.yaml"), (OT128_BAG, "Pandar128E4X.param.yaml")],
+)
+def test_keep_mask_flags_the_points_that_the_downsample_mask_keeps(tmp_path, bag, parameters_file):
+    parameters = load_parameters(HESAI_SHARE / "config" / parameters_file)
+    mask = write_mask(tmp_path / "mask.png", MASK_SIZES[parameters["sensor_model"]])
+    # The FoV still applies
+    parameters = {**parameters, "cloud_min_angle": 30, "cloud_max_angle": 300, "cut_angle": 300.0}
+    with_mask = {**parameters, "point_filters": {"downsample_mask": {"path": mask}}}
+    messages = read_messages(bag)
+
+    expected = decode_serialized(HesaiDecoder(with_mask), messages)
+    results = decode_serialized(HesaiDecoder(with_mask, filters_as_mask=True), messages)
+
+    without_mask = HesaiDecoder({**parameters, "point_filters": {}})
+    assert [r.pointcloud for r in results] == [
+        r.pointcloud for r in decode_serialized(without_mask, messages)
+    ]
+
+    assert all(result.keep_mask is None for result in expected)
+    assert len(results) == len(expected)
+    for result, expected_result in zip(results, expected):
+        assert result.pointcloud.header == expected_result.pointcloud.header
+        points = points_of(result.pointcloud)
+        assert len(result.keep_mask) == len(points)
+        kept = [point for point, keep in zip(points, result.keep_mask) if keep]
+        assert kept == points_of(expected_result.pointcloud)
+        assert len(kept) < len(points)
+
+
+def test_filters_as_mask_changes_nothing_without_a_downsample_mask(xt32_parameters):
+    messages = read_messages(XT32_BAG)
+
+    results = decode_serialized(HesaiDecoder(xt32_parameters, filters_as_mask=True), messages)
+
+    assert results == decode_serialized(HesaiDecoder(xt32_parameters), messages)
 
 
 def test_example_runs():
