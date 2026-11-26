@@ -210,12 +210,26 @@ public:
    * re-created by the caller before the socket can be used again.
    *
    * @param data The data to send
-   * @throws SocketError if send fails
+   * @param timeout Maximum time to wait for the peer to accept the bytes. Zero waits indefinitely.
+   * @throws SocketError if send fails, or SocketError("Send timeout") when @a timeout elapses
    */
-  void send(const std::vector<uint8_t> & data)
+  void send(
+    const std::vector<uint8_t> & data,
+    std::chrono::milliseconds timeout = std::chrono::milliseconds::zero())
   {
+    const auto deadline = timeout.count() > 0 ? std::chrono::steady_clock::now() + timeout
+                                              : std::chrono::steady_clock::time_point::max();
     size_t total_sent = 0;
     while (total_sent < data.size()) {
+      if (timeout.count() > 0) {
+        const auto left = std::chrono::duration_cast<std::chrono::milliseconds>(
+          deadline - std::chrono::steady_clock::now());
+        if (left.count() <= 0) throw SocketError("Send timeout");
+        auto ready = is_socket_ready(sock_fd_.get(), static_cast<int>(left.count()), POLLOUT);
+        if (!ready.has_value()) throw SocketError(ready.error());
+        if (!ready.value()) throw SocketError("Send timeout");
+      }
+
       ssize_t result{-1};
       do {
         result =
