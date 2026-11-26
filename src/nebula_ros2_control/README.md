@@ -16,7 +16,7 @@ drivers declared in the robot's URDF inside the controller manager.
 ```
 
 ```bash
-ros2 launch nebula_ros2_control nebula_ros2_control.launch.py description_file:=/path/to/robot.urdf.xacro
+ros2 launch nebula_ros2_control nebula_ros2_control.launch.xml description_file:=/path/to/robot.urdf.xacro
 ```
 
 See [docs/ros2_control.md](../../docs/ros2_control.md) for all parameters, state interfaces and the

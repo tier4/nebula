@@ -21,8 +21,7 @@
   <depend>rclcpp_lifecycle</depend>
 
   <exec_depend>controller_manager</exec_depend>
-  <exec_depend>launch</exec_depend>
-  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>launch_xml</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>xacro</exec_depend>
 

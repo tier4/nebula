@@ -149,7 +149,7 @@ ros2 control set_hardware_component_state lidar_top active
 ## Launching
 
 ```bash
-ros2 launch nebula_ros2_control nebula_ros2_control.launch.py \
+ros2 launch nebula_ros2_control nebula_ros2_control.launch.xml \
     description_file:=/path/to/my_robot.urdf.xacro
 ```
 
