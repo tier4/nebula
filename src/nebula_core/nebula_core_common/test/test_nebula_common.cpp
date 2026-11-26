@@ -126,7 +126,7 @@ TEST(NebulaCommonTest, ReturnModeStreamingAndParsingCoversSupportedValues)
 
 TEST(NebulaCommonTest, SensorModelStreamingAndStringConversionsRoundTrip)
 {
-  constexpr std::array<std::pair<SensorModel, std::string_view>, 23> streamed_values{{
+  constexpr std::array<std::pair<SensorModel, std::string_view>, 24> streamed_values{{
     {SensorModel::HESAI_PANDAR64, "Pandar64"},
     {SensorModel::HESAI_PANDAR40P, "Pandar40P"},
     {SensorModel::HESAI_PANDAR40M, "Pandar40M"},
@@ -137,6 +137,7 @@ TEST(NebulaCommonTest, SensorModelStreamingAndStringConversionsRoundTrip)
     {SensorModel::HESAI_PANDARXT32M, "PandarXT32M"},
     {SensorModel::HESAI_PANDARAT128, "PandarAT128"},
     {SensorModel::HESAI_AT128P, "AT128P"},
+    {SensorModel::HESAI_FTX140, "FTX140"},
     {SensorModel::HESAI_PANDAR128_E4X, "Pandar128_E4X_OT"},
     {SensorModel::VELODYNE_VLS128, "VLS128"},
     {SensorModel::VELODYNE_HDL64, "HDL64"},
@@ -156,7 +157,7 @@ TEST(NebulaCommonTest, SensorModelStreamingAndStringConversionsRoundTrip)
     EXPECT_EQ(stream_to_string(value), expected_string);
   }
 
-  constexpr std::array<std::pair<std::string_view, SensorModel>, 22> canonical_round_trips{{
+  constexpr std::array<std::pair<std::string_view, SensorModel>, 23> canonical_round_trips{{
     {"Pandar64", SensorModel::HESAI_PANDAR64},
     {"Pandar40P", SensorModel::HESAI_PANDAR40P},
     {"Pandar40M", SensorModel::HESAI_PANDAR40M},
@@ -165,6 +166,7 @@ TEST(NebulaCommonTest, SensorModelStreamingAndStringConversionsRoundTrip)
     {"PandarXT32M", SensorModel::HESAI_PANDARXT32M},
     {"PandarAT128", SensorModel::HESAI_PANDARAT128},
     {"AT128P", SensorModel::HESAI_AT128P},
+    {"FTX140", SensorModel::HESAI_FTX140},
     {"PandarQT64", SensorModel::HESAI_PANDARQT64},
     {"PandarQT128", SensorModel::HESAI_PANDARQT128},
     {"Pandar128E4X", SensorModel::HESAI_PANDAR128_E4X},

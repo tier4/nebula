@@ -59,6 +59,7 @@ INSTANTIATE_TEST_SUITE_P(
     ScanRateTestParams{SensorModel::HESAI_PANDARXT32M, 600},
     ScanRateTestParams{SensorModel::HESAI_PANDARAT128, 200},
     ScanRateTestParams{SensorModel::HESAI_AT128P, 200},
+    ScanRateTestParams{SensorModel::HESAI_FTX140, 600},
     ScanRateTestParams{SensorModel::HESAI_PANDAR128_E4X, 600}),
   [](const testing::TestParamInfo<ScanRateTestParams> & info) {
     return nebula::util::to_string(info.param.sensor_model);
