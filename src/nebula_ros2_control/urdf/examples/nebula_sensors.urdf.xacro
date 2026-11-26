@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!--
+  Example robot with two Nebula sensors declared through ros2_control.
+
+    ros2 launch nebula_ros2_control nebula_ros2_control.launch.py
+
+  Adjust the IP addresses / sensor models below (or in the referenced parameter files) to match
+  your setup. Sensors whose package is not installed can simply be removed.
+-->
+<robot name="nebula_sensors_example" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find nebula_ros2_control)/urdf/nebula_sensor.ros2_control.xacro"/>
+
+  <xacro:arg name="lidar_model" default="Pandar64"/>
+  <xacro:arg name="lidar_host_ip" default="192.168.1.10"/>
+  <xacro:arg name="lidar_sensor_ip" default="192.168.1.201"/>
+
+  <link name="base_link"/>
+
+  <link name="lidar_top"/>
+  <joint name="base_link_to_lidar_top" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_top"/>
+    <origin xyz="0.0 0.0 1.8" rpy="0 0 0"/>
+  </joint>
+
+  <link name="radar_front"/>
+  <joint name="base_link_to_radar_front" type="fixed">
+    <parent link="base_link"/>
+    <child link="radar_front"/>
+    <origin xyz="3.5 0.0 0.5" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Hesai LiDAR: parameters from the stock parameter file, overridden per robot -->
+  <xacro:nebula_sensor_ros2_control
+      name="lidar_top"
+      plugin="HesaiRosWrapper"
+      package="nebula_hesai"
+      frame_id="lidar_top"
+      namespace="sensing/lidar/top"
+      params_file="$(find nebula_hesai)/config/$(arg lidar_model).param.yaml"
+      monitor_topic="pandar_points">
+    <params>
+      <param name="ros.sensor_model">$(arg lidar_model)</param>
+      <param name="ros.host_ip">$(arg lidar_host_ip)</param>
+      <param name="ros.sensor_ip">$(arg lidar_sensor_ip)</param>
+    </params>
+  </xacro:nebula_sensor_ros2_control>
+
+  <!-- Continental radar: the driver's output is not a point cloud, so no monitored topic -->
+  <xacro:nebula_sensor_ros2_control
+      name="radar_front"
+      plugin="ContinentalARS548RosWrapper"
+      package="nebula_continental"
+      frame_id="radar_front"
+      namespace="sensing/radar/front"
+      params_file="$(find nebula_continental)/config/ARS548.param.yaml">
+    <params/>
+  </xacro:nebula_sensor_ros2_control>
+</robot>

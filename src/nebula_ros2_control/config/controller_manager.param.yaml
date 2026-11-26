@@ -1,0 +1,5 @@
+# Nebula drivers publish their data themselves; the controller manager only needs to run the
+# hardware lifecycle and update the exported state interfaces.
+controller_manager:
+  ros__parameters:
+    update_rate: 10 # Hz
