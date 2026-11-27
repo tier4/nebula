@@ -1,0 +1,11 @@
+<library path="nebula_ros2_control">
+  <class name="nebula_ros2_control/NebulaSensorInterface"
+         type="nebula::ros2_control::NebulaSensorInterface"
+         base_class_type="hardware_interface::SensorInterface">
+    <description>
+      Runs a Nebula sensor driver (any rclcpp component, e.g. HesaiRosWrapper) inside the
+      ros2_control controller_manager. The driver, its parameters and its state interfaces are
+      declared in the robot's URDF.
+    </description>
+  </class>
+</library>

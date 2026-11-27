@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  Run the Nebula sensors declared in a URDF through ros2_control.
+
+  Starts robot_state_publisher (TF of the sensor frames, and the robot_description topic) and the
+  ros2_control controller manager, which loads one nebula_ros2_control/NebulaSensorInterface per
+  <ros2_control> block and runs the corresponding Nebula driver.
+
+    ros2 launch nebula_ros2_control nebula_ros2_control.launch.xml \
+        description_file:=/path/to/robot.urdf.xacro xacro_args:="lidar_model:=PandarQT128"
+-->
+<launch>
+  <arg name="description_file"
+       default="$(find-pkg-share nebula_ros2_control)/urdf/examples/nebula_sensors.urdf.xacro"
+       description="URDF/xacro file declaring the Nebula sensors in ros2_control blocks"/>
+  <arg name="xacro_args" default="" description="Extra 'name:=value' arguments for xacro"/>
+  <arg name="controller_manager_config"
+       default="$(find-pkg-share nebula_ros2_control)/config/controller_manager.param.yaml"
+       description="Parameter file of the controller manager"/>
+
+  <node pkg="robot_state_publisher" exec="robot_state_publisher" output="screen">
+    <param name="robot_description" type="str"
+           value="$(command 'xacro $(var description_file) $(var xacro_args)')"/>
+  </node>
+
+  <!-- The controller manager reads the URDF from robot_state_publisher's topic (Humble and later) -->
+  <node pkg="controller_manager" exec="ros2_control_node" output="screen">
+    <param from="$(var controller_manager_config)"/>
+    <remap from="~/robot_description" to="/robot_description"/>
+  </node>
+</launch>

@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!--
+  Declares a Nebula sensor driver as a ros2_control sensor hardware component.
+
+  Required arguments:
+    name        Name of the <ros2_control> block and of its <sensor>. State interfaces are exported
+                as "<name>/<interface>" (e.g. "front_lidar/message_rate").
+    plugin      Driver component class, as listed by `ros2 component types`, e.g. HesaiRosWrapper,
+                VelodyneRosWrapper, RobosenseRosWrapper, ContinentalARS548RosWrapper,
+                ContinentalSRR520RosWrapper.
+    frame_id    TF frame the driver stamps its output with. Usually the URDF link of the sensor.
+
+  Optional arguments:
+    package             Package registering `plugin` (speeds up the lookup, e.g. nebula_hesai).
+    params_file         Driver parameter file(s), ';'-separated. Use $(find <pkg>) to resolve them.
+    namespace           Namespace of the driver node.
+    node_name           Name of the driver node (default: <name>_driver).
+    remappings          ';'-separated 'from:=to' remappings applied to the driver node.
+    monitor_topic       Output topic of the driver (resolved in `namespace`) to monitor. Enables the
+                        message_count / message_rate / message_age / header_stamp state interfaces.
+    monitor_topic_type  Message type of `monitor_topic` (default: sensor_msgs/msg/PointCloud2).
+    executor_threads    Number of threads spinning the driver node (default: 1).
+
+  Block argument:
+    params      Element whose children are extra <param> tags of the hardware, typically
+                <param name="ros.<ros parameter>">value</param> to set or override driver
+                parameters. Pass an empty element if there are none.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="nebula_sensor_ros2_control"
+               params="name plugin frame_id
+                       package:='' params_file:='' namespace:='' node_name:='' remappings:=''
+                       monitor_topic:='' monitor_topic_type:='sensor_msgs/msg/PointCloud2'
+                       executor_threads:=1 **params">
+    <ros2_control name="${name}" type="sensor">
+      <hardware>
+        <plugin>nebula_ros2_control/NebulaSensorInterface</plugin>
+        <param name="plugin">${plugin}</param>
+        <xacro:if value="${package != ''}">
+          <param name="package">${package}</param>
+        </xacro:if>
+        <xacro:if value="${params_file != ''}">
+          <param name="params_file">${params_file}</param>
+        </xacro:if>
+        <xacro:if value="${namespace != ''}">
+          <param name="namespace">${namespace}</param>
+        </xacro:if>
+        <xacro:if value="${node_name != ''}">
+          <param name="node_name">${node_name}</param>
+        </xacro:if>
+        <xacro:if value="${remappings != ''}">
+          <param name="remappings">${remappings}</param>
+        </xacro:if>
+        <xacro:if value="${monitor_topic != ''}">
+          <param name="monitor_topic">${monitor_topic}</param>
+          <param name="monitor_topic_type">${monitor_topic_type}</param>
+        </xacro:if>
+        <param name="executor_threads">${executor_threads}</param>
+        <xacro:insert_block name="params"/>
+      </hardware>
+      <sensor name="${name}">
+        <param name="frame_id">${frame_id}</param>
+        <state_interface name="driver_active"/>
+        <xacro:if value="${monitor_topic != ''}">
+          <state_interface name="message_count"/>
+          <state_interface name="message_rate"/>
+          <state_interface name="message_age"/>
+          <state_interface name="header_stamp"/>
+        </xacro:if>
+      </sensor>
+    </ros2_control>
+  </xacro:macro>
+</robot>

@@ -15,6 +15,7 @@ nav = [
   { "Supported sensors" = "supported_sensors.md" },
   { "Installation" = "installation.md" },
   { "Usage" = "usage.md" },
+  { "ros2_control" = "ros2_control.md" },
   { "Parameters" = [
     { "Common Parameters" = "parameters.md" },
     { "Hesai" = [
